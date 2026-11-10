@@ -83,16 +83,22 @@ def asegurar_dependencias():
                 ejecutar_pip_install(candidate, req_file)
             
             print(f"[*] Reanudando servidor con el entorno virtual ({candidate})...")
-            ret = subprocess.call([str(candidate)] + sys.argv)
-            sys.exit(ret)
+            try:
+                ret = subprocess.call([str(candidate)] + sys.argv)
+                sys.exit(ret)
+            except KeyboardInterrupt:
+                sys.exit(0)
 
     # Si no hay otro venv o ya estamos en el venv, instalar en el interprete actual
     print("[*] Instalando dependencias necesarias en el interprete actual...")
     req_file = BASE_DIR / "requirements.txt"
     if ejecutar_pip_install(sys.executable, req_file):
         print("[OK] Dependencias instaladas con exito.")
-        ret = subprocess.call([sys.executable] + sys.argv)
-        sys.exit(ret)
+        try:
+            ret = subprocess.call([sys.executable] + sys.argv)
+            sys.exit(ret)
+        except KeyboardInterrupt:
+            sys.exit(0)
 
 def instalar_certificado_en_almacen_windows(ca_path: Path):
     """
@@ -170,12 +176,19 @@ def main():
             host=args.host,
             port=args.port,
             log_level="info",
-            timeout_graceful_shutdown=1,
+            timeout_graceful_shutdown=2,
             **ssl_kwargs
         )
     except KeyboardInterrupt:
-        print("\n[*] Servidor detenido inmediatamente por el usuario.")
+        pass
+    except Exception as e:
+        print(f"[!] Error: {e}")
+    finally:
+        print("\n[*] Servidor detenido limpiamente.")
         sys.exit(0)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit(0)

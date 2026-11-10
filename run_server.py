@@ -16,4 +16,7 @@ if str(BACKEND_DIR) not in sys.path:
 from run_server import main
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit(0)

@@ -1,4 +1,4 @@
-import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,11 +8,20 @@ from fastapi.responses import FileResponse, Response
 from .config import settings
 from .routers.audio_router import router as audio_router
 from .middlewares.security_middleware import SecurityMiddleware
+from .services.job_manager import job_manager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Inicio del servidor
+    yield
+    # Apagado ordenado e inmediato: cancelar conexiones SSE y tareas pendientes
+    job_manager.shutdown()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="Backend API seguro con TLS para procesamiento, transcripción, consolidación y corrección de audio a texto."
+    description="Backend API seguro con TLS para procesamiento, transcripción, consolidación y corrección de audio a texto.",
+    lifespan=lifespan
 )
 
 # Middleware de Seguridad y Cabeceras HTTPS
