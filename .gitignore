@@ -1,8 +1,11 @@
-# Cert
-certs/
+# Certificados y Claves TLS / HTTPS (Nunca subir a Git)
+certs/*
+!certs/.gitkeep
 *.crt
 *.key
 *.pem
+*.p12
+*.pfx
 
 # Node
 node_modules/
@@ -33,6 +36,10 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+
+# Logs
+logs/
+*.log
 
 # Uploads
 backend/uploads/*
