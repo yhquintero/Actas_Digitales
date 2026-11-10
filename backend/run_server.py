@@ -49,12 +49,15 @@ def ejecutar_pip_install(py_exe, req_path):
             return False
 
 def asegurar_dependencias():
-    """Valida que uvicorn, fastapi, cryptography y python-docx esten disponibles."""
+    """Valida que uvicorn, fastapi, cryptography, mutagen, av, imageio_ffmpeg y python-docx esten disponibles."""
     try:
         import uvicorn
         import fastapi
         import docx
         import cryptography
+        import mutagen
+        import av
+        import imageio_ffmpeg
         return
     except ImportError as e:
         print(f"[*] Modulo faltante en el interprete actual ({sys.executable}): {e.name}")

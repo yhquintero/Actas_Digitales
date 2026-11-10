@@ -25,32 +25,56 @@ class AudioService:
     def get_exact_audio_duration(file_path: Path) -> float:
         """
         Calcula con precisión exacta la duración en segundos del audio.
-        Utiliza mutagen y PyAV si están disponibles (MP3, WAV, M4A, OGG, FLAC, AAC, WEBM, MP4).
-        Fallback a wave nativo para WAV o estimación por tamaño de archivo.
+        Multi-estrategia en orden de precisión:
+        1. PyAV (decodificación del contenedor y streams de audio).
+        2. Mutagen (lectura de metadatos ID3/Xing/VBRI/AAC/Vorbis).
+        3. imageio_ffmpeg (análisis mediante binario FFmpeg).
+        4. Wave nativo (si el archivo es WAV).
+        5. Conversión temporal a PCM WAV para medir la duración física exacta en muestras.
         """
-        # 1. Mutagen
-        try:
-            from mutagen import File as MutagenFile
-            audio = MutagenFile(str(file_path))
-            if audio is not None and hasattr(audio, 'info') and hasattr(audio.info, 'length'):
-                if audio.info.length and audio.info.length > 0:
-                    return round(float(audio.info.length), 2)
-        except Exception:
-            pass
-
-        # 2. PyAV
+        # 1. PyAV (precisión exacta de streams y contenedor)
         try:
             import av
             with av.open(str(file_path)) as container:
                 if container.duration:
-                    return round(float(container.duration) / 1000000.0, 2)
+                    dur = float(container.duration) / 1000000.0
+                    if dur > 0.1:
+                        return round(dur, 2)
                 for stream in container.streams.audio:
                     if stream.duration and stream.time_base:
-                        return round(float(stream.duration * stream.time_base), 2)
+                        dur = float(stream.duration * stream.time_base)
+                        if dur > 0.1:
+                            return round(dur, 2)
         except Exception:
             pass
 
-        # 3. Wave nativo si es WAV
+        # 2. Mutagen
+        try:
+            from mutagen import File as MutagenFile
+            audio = MutagenFile(str(file_path))
+            if audio is not None and hasattr(audio, 'info') and hasattr(audio.info, 'length'):
+                if audio.info.length and audio.info.length > 0.1:
+                    return round(float(audio.info.length), 2)
+        except Exception:
+            pass
+
+        # 3. imageio_ffmpeg (salida de FFmpeg -i)
+        try:
+            import imageio_ffmpeg
+            ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+            cmd = [ffmpeg_exe, "-i", str(file_path)]
+            res = subprocess.run(cmd, stderr=subprocess.PIPE, stdout=subprocess.DEVNULL, text=True, errors="replace")
+            for line in res.stderr.splitlines():
+                if "Duration:" in line:
+                    parts = line.split("Duration:")[1].split(",")[0].strip()
+                    h, m, s = parts.split(":")
+                    dur = float(h) * 3600 + float(m) * 60 + float(s)
+                    if dur > 0.1:
+                        return round(dur, 2)
+        except Exception:
+            pass
+
+        # 4. Wave nativo si es WAV
         ext = file_path.suffix.lower()
         if ext == ".wav":
             try:
@@ -61,9 +85,26 @@ class AudioService:
                         return round(frames / float(rate), 2)
             except Exception:
                 pass
-        
+
+        # 5. Medición acústica física mediante conversión temporal a WAV PCM
+        temp_meas = file_path.parent / f"_dur_meas_{file_path.stem}.wav"
+        try:
+            if AudioService.convert_to_pcm_wav(file_path, temp_meas) and temp_meas.exists():
+                with wave.open(str(temp_meas), 'rb') as wf:
+                    frames = wf.getnframes()
+                    rate = wf.getframerate()
+                    if rate > 0:
+                        return round(frames / float(rate), 2)
+        except Exception:
+            pass
+        finally:
+            if temp_meas.exists():
+                try: temp_meas.unlink()
+                except Exception: pass
+
+        # 6. Fallback final estimando según tasa típica de MP3 a 192 kbps (no a 64 kbps)
         file_size_bytes = os.path.getsize(file_path)
-        estimated_seconds = max(1.0, round((file_size_bytes * 8) / 64000, 2))
+        estimated_seconds = max(1.0, round((file_size_bytes * 8) / 192000, 2))
         return min(estimated_seconds, 14400.0)
 
     @staticmethod
@@ -166,7 +207,7 @@ class AudioService:
     def analyze_audio_metadata(file_path: Path) -> Dict[str, Any]:
         """Extrae metadatos técnicos acústicos del archivo."""
         duration = AudioService.get_exact_audio_duration(file_path)
-        bitrate = 64000
+        bitrate = 192000
         sample_rate = 16000
         channels = 1
         codec = file_path.suffix.replace('.', '').upper()
