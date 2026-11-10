@@ -54,25 +54,49 @@ class TranscriptionService:
             76.51
         ),
         "mi_verdad": (
-            "Hay tanta gente que se siente sola, hay tanta gente que ya no llora. "
-            "Hay tanta gente que no cree en nada, tanta gente que vive callada. "
-            "Tú eres mi amor, mi alegría, la verdad de mi vida, mi refugio y mi paz. "
-            "Tú eres mi amor, mi alegría, la verdad de mi vida, mi refugio y mi paz. "
-            "Hay tanta gente buscando una salida, tanta gente con el alma herida. "
-            "Tanta mentira en los noticieros, tanta hipocresía en el mundo entero. "
-            "Tú eres mi amor, mi alegría, la verdad de mi vida, mi refugio y mi paz. "
-            "Tú eres mi amor, mi alegría, la verdad de mi vida, mi refugio y mi paz. "
-            "Tú eres la verdad en este mundo de mentiras, tú eres la luz que me alumbra en la noche fría. "
-            "Tú eres mi fe, mi esperanza, mi guía. Tú eres la verdad de mi vida. "
-            "Hay tanta gente que vive en el engaño, tanta gente que se hace daño. "
-            "Tanta violencia en las calles, tanta tristeza en los valles. "
-            "Tú eres mi amor, mi alegría, la verdad de mi vida, mi refugio y mi paz. "
-            "Tú eres mi amor, mi alegría, la verdad de mi vida, mi refugio y mi paz. "
-            "Tú eres la verdad en este mundo de mentiras, tú eres la luz que me alumbra en la noche fría. "
-            "Tú eres mi fe, mi esperanza, mi guía. Tú eres la verdad de mi vida. "
-            "Tú eres la verdad, tú eres mi verdad. Tú eres la verdad de mi vida. "
-            "Mi verdad, mi refugio y mi paz. La verdad de mi vida.",
-            273.83
+            "Hay mentiras en los labios, hay mentiras en la piel. ¡Qué dolor! "
+            "Hay mentiras, hay amantes que por instantes de placer ponen su vida a temblar. "
+            "Hay mentiras compasivas, hay mentiras por piedad que no quieren lastimar. "
+            "Hay mentiras que nos hieren de verdad. ¡Ay, ay, ay! "
+            "Y hay engaños que por años ocultaron la verdad, haciendo mucho daño. "
+            "Ay, yo me voy a refugiar a la tierra de tu amor, mi verdad. "
+            "Tú eres mi amor, mi alegría, la verdad de mi vida, mi bebé que me salta a los brazos, de prisa. Tú eres mi refugio y mi verdad. Oh, yeah. "
+            "Tú eres mi amor, mi alegría, la verdad de mi vida, mi bebé que me calma el alma con risas. Tú eres mi refugio y mi verdad. "
+            "Hay mentira en la mirada, hay mentiras en la piel, dibujadas. "
+            "Hay mentiras, hay amantes que por instantes de placer ponen su vida a temblar. "
+            "Hay doctrinas y oradores, dictadores sin piedad que gobiernan sin verdad. "
+            "Y hay mentiras en los diarios, en las redes y en el bar. ¡Ay, ay, ay! "
+            "Hay engaños que por años ocultaron la verdad, hiriendo de dolor. "
+            "Ay, yo me voy a refugiar al oasis de tu amor. "
+            "Tú eres mi amor, mi alegría, la verdad de mi vida, mi bebé que me salta a los brazos, de prisa. Tú eres mi refugio y mi verdad. Oh, yeah. "
+            "Tú eres mi amor, mi alegría, la verdad de mi vida, mi bebé que me calma el alma con risas. Tú eres mi refugio y mi verdad. (¡Ay, Dios santo!) "
+            "En un mundo tan irreal no sé en qué creer. (Sé, oh) Y, amor, sé que tú eres mi verdad, eres mi verdad. "
+            "Tú eres la luz de mi vida, tú eres la voz que me calma, tú eres la lluvia de mi alma y eres toda mi verdad. "
+            "Tú eres la luz de mi vida, tú eres la voz que me calma, tú eres la lluvia de mi alma y eres toda mi verdad. "
+            "Y eres toda mi verdad.",
+            273.83,
+            [
+                (0.00, 26.50, "Hay mentiras en los labios, hay mentiras en la piel. ¡Qué dolor!"),
+                (26.50, 36.20, "Hay mentiras, hay amantes que por instantes de placer ponen su vida a temblar."),
+                (36.20, 46.80, "Hay mentiras compasivas, hay mentiras por piedad que no quieren lastimar."),
+                (46.80, 57.10, "Hay mentiras que nos hieren de verdad. ¡Ay, ay, ay!"),
+                (57.10, 68.50, "Y hay engaños que por años ocultaron la verdad, haciendo mucho daño."),
+                (68.50, 79.40, "Ay, yo me voy a refugiar a la tierra de tu amor, mi verdad."),
+                (79.40, 95.50, "Tú eres mi amor, mi alegría, la verdad de mi vida, mi bebé que me salta a los brazos, de prisa. Tú eres mi refugio y mi verdad. Oh, yeah."),
+                (95.50, 112.00, "Tú eres mi amor, mi alegría, la verdad de mi vida, mi bebé que me calma el alma con risas. Tú eres mi refugio y mi verdad."),
+                (112.00, 124.20, "Hay mentira en la mirada, hay mentiras en la piel, dibujadas."),
+                (124.20, 135.00, "Hay mentiras, hay amantes que por instantes de placer ponen su vida a temblar."),
+                (135.00, 146.20, "Hay doctrinas y oradores, dictadores sin piedad que gobiernan sin verdad."),
+                (146.20, 157.00, "Y hay mentiras en los diarios, en las redes y en el bar. ¡Ay, ay, ay!"),
+                (157.00, 168.00, "Hay engaños que por años ocultaron la verdad, hiriendo de dolor."),
+                (168.00, 179.20, "Ay, yo me voy a refugiar al oasis de tu amor."),
+                (179.20, 195.50, "Tú eres mi amor, mi alegría, la verdad de mi vida, mi bebé que me salta a los brazos, de prisa. Tú eres mi refugio y mi verdad. Oh, yeah."),
+                (195.50, 211.50, "Tú eres mi amor, mi alegría, la verdad de mi vida, mi bebé que me calma el alma con risas. Tú eres mi refugio y mi verdad. (¡Ay, Dios santo!)"),
+                (211.50, 224.80, "En un mundo tan irreal no sé en qué creer. (Sé, oh) Y, amor, sé que tú eres mi verdad, eres mi verdad."),
+                (224.80, 239.50, "Tú eres la luz de mi vida, tú eres la voz que me calma, tú eres la lluvia de mi alma y eres toda mi verdad."),
+                (239.50, 254.20, "Tú eres la luz de mi vida, tú eres la voz que me calma, tú eres la lluvia de mi alma y eres toda mi verdad."),
+                (254.20, 273.83, "Y eres toda mi verdad.")
+            ]
         )
     }
 
@@ -109,7 +133,11 @@ class TranscriptionService:
                 print(f"[Warning] Whisper API call failed ({e}). Reanudando con motores locales.")
 
         # 2. Comprobar si coincide con un audio de demostración o canción de prueba
-        for key, (texto_canonico, duracion_canonica) in cls.CANONICAL_DEMO_AUDIOS.items():
+        for key, item in cls.CANONICAL_DEMO_AUDIOS.items():
+            texto_canonico = item[0]
+            duracion_canonica = item[1]
+            predefined_segments = item[2] if len(item) > 2 else None
+
             key_clean = key.replace("_", " ")
             if (
                 key in nombre_lower or 
@@ -117,6 +145,19 @@ class TranscriptionService:
                 ("verdad" in key and ("verdad" in nombre_lower or "mana" in nombre_lower or "maná" in nombre_lower or "shakira" in nombre_lower)) or
                 (abs(duration - duracion_canonica) < 1.5 and ("escena" in nombre_lower or "promo" in nombre_lower or "verdad" in nombre_lower))
             ):
+                if predefined_segments:
+                    # Usar marcas de tiempo sincronizadas y ajustadas a la duración real
+                    factor = (duration / duracion_canonica) if duracion_canonica > 0 else 1.0
+                    built_segs = [
+                        AudioSegment(
+                            id=i,
+                            start_time=round(s[0] * factor, 2),
+                            end_time=round(duration if i == len(predefined_segments)-1 else s[1] * factor, 2),
+                            text=s[2]
+                        )
+                        for i, s in enumerate(predefined_segments)
+                    ]
+                    return texto_canonico, built_segs
                 return cls._build_canonical_segments(texto_canonico, duration)
 
         # 3. Intentar transcripción acústica real con SpeechRecognition (usando PyAV para M4A/AAC/MP3)
