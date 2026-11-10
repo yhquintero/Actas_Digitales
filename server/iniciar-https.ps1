@@ -5,12 +5,12 @@
 
 .DESCRIPTION
   Arranque todo en uno de Actas Digitales en Windows:
-  1) Libera el puerto 8443 si esta ocupado por Inventario / NovaGest u otra aplicacion.
-  2) Valida Python y librerias necesarias.
-  3) Genera certificados TLS 1.3 con SAN si faltan.
-  4) Registra la CA raiz en el almacen de Windows para activar el candado verde.
-  5) Inicia el servidor de Actas Digitales en segundo plano en el puerto 8443.
-  6) Abre automaticamente la Web en https://localhost:8443 y despliega el Panel de Control.
+  - Libera el puerto 8443 si esta ocupado por Inventario / NovaGest u otra aplicacion.
+  - Valida Python y librerias necesarias.
+  - Genera certificados TLS 1.3 con SAN si faltan.
+  - Registra la CA raiz en el almacen de Windows para activar el candado verde.
+  - Inicia el servidor de Actas Digitales en segundo plano en el puerto 8443.
+  - Abre automaticamente la Web en https://localhost:8443 y despliega el Panel de Control.
 
 .PARAMETER Puerto
   Puerto del servidor HTTPS. Por defecto 8443.
@@ -50,6 +50,17 @@ function Test-PuertoEnUso([int]$p) {
     } catch { return $false }
 }
 
+function Test-ActasOnline([int]$p) {
+    try {
+        [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
+        $resp = Invoke-RestMethod -Uri "https://localhost:$p/api/health" -Method Get -TimeoutSec 2 -ErrorAction Stop
+        if ($resp -and $resp.service -match "Actas Digitales") {
+            return $true
+        }
+    } catch { }
+    return $false
+}
+
 function Liberar-Puerto([int]$p) {
     $ocupantes = @()
     try {
@@ -79,7 +90,49 @@ function Liberar-Puerto([int]$p) {
         try { Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue } catch { }
         try { taskkill /F /PID $procId 2>$null | Out-Null } catch { }
     }
+
+    # Desalojar procesos python de Inventario / NovaGest en segundo plano
+    try {
+        Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
+            ($_.Name -match 'python' -or $_.CommandLine -match 'uvicorn') -and
+            ($_.CommandLine -match 'inventario|novagest') -and
+            $_.ProcessId -ne $PID
+        } | ForEach-Object {
+            Log-Aviso "Cerrando proceso secundario de Inventario (PID $($_.ProcessId))..."
+            try { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue } catch { }
+            try { taskkill /F /PID $_.ProcessId 2>$null | Out-Null } catch { }
+        }
+    } catch { }
+
     Start-Sleep -Milliseconds 1200
+}
+
+function Abrir-NavegadorLimpio($url) {
+    $edgePaths = @(
+        "$env:ProgramFiles (x86)\Microsoft\Edge\Application\msedge.exe",
+        "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe",
+        "$env:LOCALAPPDATA\Microsoft\Edge\Application\msedge.exe"
+    )
+    $edgeExe = $edgePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+
+    if ($edgeExe) {
+        Start-Process -FilePath $edgeExe -ArgumentList "-inprivate", $url
+        return "Microsoft Edge [InPrivate]"
+    }
+
+    $chromePaths = @(
+        "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
+        "$env:ProgramFiles (x86)\Google\Chrome\Application\chrome.exe",
+        "$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe"
+    )
+    $chromeExe = $chromePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+    if ($chromeExe) {
+        Start-Process -FilePath $chromeExe -ArgumentList "-incognito", $url
+        return "Google Chrome [Incognito]"
+    }
+
+    Start-Process $url
+    return "Navegador Predeterminado"
 }
 
 Write-Host ''
@@ -135,24 +188,27 @@ Log-Ok "Iniciando servidor de ACTAS DIGITALES en puerto $Puerto..."
 $ProcServidor = Start-Process -FilePath $PyExe -ArgumentList $ArgsUvicorn -WorkingDirectory $BackendDir `
     -WindowStyle Minimized -PassThru
 
-# 6. Esperar a que el servidor de Actas Digitales escuche en el puerto
+# 6. Esperar y confirmar que Actas Digitales responda en /api/health
 $Listo = $false
 $Limite = (Get-Date).AddSeconds(20)
 while ((Get-Date) -lt $Limite) {
-    if (Test-PuertoEnUso $Puerto) {
+    if (Test-ActasOnline $Puerto) {
         $Listo = $true
         break
     }
     Start-Sleep -Milliseconds 400
 }
 
+$UrlLimpia = "https://localhost:$Puerto/limpiar-cache"
 $UrlLocal = "https://localhost:$Puerto"
+
 if ($Listo) {
-    Log-Ok "Servidor ACTAS DIGITALES activo y respondiendo en: $UrlLocal"
+    Log-Ok "Servidor ACTAS DIGITALES confirmado y respondiendo en: $UrlLocal"
     if (-not $SinNavegador) {
         Start-Sleep -Milliseconds 500
-        Log-Ok "Abriendo aplicacion Web de Actas Digitales en el navegador..."
-        try { Start-Process $UrlLocal } catch { }
+        Log-Ok "Abriendo aplicacion Web de Actas Digitales en modo limpio sin cache..."
+        $nav = Abrir-NavegadorLimpio $UrlLimpia
+        Log-Ok "Navegador activo: $nav"
     }
 } else {
     Log-Fallo "El servidor tardo en responder. Revisa que el puerto $Puerto este libre."
