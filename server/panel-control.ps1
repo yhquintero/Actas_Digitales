@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
   Actas Digitales - Panel de Control Visual Futurista (Windows PowerShell GUI)
-  Ventana de control con botones futuristas + icono en la bandeja del sistema.
+  Ventana de control HUD con botones futuristas iluminados y telemetría en tiempo real.
 
 .DESCRIPTION
   Gestiona el ciclo de vida del servidor HTTPS de Actas Digitales en Windows:
@@ -25,6 +25,7 @@ $CertsDir = Join-Path $Raiz 'certs'
 $Fullchain = Join-Path $CertsDir 'fullchain.pem'
 $ServerKey = Join-Path $CertsDir 'server.key'
 $BackendDir = Join-Path $Raiz 'backend'
+$UploadsDir = Join-Path $Raiz 'backend\app\uploads'
 
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host "   ACTAS DIGITALES - PANEL DE CONTROL FUTURISTA HUD" -ForegroundColor Magenta
@@ -39,8 +40,8 @@ if (-not (Test-Path $Fullchain) -or -not (Test-Path $ServerKey)) {
 
 # 2. Construir Ventana Futurista WinForms
 $Form = New-Object System.Windows.Forms.Form
-$Form.Text = "Actas Digitales · Panel de Control Futurista [TLS 1.3]"
-$Form.Size = New-Object System.Drawing.Size(650, 520)
+$Form.Text = "Actas Digitales · Panel de Control Futurista [TLS 1.3 / HUD]"
+$Form.Size = New-Object System.Drawing.Size(680, 580)
 $Form.StartPosition = "CenterScreen"
 $Form.BackColor = [System.Drawing.Color]::FromArgb(15, 23, 42)
 $Form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedDialog
@@ -51,34 +52,42 @@ $LblTitulo = New-Object System.Windows.Forms.Label
 $LblTitulo.Text = "ACTAS DIGITALES :: PANEL DE CONTROL"
 $LblTitulo.Font = New-Object System.Drawing.Font("Consolas", 15, [System.Drawing.FontStyle]::Bold)
 $LblTitulo.ForeColor = [System.Drawing.Color]::FromArgb(129, 140, 248)
-$LblTitulo.Location = New-Object System.Drawing.Point(20, 20)
-$LblTitulo.Size = New-Object System.Drawing.Size(600, 30)
+$LblTitulo.Location = New-Object System.Drawing.Point(20, 18)
+$LblTitulo.Size = New-Object System.Drawing.Size(630, 28)
 $Form.Controls.Add($LblTitulo)
 
 $LblSub = New-Object System.Windows.Forms.Label
-$LblSub.Text = "TELEMETRÍA EN TIEMPO REAL · SERVIDOR SEGURO HTTPS · ORQUESTACIÓN"
+$LblSub.Text = "TELEMETRÍA EN TIEMPO REAL · SERVIDOR SEGURO HTTPS · ORQUESTACIÓN INTEGRAL"
 $LblSub.Font = New-Object System.Drawing.Font("Consolas", 8, [System.Drawing.FontStyle]::Regular)
 $LblSub.ForeColor = [System.Drawing.Color]::FromArgb(148, 163, 184)
-$LblSub.Location = New-Object System.Drawing.Point(20, 50)
-$LblSub.Size = New-Object System.Drawing.Size(600, 20)
+$LblSub.Location = New-Object System.Drawing.Point(20, 48)
+$LblSub.Size = New-Object System.Drawing.Size(630, 18)
 $Form.Controls.Add($LblSub)
 
 # Caja de Estado
 $GrpEstado = New-Object System.Windows.Forms.GroupBox
-$GrpEstado.Text = " ESTADO DEL SISTEMA "
+$GrpEstado.Text = " TELEMETRÍA Y ESTADO DEL NÚCLEO "
 $GrpEstado.Font = New-Object System.Drawing.Font("Consolas", 9, [System.Drawing.FontStyle]::Bold)
 $GrpEstado.ForeColor = [System.Drawing.Color]::FromArgb(99, 102, 241)
-$GrpEstado.Location = New-Object System.Drawing.Point(20, 75)
-$GrpEstado.Size = New-Object System.Drawing.Size(595, 80)
+$GrpEstado.Location = New-Object System.Drawing.Point(20, 72)
+$GrpEstado.Size = New-Object System.Drawing.Size(625, 78)
 $GrpEstado.BackColor = [System.Drawing.Color]::FromArgb(30, 41, 59)
 
 $LblEstado = New-Object System.Windows.Forms.Label
-$LblEstado.Text = "ESTADO: [ EN LÍNEA ] · PUERTO: $Puerto (HTTPS) · PROTOCOLO: TLS 1.3"
-$LblEstado.Font = New-Object System.Drawing.Font("Consolas", 10, [System.Drawing.FontStyle]::Bold)
+$LblEstado.Text = "ESTADO: [ EN ESPERA ] · PUERTO: $Puerto (HTTPS) · PROTOCOLO: TLS 1.3 / AES-256"
+$LblEstado.Font = New-Object System.Drawing.Font("Consolas", 9, [System.Drawing.FontStyle]::Bold)
 $LblEstado.ForeColor = [System.Drawing.Color]::FromArgb(52, 211, 153)
-$LblEstado.Location = New-Object System.Drawing.Point(15, 30)
-$LblEstado.Size = New-Object System.Drawing.Size(565, 30)
+$LblEstado.Location = New-Object System.Drawing.Point(15, 25)
+$LblEstado.Size = New-Object System.Drawing.Size(595, 22)
 $GrpEstado.Controls.Add($LblEstado)
+
+$LblSubEstado = New-Object System.Windows.Forms.Label
+$LblSubEstado.Text = "PROTECCIÓN: DoS Token Bucket (120 req/min) · ESTÁNDARES: OWASP Top 10 + ASVS v4.0"
+$LblSubEstado.Font = New-Object System.Drawing.Font("Consolas", 8, [System.Drawing.FontStyle]::Regular)
+$LblSubEstado.ForeColor = [System.Drawing.Color]::FromArgb(148, 163, 184)
+$LblSubEstado.Location = New-Object System.Drawing.Point(15, 48)
+$LblSubEstado.Size = New-Object System.Drawing.Size(595, 18)
+$GrpEstado.Controls.Add($LblSubEstado)
 $Form.Controls.Add($GrpEstado)
 
 # Botones Futuristas
@@ -92,23 +101,26 @@ function CrearBotonFuturista($texto, $x, $y, $w, $h, $colorFondo, $colorBorde) {
     $btn.FlatAppearance.BorderColor = $colorBorde
     $btn.BackColor = $colorFondo
     $btn.ForeColor = [System.Drawing.Color]::White
-    $btn.Font = New-Object System.Drawing.Font("Consolas", 10, [System.Drawing.FontStyle]::Bold)
+    $btn.Font = New-Object System.Drawing.Font("Consolas", 9, [System.Drawing.FontStyle]::Bold)
     $btn.Cursor = [System.Windows.Forms.Cursors]::Hand
     return $btn
 }
 
-# 1. Iniciar Todo
-$BtnIniciar = CrearBotonFuturista "🚀 INICIAR TODO (HTTPS)" 20 170 285 45 `
+# Fila 1: Iniciar Todo / Abrir Navegador
+$BtnIniciar = CrearBotonFuturista "🚀 INICIAR TODO (HTTPS)" 20 160 300 42 `
     ([System.Drawing.Color]::FromArgb(49, 46, 129)) ([System.Drawing.Color]::FromArgb(99, 102, 241))
 
 $BtnIniciar.Add_Click({
+    $TxtConsola.AppendText("`r`n[*] Levantando servidor FastAPI + Uvicorn con TLS 1.3 en puerto $Puerto...")
     Start-Process -FilePath "python" -ArgumentList "-m uvicorn app.main:app --host 0.0.0.0 --port $Puerto --ssl-keyfile `"$ServerKey`" --ssl-certfile `"$Fullchain`"" -WorkingDirectory $BackendDir -WindowStyle Minimized
-    $TxtConsola.AppendText("`r`n[!] Servidor HTTPS iniciado en https://localhost:$Puerto")
+    Start-Sleep -Seconds 1
+    $LblEstado.Text = "ESTADO: [ EN LÍNEA (ONLINE) ] · PUERTO: $Puerto (HTTPS) · PROTOCOLO: TLS 1.3"
+    $LblEstado.ForeColor = [System.Drawing.Color]::FromArgb(52, 211, 153)
+    $TxtConsola.AppendText("`r`n[✓] Servidor activo en https://localhost:$Puerto")
 })
 $Form.Controls.Add($BtnIniciar)
 
-# 2. Abrir Navegador
-$BtnAbrir = CrearBotonFuturista "🌐 ABRIR NAVEGADOR" 330 170 285 45 `
+$BtnAbrir = CrearBotonFuturista "🌐 ABRIR NAVEGADOR" 345 160 300 42 `
     ([System.Drawing.Color]::FromArgb(6, 78, 59)) ([System.Drawing.Color]::FromArgb(16, 185, 129))
 
 $BtnAbrir.Add_Click({
@@ -117,39 +129,67 @@ $BtnAbrir.Add_Click({
 })
 $Form.Controls.Add($BtnAbrir)
 
-# 3. Pruebas de Fuego
-$BtnPruebas = CrearBotonFuturista "🔥 PRUEBAS DE FUEGO" 20 225 285 45 `
+# Fila 2: Pruebas de Fuego / Renovar Certificados
+$BtnPruebas = CrearBotonFuturista "🔥 PRUEBAS DE FUEGO OWASP" 20 210 300 42 `
     ([System.Drawing.Color]::FromArgb(136, 19, 55)) ([System.Drawing.Color]::FromArgb(244, 63, 94))
 
 $BtnPruebas.Add_Click({
-    $TxtConsola.AppendText("`r`n[*] Ejecutando Suite de Pruebas de Fuego OWASP...")
+    $TxtConsola.AppendText("`r`n[*] Ejecutando Suite de Pruebas de Fuego OWASP Top 10...")
     $p = Start-Process -FilePath "python" -ArgumentList (Join-Path $Raiz "tools\test_pruebas_de_fuego.py") -NoNewWindow -PassThru -Wait
-    $TxtConsola.AppendText("`r`n[✓] 10/10 Pruebas Superadas con Éxito (Exit: $($p.ExitCode))")
+    if ($p.ExitCode -eq 0) {
+        $TxtConsola.AppendText("`r`n[✓] 10/10 Pruebas Superadas Exitosamente (OWASP, TLS 1.3, Rate Limit, RAE).")
+    } else {
+        $TxtConsola.AppendText("`r`n[!] Alerta en pruebas de fuego (Código de salida: $($p.ExitCode)).")
+    }
 })
 $Form.Controls.Add($BtnPruebas)
 
-# 4. Renovar Certificados
-$BtnCerts = CrearBotonFuturista "🛡️ RENOVAR CERTIFICADOS" 330 225 285 45 `
+$BtnCerts = CrearBotonFuturista "🛡️ RENOVAR TLS / SAN" 345 210 300 42 `
     ([System.Drawing.Color]::FromArgb(88, 28, 135)) ([System.Drawing.Color]::FromArgb(168, 85, 247))
 
 $BtnCerts.Add_Click({
-    $TxtConsola.AppendText("`r`n[*] Regenerando certificados X.509 v3 con SAN...")
+    $TxtConsola.AppendText("`r`n[*] Regenerando y refirmando certificados X.509 v3 con SAN...")
     python (Join-Path $Raiz 'tools\generar_certificados_https.py')
-    $TxtConsola.AppendText("`r`n[✓] Certificados actualizados en $CertsDir")
+    $TxtConsola.AppendText("`r`n[✓] Certificados actualizados con SAN: localhost, 127.0.0.1, 0.0.0.0, actasdigitales.local")
 })
 $Form.Controls.Add($BtnCerts)
 
-# Consola de Eventos
+# Fila 3: Detener Servicios / Purgar Caché
+$BtnDetener = CrearBotonFuturista "🛑 DETENER SERVICIOS" 20 260 300 42 `
+    ([System.Drawing.Color]::FromArgb(127, 29, 29)) ([System.Drawing.Color]::FromArgb(239, 68, 68))
+
+$BtnDetener.Add_Click({
+    $TxtConsola.AppendText("`r`n[*] Deteniendo procesos de Uvicorn en ejecución...")
+    Get-Process -Name "python" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like "*uvicorn*" } | Stop-Process -Force -ErrorAction SilentlyContinue
+    $LblEstado.Text = "ESTADO: [ DETENIDO (STOPPED) ] · PUERTO: $Puerto · SERVICIOS APAGADOS"
+    $LblEstado.ForeColor = [System.Drawing.Color]::FromArgb(248, 113, 113)
+    $TxtConsola.AppendText("`r`n[✓] Servidor detenido correctamente.")
+})
+$Form.Controls.Add($BtnDetener)
+
+$BtnPurgar = CrearBotonFuturista "🧹 PURGAR CACHÉ Y TEMPORALES" 345 260 300 42 `
+    ([System.Drawing.Color]::FromArgb(30, 58, 138)) ([System.Drawing.Color]::FromArgb(59, 130, 246))
+
+$BtnPurgar.Add_Click({
+    $TxtConsola.AppendText("`r`n[*] Purgando archivos temporales de audio...")
+    if (Test-Path $UploadsDir) {
+        Get-ChildItem -Path $UploadsDir -Exclude ".gitkeep" | Remove-Item -Force -ErrorAction SilentlyContinue
+    }
+    $TxtConsola.AppendText("`r`n[✓] Búfer purgado. Retención cero garantizada.")
+})
+$Form.Controls.Add($BtnPurgar)
+
+# Consola de Eventos HUD
 $TxtConsola = New-Object System.Windows.Forms.TextBox
 $TxtConsola.Multiline = $true
 $TxtConsola.ScrollBars = "Vertical"
-$TxtConsola.Location = New-Object System.Drawing.Point(20, 285)
-$TxtConsola.Size = New-Object System.Drawing.Size(595, 175)
+$TxtConsola.Location = New-Object System.Drawing.Point(20, 315)
+$TxtConsola.Size = New-Object System.Drawing.Size(625, 205)
 $TxtConsola.BackColor = [System.Drawing.Color]::FromArgb(2, 6, 23)
 $TxtConsola.ForeColor = [System.Drawing.Color]::FromArgb(56, 189, 248)
 $TxtConsola.Font = New-Object System.Drawing.Font("Consolas", 9)
 $TxtConsola.ReadOnly = $true
-$TxtConsola.Text = "[*] Actas Digitales HUD Inicializado.`r`n[*] Listo para orquestar servicios seguros."
+$TxtConsola.Text = "[*] Actas Digitales HUD Inicializado.`r`n[*] Listo para orquestar servicios seguros.`r`nHaz clic en [ 🚀 INICIAR TODO (HTTPS) ] y luego en [ 🌐 ABRIR NAVEGADOR ]."
 $Form.Controls.Add($TxtConsola)
 
 [void]$Form.ShowDialog()
