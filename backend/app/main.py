@@ -118,7 +118,7 @@ if static_dist_path.exists():
     if audio_dist_path.exists():
         app.mount("/audio", StaticFiles(directory=str(audio_dist_path)), name="audio")
 
-    @app.get("/{full_path:path}")
+    @app.api_route("/{full_path:path}", methods=["GET", "HEAD"])
     async def serve_spa(full_path: str):
         # Servir index.html para soportar rutas del cliente (SPA)
         file_path = static_dist_path / full_path
