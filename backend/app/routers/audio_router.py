@@ -3,7 +3,7 @@ import asyncio
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, List
-from fastapi import APIRouter, UploadFile, File, Form, Header, HTTPException, status
+from fastapi import APIRouter, UploadFile, File, Form, Header, HTTPException, status, Request
 from fastapi.responses import StreamingResponse, FileResponse
 import aiofiles
 
@@ -67,7 +67,7 @@ async def get_job_status(job_id: str):
     return job
 
 @router.get("/jobs/{job_id}/stream")
-async def stream_job_status(job_id: str):
+async def stream_job_status(job_id: str, request: Request):
     """
     Canal Server-Sent Events (SSE) para recibir actualizaciones en tiempo real
     del avance del procesamiento (Web y Android).
@@ -81,14 +81,23 @@ async def stream_job_status(job_id: str):
     async def event_generator():
         try:
             while True:
+                if await request.is_disconnected() or getattr(job_manager, "_is_shutting_down", False):
+                    break
                 try:
-                    updated_job: JobResponse = await asyncio.wait_for(queue.get(), timeout=15.0)
+                    updated_job: Optional[JobResponse] = await asyncio.wait_for(queue.get(), timeout=2.0)
+                    if updated_job is None:
+                        # Señal de apagado inmediato del servidor
+                        break
                     payload = updated_job.model_dump_json()
                     yield f"data: {payload}\n\n"
                     if updated_job.status in (JobStatus.COMPLETED, JobStatus.FAILED):
                         break
                 except asyncio.TimeoutError:
+                    if await request.is_disconnected() or getattr(job_manager, "_is_shutting_down", False):
+                        break
                     yield ": keepalive\n\n"
+        except (asyncio.CancelledError, Exception):
+            pass
         finally:
             job_manager.unsubscribe(job_id, queue)
 

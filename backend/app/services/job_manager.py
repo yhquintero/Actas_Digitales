@@ -14,6 +14,17 @@ class JobManager:
     def __init__(self):
         self._jobs: Dict[str, JobResponse] = {}
         self._subscribers: Dict[str, List[asyncio.Queue]] = {}
+        self._is_shutting_down: bool = False
+
+    def shutdown(self):
+        """Notifica inmediatamente a todas las conexiones activas el cierre del servidor."""
+        self._is_shutting_down = True
+        for queues in list(self._subscribers.values()):
+            for q in list(queues):
+                try:
+                    q.put_nowait(None)
+                except Exception:
+                    pass
 
     def create_job(self, filename: str, file_size_bytes: int, language: str = "es") -> JobResponse:
         job_id = str(uuid.uuid4())
