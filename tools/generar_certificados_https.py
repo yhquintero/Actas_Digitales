@@ -21,7 +21,7 @@ CERTS_DIR = Path(__file__).resolve().parent.parent / "certs"
 
 def generar_certificados_firmados(
     dias_validez: int = 825,
-    common_name: str = "actasdigitales.local",
+    common_name: str = "localhost",
     salida_dir: Path = CERTS_DIR
 ):
     salida_dir.mkdir(parents=True, exist_ok=True)

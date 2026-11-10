@@ -139,13 +139,18 @@ def main():
     import uvicorn
     from app.main import app
 
-    uvicorn.run(
-        app,
-        host=args.host,
-        port=args.port,
-        log_level="info",
-        **ssl_kwargs
-    )
+    try:
+        uvicorn.run(
+            app,
+            host=args.host,
+            port=args.port,
+            log_level="info",
+            timeout_graceful_shutdown=1,
+            **ssl_kwargs
+        )
+    except KeyboardInterrupt:
+        print("\n[*] Servidor detenido inmediatamente por el usuario.")
+        sys.exit(0)
 
 if __name__ == "__main__":
     main()

@@ -65,6 +65,7 @@ class JobManager:
         self,
         job_id: str,
         file_path: Path,
+        client_transcription: Optional[str] = None,
         custom_api_key: str = ""
     ):
         job = self._jobs.get(job_id)
@@ -94,6 +95,7 @@ class JobManager:
             raw_text, segments = TranscriptionService.transcribe(
                 file_path=file_path,
                 language=job.language,
+                client_transcription=client_transcription,
                 custom_api_key=custom_api_key
             )
             job.raw_transcription = raw_text

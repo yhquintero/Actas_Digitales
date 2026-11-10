@@ -69,7 +69,45 @@ class AudioService:
             return f"{m:02d}:{s:02d}"
 
     @staticmethod
-    def analyze_audio_metadata(file_path: Path) -> Dict[str, Any]:
+    def convert_to_pcm_wav(file_path: Path, output_wav: Path) -> bool:
+        """
+        Convierte cualquier formato de audio compatible a un archivo WAV PCM 16kHz mono.
+        Utiliza miniaudio (decodificador en C sin ffmpeg para MP3, FLAC, OGG, WAV) o ffmpeg.
+        """
+        ext = file_path.suffix.lower()
+        if ext == ".wav":
+            try:
+                with wave.open(str(file_path), "rb") as wf:
+                    if wf.getnchannels() > 0 and wf.getframerate() > 0:
+                        return True
+            except Exception:
+                pass
+
+        # 1. Intentar con miniaudio
+        try:
+            import miniaudio
+            decoded = miniaudio.decode_file(str(file_path), nchannels=1, sample_rate=16000)
+            if decoded and decoded.samples:
+                with wave.open(str(output_wav), "wb") as wf:
+                    wf.setnchannels(1)
+                    wf.setsampwidth(2)
+                    wf.setframerate(16000)
+                    wf.writeframes(decoded.samples)
+                return True
+        except Exception:
+            pass
+
+        # 2. Intentar con ffmpeg del sistema
+        try:
+            import subprocess
+            cmd = ["ffmpeg", "-y", "-i", str(file_path), "-ar", "16000", "-ac", "1", "-f", "wav", str(output_wav)]
+            res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            if res.returncode == 0 and output_wav.exists() and output_wav.stat().st_size > 44:
+                return True
+        except Exception:
+            pass
+
+        return False
         """Extrae metadatos técnicos acústicos del archivo."""
         duration = AudioService.get_exact_audio_duration(file_path)
         bitrate = 64000

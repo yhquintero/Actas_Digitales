@@ -17,25 +17,27 @@ echo.
 set "CA_CERT=%~dp0certs\ca.crt"
 
 if not exist "%CA_CERT%" (
-    echo [*] Generando certificados TLS 1.3 primero...
+    echo [*] Generando certificados TLS 1.3 actualizados...
     python "%~dp0tools\generar_certificados_https.py"
 )
 
-echo [*] Registrando certificado raíz en el almacén de usuario de Windows...
+echo [*] Registrando certificado raíz ca.crt en el almacén de usuario de Windows...
 certutil -user -addstore -f "Root" "%CA_CERT%"
 
 if %ERRORLEVEL% EQU 0 (
     echo.
     echo ======================================================================
-    echo  [✓] ¡CERTIFICADO INSTALADO CON ÉXITO!
+    echo  [✓] ¡CERTIFICADO RAÍZ REGISTRADO CON ÉXITO!
     echo ======================================================================
     echo Ahora puedes acceder con total seguridad a:
     echo    https://localhost:8443
     echo    https://127.0.0.1:8443
-    echo El navegador mostrará la conexión como segura y privada.
+    echo.
+    echo Reinicia o refresca tu navegador (Chrome o Edge) para aplicar los cambios.
+    echo El navegador mostrará la conexión como completamente segura y privada.
 ) else (
     echo.
-    echo [!] Solicitando permisos de administrador para instalar a nivel de máquina...
+    echo [!] Solicitando permisos de administrador para instalar en el almacén del sistema...
     powershell -Command "Start-Process certutil -ArgumentList '-addstore -f Root \"%CA_CERT%\"' -Verb RunAs"
 )
 

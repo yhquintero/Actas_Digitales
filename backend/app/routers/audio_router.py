@@ -20,6 +20,7 @@ router = APIRouter(prefix="/audio", tags=["Audio & Transcripción"])
 async def upload_audio(
     file: UploadFile = File(...),
     language: str = Form("es"),
+    client_transcription: Optional[str] = Form(None),
     x_api_key: Optional[str] = Header(None, alias="X-API-Key")
 ):
     """
@@ -48,6 +49,7 @@ async def upload_audio(
         job_manager.process_job(
             job_id=job.job_id,
             file_path=target_path,
+            client_transcription=client_transcription,
             custom_api_key=x_api_key or ""
         )
     )
@@ -79,11 +81,14 @@ async def stream_job_status(job_id: str):
     async def event_generator():
         try:
             while True:
-                updated_job: JobResponse = await queue.get()
-                payload = updated_job.model_dump_json()
-                yield f"data: {payload}\n\n"
-                if updated_job.status in (JobStatus.COMPLETED, JobStatus.FAILED):
-                    break
+                try:
+                    updated_job: JobResponse = await asyncio.wait_for(queue.get(), timeout=15.0)
+                    payload = updated_job.model_dump_json()
+                    yield f"data: {payload}\n\n"
+                    if updated_job.status in (JobStatus.COMPLETED, JobStatus.FAILED):
+                        break
+                except asyncio.TimeoutError:
+                    yield ": keepalive\n\n"
         finally:
             job_manager.unsubscribe(job_id, queue)
 
@@ -354,8 +359,13 @@ async def renew_system_certs():
     """
     Regenera y refirma los certificados X.509 v3 con SAN y clave RSA-4096.
     """
-    from ...tools.generar_certificados_https import generar_certificados_firmados
-    fullchain, key = generar_certificados_firmados()
+    import sys
+    root_dir = Path(__file__).resolve().parent.parent.parent.parent
+    tools_dir = root_dir / "tools"
+    if str(tools_dir) not in sys.path:
+        sys.path.insert(0, str(tools_dir))
+    import generar_certificados_https
+    fullchain, key = generar_certificados_https.generar_certificados_firmados(salida_dir=root_dir / "certs")
     return {
         "status": "SUCCESS",
         "message": "Certificados TLS 1.3 refirmados y renovados exitosamente.",
