@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Mic, Square, RotateCcw, Send, AlertCircle } from 'lucide-react';
+import { Mic, Square, RotateCcw, Send, AlertCircle, Sparkles } from 'lucide-react';
 
 interface AudioRecorderProps {
-  onAudioRecorded: (file: File) => void;
+  onAudioRecorded: (file: File, clientTranscript?: string) => void;
   isLoading: boolean;
 }
 
@@ -11,11 +11,13 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioRecorded, i
   const [recordDuration, setRecordDuration] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [liveTranscript, setLiveTranscript] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<number | null>(null);
+  const recognitionRef = useRef<any>(null);
 
   // Web Audio Analyser para visualizador de ondas
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -28,6 +30,11 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioRecorded, i
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
       if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
         audioContextRef.current.close();
+      }
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (_) {}
       }
     };
   }, []);
@@ -72,6 +79,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioRecorded, i
     setError(null);
     setAudioUrl(null);
     setAudioBlob(null);
+    setLiveTranscript('');
     setRecordDuration(0);
     chunksRef.current = [];
 
@@ -122,6 +130,31 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioRecorded, i
       mediaRecorder.start(250);
       setIsRecording(true);
 
+      // Iniciar reconocimiento de voz en tiempo real con Web Speech API
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        try {
+          const recognition = new SpeechRecognition();
+          recognition.lang = 'es-ES';
+          recognition.continuous = true;
+          recognition.interimResults = true;
+          recognition.onresult = (event: any) => {
+            let finalStr = '';
+            for (let i = 0; i < event.results.length; i++) {
+              finalStr += event.results[i][0].transcript + ' ';
+            }
+            setLiveTranscript(finalStr.trim());
+          };
+          recognition.onerror = (e: any) => {
+            console.log('Web Speech API info:', e);
+          };
+          recognition.start();
+          recognitionRef.current = recognition;
+        } catch (e) {
+          console.warn('SpeechRecognition no iniciado:', e);
+        }
+      }
+
       timerRef.current = window.setInterval(() => {
         setRecordDuration((prev) => prev + 1);
       }, 1000);
@@ -136,6 +169,11 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioRecorded, i
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       if (timerRef.current) clearInterval(timerRef.current);
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (_) {}
+      }
     }
   };
 
@@ -144,8 +182,14 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioRecorded, i
     setRecordDuration(0);
     setAudioUrl(null);
     setAudioBlob(null);
+    setLiveTranscript('');
     setError(null);
     if (timerRef.current) clearInterval(timerRef.current);
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (_) {}
+    }
   };
 
   const handleSubmit = () => {
@@ -153,7 +197,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioRecorded, i
     const file = new File([audioBlob], `grabacion_acta_${Date.now()}.webm`, {
       type: audioBlob.type || 'audio/webm',
     });
-    onAudioRecorded(file);
+    onAudioRecorded(file, liveTranscript.trim() || undefined);
   };
 
   const formatDuration = (secs: number) => {
@@ -201,6 +245,19 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioRecorded, i
         {isRecording && (
           <div className="w-full max-w-xs mb-4">
             <canvas ref={canvasRef} width={280} height={40} className="w-full h-10 rounded-lg bg-slate-900 shadow-inner" />
+          </div>
+        )}
+
+        {/* Live speech preview if captured */}
+        {liveTranscript && (
+          <div className="w-full max-w-lg mb-5 p-3.5 bg-indigo-50/70 border border-indigo-200 rounded-xl text-left">
+            <div className="flex items-center space-x-1.5 text-xs font-semibold text-indigo-700 mb-1">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Voz captada en vivo:</span>
+            </div>
+            <p className="text-xs text-slate-700 font-mono italic leading-relaxed">
+              "{liveTranscript}"
+            </p>
           </div>
         )}
 

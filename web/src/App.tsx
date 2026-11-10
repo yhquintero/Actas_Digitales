@@ -44,12 +44,15 @@ export const App: React.FC = () => {
     loadRecentJobs();
   }, []);
 
-  const handleAudioSubmit = async (file: File) => {
+  const handleAudioSubmit = async (file: File, clientTranscript?: string) => {
     setIsUploading(true);
     try {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('language', 'es');
+      if (clientTranscript && clientTranscript.trim()) {
+        formData.append('client_transcription', clientTranscript.trim());
+      }
 
       const headers: Record<string, string> = {};
       if (apiKey) {
