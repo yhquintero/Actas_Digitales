@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="brand/actas-digitales-icon.svg" width="104" alt="Logotipo de Actas Digitales" />
+<img src="brand/actas-digitales-icon.png" width="104" alt="Logotipo de Actas Digitales" />
 
 # Actas Digitales
 
@@ -26,7 +26,7 @@
 </div>
 
 <p align="center">
-  <img src="brand/actas-digitales-hero.svg" width="100%" alt="Actas Digitales: Panel en el navegador, App Android nativa y conexión segura TLS 1.3" />
+  <img src="brand/actas-digitales-hero.png" width="100%" alt="Actas Digitales: Panel en el navegador, App Android nativa y conexión segura TLS 1.3" />
 </p>
 
 > [!TIP]
@@ -113,6 +113,38 @@ Actas Digitales está compuesto por **tres componentes que trabajan de forma sin
 - 🔍 **Auditoría de cambios** — Listado pormenorizado de cada corrección aplicada con su categoría (*muletilla, repetición, ortografía, puntuación*) y justificación.
 - 📑 **Estructuración en Acta Oficial RAE** — Convierte el texto corregido en un documento formal con título, asistentes, orden del día, acuerdos numerados (`ACUERDO-01`, etc.) y pie de firmas para Presidente y Secretario.
 - 💾 **Exportación multipropósito** — Copiado instantáneo al portapapeles, descarga en `.txt` UTF-8, archivo `.md` (Markdown) o impresión/guardado en PDF vectorial.
+
+---
+
+## 📸 Capturas
+
+*Datos de demostración del proyecto: sesión oficial simulada con supresión de muletillas y corrección ortotipográfica RAE.*
+
+<p align="center">
+  <img src="docs/assets/capturas/galeria-actas-digitales.png" width="100%" alt="Actas Digitales: Panel Web, App Android, Comparativa de calidad y Pipeline lingüístico" />
+</p>
+
+<table>
+  <tr>
+    <td width="50%" valign="top"><img src="docs/assets/capturas/grabacion-audio.png" alt="Grabación de audio en vivo con micrófono y muestreo de 16 kHz" /><br /><sub><b>Grabación en directo</b> — captura acústica con cancelación de eco y medidor de tiempo.</sub></td>
+    <td width="50%" valign="top"><img src="docs/assets/capturas/pipeline-progreso.png" alt="Pipeline de 5 fases en tiempo real con SSE" /><br /><sub><b>Pipeline en 5 fases</b> — Ingesta, VAD, STT fonético, Consolidación y Corrección RAE.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top"><img src="docs/assets/capturas/comparativa-antes-despues.png" alt="Comparativa Antes y Después con texto crudo vs consolidado" /><br /><sub><b>Comparativa Antes / Después</b> — texto crudo con tartamudeos frente al acta limpia.</sub></td>
+    <td width="50%" valign="top"><img src="docs/assets/capturas/acta-oficial-rae.png" alt="Acta Oficial RAE con orden del día, acuerdos y firmas" /><br /><sub><b>Acta Oficial RAE</b> — orden del día, acuerdos numerados y espacio legal para firmas.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top"><img src="docs/assets/capturas/auditoria-correcciones.png" alt="Auditoría de correcciones y muletillas eliminadas" /><br /><sub><b>Auditoría de cambios</b> — desglose de muletillas, repeticiones y tildes corregidas.</sub></td>
+    <td width="50%" valign="top"><img src="docs/assets/capturas/app-android-movil.png" alt="Aplicación Android nativa en Kotlin con Jetpack Compose" /><br /><sub><b>App Android nativa</b> — interfaz Compose con subida resiliente en segundo plano.</sub></td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="docs/assets/actas-digitales-movil.png" width="100%" alt="Actas Digitales en el móvil: Web PWA instalable y Android nativo con Jetpack Compose" />
+  <br /><sub>Actas Digitales en movilidad: Web PWA instalable y app Android nativa con WorkManager.</sub>
+</p>
+
+▶️ **Vídeo:** [presentación oficial de 3 min (1080p60, narración en español y subtítulos)](docs/PROPUESTA_VIDEO_PROMOCIONAL.md) · [reproductor interactivo en la app Web](web/) · [manual imprimible de usuario](docs/MANUAL_USUARIO.html)
 
 ---
 
@@ -204,7 +236,10 @@ python3 tools/test_seguridad_https.py
 # 2. Pruebas del pipeline de consolidación, desduplicación y ortografía en español
 python3 tools/test_pipeline.py
 
-# 3. Verificación de compilación y tipado estricto de la Web
+# 3. Suite de Pruebas de Fuego, Fuzzing y Estándares OWASP Top 10
+python3 tools/test_pruebas_de_fuego.py
+
+# 4. Verificación de compilación y tipado estricto de la Web
 cd web && npm run build && cd ..
 ```
 
@@ -283,6 +318,27 @@ Actas_Digitales/
 ---
 
 ## ❓ Preguntas frecuentes
+
+<details>
+<summary><b>¿Cómo solucionar el error de descarga en GitHub Desktop («curl 56 Recv failure» / «early EOF»)?</b></summary>
+
+<br />
+
+Este error ocurre cuando la conexión de red local sufre un microcorte o el búfer HTTP de Git en tu equipo tiene el tamaño mínimo por defecto (1 MB). Para resolverlo al instante en tu equipo, abre la terminal o PowerShell y amplía el búfer de Git:
+
+```bash
+git config --global http.postBuffer 524288000
+git config --global http.maxRequestBuffer 100M
+git config --global core.compression 0
+```
+
+Alternativamente, si deseas clonar de inmediato sin descargar el historial completo de commits anteriores, ejecuta una clonación superficial (*shallow clone*):
+
+```bash
+git clone --depth 1 https://github.com/yhquintero/Actas_Digitales.git
+```
+
+</details>
 
 <details>
 <summary><b>¿Funciona sin conexión a internet externa?</b></summary>

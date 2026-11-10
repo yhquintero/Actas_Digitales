@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="../../brand/actas-digitales-icon.svg" width="104" alt="Actas Digitales Logo" />
+<img src="../../brand/actas-digitales-icon.png" width="104" alt="Actas Digitales Logo" />
 
 # Actas Digitales
 
@@ -21,6 +21,10 @@
 [![License](https://img.shields.io/badge/license-proprietary-475569?style=flat-square)](../../LICENSE)
 
 </div>
+
+<p align="center">
+  <img src="../../brand/actas-digitales-hero.png" width="100%" alt="Actas Digitales: Web Browser, Native Android app, and Secure TLS 1.3 connection" />
+</p>
 
 ---
 
