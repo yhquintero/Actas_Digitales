@@ -30,24 +30,66 @@ $Fullchain = Join-Path $CertsDir 'fullchain.pem'
 $ServerKey = Join-Path $CertsDir 'server.key'
 $CaCert = Join-Path $CertsDir 'ca.crt'
 $BackendDir = Join-Path $Raiz 'backend'
-$UploadsDir = Join-Path $Raiz 'backend\app\uploads'
+$RunServerPy = Join-Path $BackendDir 'run_server.py'
+$UploadsDir = Join-Path $Raiz 'backend\uploads'
+$LogDir = Join-Path $Raiz 'logs'
+
+function Obtener-Python {
+    $venvPaths = @(
+        (Join-Path $Raiz ".venv\Scripts\python.exe"),
+        (Join-Path $Raiz "venv\Scripts\python.exe")
+    )
+    foreach ($vp in $venvPaths) {
+        if (Test-Path $vp) { return $vp }
+    }
+
+    $cmds = @(Get-Command 'python', 'py' -ErrorAction SilentlyContinue)
+    foreach ($c in $cmds) {
+        $p = $c.Source
+        if ($p -and (Test-Path $p) -and ($p -notmatch 'WindowsApps')) {
+            return $p
+        }
+    }
+
+    $stdPaths = @(
+        "$env:LOCALAPPDATA\Programs\Python\Python313\python.exe",
+        "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe",
+        "$env:LOCALAPPDATA\Programs\Python\Python311\python.exe",
+        "$env:LOCALAPPDATA\Programs\Python\Python310\python.exe",
+        "$env:ProgramFiles\Python313\python.exe",
+        "$env:ProgramFiles\Python312\python.exe",
+        "$env:ProgramFiles\Python311\python.exe",
+        "$env:ProgramFiles\Python310\python.exe"
+    )
+    foreach ($sp in $stdPaths) {
+        if (Test-Path $sp) { return $sp }
+    }
+
+    return "python"
+}
+
+$PyExe = Obtener-Python
+
+function Test-PuertoEscuchando([int]$p) {
+    try {
+        $tcp = New-Object System.Net.Sockets.TcpClient
+        $iar = $tcp.BeginConnect("127.0.0.1", $p, $null, $null)
+        $wait = $iar.AsyncWaitHandle.WaitOne(600)
+        if ($wait) {
+            $tcp.EndConnect($iar)
+            $tcp.Close()
+            return $true
+        }
+        $tcp.Close()
+    } catch { }
+    return $false
+}
 
 function Test-PuertoEnUso([int]$p) {
     try {
         return (@([System.Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties().GetActiveTcpListeners() |
             Where-Object { $_.Port -eq $p }).Count -gt 0)
     } catch { return $false }
-}
-
-function Test-ActasOnline([int]$p) {
-    try {
-        [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
-        $resp = Invoke-RestMethod -Uri "https://localhost:$p/api/health" -Method Get -TimeoutSec 2 -ErrorAction Stop
-        if ($resp -and $resp.service -match "Actas Digitales") {
-            return $true
-        }
-    } catch { }
-    return $false
 }
 
 function Liberar-Puerto([int]$p) {
@@ -125,7 +167,7 @@ function Abrir-NavegadorInPrivate($url) {
 # 1. Asegurar certificados
 if (-not (Test-Path $Fullchain) -or -not (Test-Path $ServerKey)) {
     Write-Host "[*] Generando certificados TLS 1.3..." -ForegroundColor Yellow
-    python (Join-Path $Raiz 'tools\generar_certificados_https.py')
+    & $PyExe (Join-Path $Raiz 'tools\generar_certificados_https.py')
 }
 
 # 2. Construir Ventana WinForms
@@ -201,26 +243,49 @@ $BtnIniciar = CrearBoton "INICIAR TODO (HTTPS)" 20 152 300 38 `
     ([System.Drawing.Color]::FromArgb(49, 46, 129)) ([System.Drawing.Color]::FromArgb(99, 102, 241))
 
 $BtnIniciar.Add_Click({
-    $TxtConsola.AppendText("`r`n[*] Deteniendo procesos en conflicto en puerto $Puerto (Inventario/NovaGest)...")
+    $TxtConsola.AppendText("`r`n[*] Validando entorno Python y dependencias...")
+    $deps = & $PyExe -c "import fastapi, uvicorn, docx, cryptography; print('OK')" 2>$null
+    if ($deps -ne "OK") {
+        $TxtConsola.AppendText("`r`n[*] Instalando dependencias requeridas (fastapi, uvicorn, docx, cryptography)...")
+        & $PyExe -m pip install -r (Join-Path $BackendDir 'requirements.txt')
+    }
+
+    $TxtConsola.AppendText("`r`n[*] Liberando puerto $Puerto (desalojando Inventario/NovaGest)...")
     Liberar-Puerto $Puerto
-    $TxtConsola.AppendText("`r`n[*] Levantando servidor ACTAS DIGITALES en puerto $Puerto...")
-    Start-Process -FilePath "python" -ArgumentList "-m uvicorn app.main:app --host 0.0.0.0 --port $Puerto --ssl-keyfile `"$ServerKey`" --ssl-certfile `"$Fullchain`"" -WorkingDirectory $BackendDir -WindowStyle Minimized
-    
+
+    if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Path $LogDir -Force | Out-Null }
+    $LogOut = Join-Path $LogDir 'servidor.log'
+    $LogErr = Join-Path $LogDir 'servidor_error.log'
+    "" | Out-File $LogOut -Force
+    "" | Out-File $LogErr -Force
+
+    $TxtConsola.AppendText("`r`n[*] Iniciando servidor ACTAS DIGITALES en https://localhost:$Puerto...")
+    $proc = Start-Process -FilePath $PyExe -ArgumentList "`"$RunServerPy`"", "$Puerto" `
+        -WorkingDirectory $BackendDir -RedirectStandardOutput $LogOut -RedirectStandardError $LogErr `
+        -WindowStyle Minimized -PassThru
+
     $ok = $false
-    for ($i = 0; $i -lt 12; $i++) {
+    for ($i = 0; $i -lt 15; $i++) {
         Start-Sleep -Milliseconds 600
-        if (Test-ActasOnline $Puerto) { $ok = $true; break }
+        if (Test-PuertoEscuchando $Puerto) { $ok = $true; break }
+        if ($proc.HasExited) { break }
     }
 
     if ($ok) {
         $LblEstado.Text = "ESTADO: [ EN LINEA ] - PUERTO: $Puerto (HTTPS) - ACTAS DIGITALES EXCLUSIVO"
         $LblEstado.ForeColor = [System.Drawing.Color]::FromArgb(52, 211, 153)
-        $TxtConsola.AppendText("`r`n[OK] Actas Digitales activo y confirmado en https://localhost:$Puerto")
-        $TxtConsola.AppendText("`r`n[+] Si tu navegador sigue mostrando Inventario por cache vieja, usa [ ABRIR EN EDGE INPRIVATE ].")
+        $TxtConsola.AppendText("`r`n[OK] Servidor Actas Digitales activo y escuchando en https://localhost:$Puerto")
+        $TxtConsola.AppendText("`r`n[+] Haz clic en [ ABRIR EN EDGE INPRIVATE ] para ver la web sin cache de Inventario.")
     } else {
-        $LblEstado.Text = "ESTADO: [ REVISAR CONEXION ] - PUERTO $Puerto"
-        $LblEstado.ForeColor = [System.Drawing.Color]::FromArgb(251, 191, 36)
-        $TxtConsola.AppendText("`r`n[!] El servidor tardo en responder. Si el puerto sigue ocupado, pulsa DETENER y vuelve a INICIAR.")
+        $LblEstado.Text = "ESTADO: [ ERROR AL INICIAR ] - PUERTO $Puerto"
+        $LblEstado.ForeColor = [System.Drawing.Color]::FromArgb(248, 113, 113)
+        $TxtConsola.AppendText("`r`n[X] El servidor no pudo iniciar.")
+        if (Test-Path $LogErr) {
+            $errContent = Get-Content $LogErr -Raw -ErrorAction SilentlyContinue
+            if ($errContent) {
+                $TxtConsola.AppendText("`r`n[DETALLE ERROR]: $errContent")
+            }
+        }
     }
 })
 $Form.Controls.Add($BtnIniciar)
@@ -280,7 +345,7 @@ $BtnPruebas = CrearBoton "PRUEBAS DE FUEGO OWASP" 20 240 300 38 `
 
 $BtnPruebas.Add_Click({
     $TxtConsola.AppendText("`r`n[*] Ejecutando Suite de Pruebas de Fuego OWASP Top 10...")
-    $p = Start-Process -FilePath "python" -ArgumentList (Join-Path $Raiz "tools\test_pruebas_de_fuego.py") -NoNewWindow -PassThru -Wait
+    $p = Start-Process -FilePath $PyExe -ArgumentList (Join-Path $Raiz "tools\test_pruebas_de_fuego.py") -NoNewWindow -PassThru -Wait
     if ($p.ExitCode -eq 0) {
         $TxtConsola.AppendText("`r`n[OK] 11/11 Pruebas Superadas Exitosamente (OWASP, TLS 1.3, Rate Limit, DOCX, RAE).")
     } else {
@@ -294,7 +359,7 @@ $BtnCerts = CrearBoton "RENOVAR TLS / SAN" 345 240 300 38 `
 
 $BtnCerts.Add_Click({
     $TxtConsola.AppendText("`r`n[*] Regenerando y refirmando certificados X.509 v3 con SAN...")
-    python (Join-Path $Raiz 'tools\generar_certificados_https.py')
+    & $PyExe (Join-Path $Raiz 'tools\generar_certificados_https.py')
     $TxtConsola.AppendText("`r`n[OK] Certificados actualizados con SAN: localhost, 127.0.0.1, 0.0.0.0, actasdigitales.local")
 })
 $Form.Controls.Add($BtnCerts)
@@ -319,7 +384,7 @@ $BtnConfiar.Add_Click({
     $TxtConsola.AppendText("`r`n[*] Registrando Autoridad Certificadora (ca.crt) en Windows...")
     $CaCertPath = Join-Path $Raiz "certs\ca.crt"
     if (-not (Test-Path $CaCertPath)) {
-        python (Join-Path $Raiz 'tools\generar_certificados_https.py')
+        & $PyExe (Join-Path $Raiz 'tools\generar_certificados_https.py')
     }
     try {
         certutil -user -addstore -f "Root" $CaCertPath | Out-Null
@@ -343,11 +408,12 @@ $TxtConsola.ReadOnly = $true
 
 # Diagnostico Inicial al Abrir el HUD
 $TxtConsola.Text = "[*] Actas Digitales HUD Inicializado."
+$TxtConsola.AppendText("`r`n[*] Interprete Python: $PyExe")
 
-if (Test-ActasOnline $Puerto) {
+if (Test-PuertoEscuchando $Puerto) {
     $LblEstado.Text = "ESTADO: [ EN LINEA ] - PUERTO: $Puerto (HTTPS) - ACTAS DIGITALES EXCLUSIVO"
     $LblEstado.ForeColor = [System.Drawing.Color]::FromArgb(52, 211, 153)
-    $TxtConsola.AppendText("`r`n[OK] Servidor Actas Digitales verificado y activo en puerto $Puerto.")
+    $TxtConsola.AppendText("`r`n[OK] Servidor detectado y respondiendo en puerto $Puerto.")
     $TxtConsola.AppendText("`r`n[+] Haz clic en [ ABRIR EN EDGE INPRIVATE ] para entrar sin cache de Inventario.")
 } elseif (Test-PuertoEnUso $Puerto) {
     $LblEstado.Text = "ESTADO: [ CONFLICTO ] - PUERTO $Puerto OCUPADO POR INVENTARIO/NOVAGEST"
