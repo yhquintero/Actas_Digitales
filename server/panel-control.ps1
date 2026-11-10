@@ -36,6 +36,8 @@ $LogDir = Join-Path $Raiz 'logs'
 
 function Obtener-Python {
     $venvPaths = @(
+        (Join-Path $Raiz "backend\venv\Scripts\python.exe"),
+        (Join-Path $Raiz "backend\.venv\Scripts\python.exe"),
         (Join-Path $Raiz ".venv\Scripts\python.exe"),
         (Join-Path $Raiz "venv\Scripts\python.exe")
     )

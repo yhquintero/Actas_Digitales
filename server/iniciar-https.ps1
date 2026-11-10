@@ -46,6 +46,8 @@ function Log-Fallo($m) { Write-Host "  [X] $m" -ForegroundColor Red }
 
 function Obtener-Python {
     $venvPaths = @(
+        (Join-Path $Raiz "backend\venv\Scripts\python.exe"),
+        (Join-Path $Raiz "backend\.venv\Scripts\python.exe"),
         (Join-Path $Raiz ".venv\Scripts\python.exe"),
         (Join-Path $Raiz "venv\Scripts\python.exe")
     )
