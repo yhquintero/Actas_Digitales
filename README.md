@@ -142,12 +142,11 @@ Actas Digitales incorpora un **Panel de Control Centralizado de Alto Rendimiento
 
 ### 💻 1. Ejecución de la Web desde el Panel de Control en Windows (1 Clic)
 
-Diseñado siguiendo el patrón de arquitectura centralizada de herramientas de escritorio de alto rendimiento:
+Diseñado siguiendo el patrón de arquitectura centralizada de herramientas de escritorio de alto rendimiento (inspirado en `yhquintero/inventario`):
 
-1. **Lanzamiento:** Haz doble clic sobre el archivo ejecutable **`iniciar-panel.bat`** (o `server\panel-control.bat`) ubicado en la carpeta raíz del repositorio.
-2. **Auto-diagnóstico y Certificados:** El panel verifica en milisegundos que el entorno Python esté disponible y que existan los certificados TLS 1.3 firmados con SAN (`localhost`, `127.0.0.1`, `0.0.0.0`, `actasdigitales.local`). Si es la primera ejecución, los genera y firma automáticamente con su CA local RSA-4096.
-3. **Paso 1 · Iniciar el Servidor:** Pulsa el botón futurista iluminado **`[ 🚀 INICIAR TODO (HTTPS) ]`**. El panel arrancará el servidor FastAPI + Uvicorn con TLS 1.3 en el puerto 8443 en segundo plano de manera desacoplada. El indicador de telemetría pasará inmediatamente a `ESTADO: [ EN LÍNEA (ONLINE) ]` en color esmeralda brillante.
-4. **Paso 2 · Abrir la Web:** Pulsa el botón **`[ 🌐 ABRIR NAVEGADOR ]`**. El sistema abrirá automáticamente tu navegador web predeterminado en **`https://localhost:8443`**, cargando la aplicación Web completa con captura por micrófono, procesamiento fonético y exportador de actas RAE.
+1. **Lanzamiento Automático en 1 Clic:** Haz doble clic sobre el archivo ejecutable **`iniciar-https.bat`** (o `iniciar-panel.bat` / `server\iniciar-https.ps1`) ubicado en la carpeta raíz del repositorio.
+2. **Auto-diagnóstico, Certificados y Confianza Windows:** El sistema verifica Python, comprueba o genera los certificados TLS 1.3 con SAN e instala automáticamente la Autoridad Raíz (`ca.crt`) en el almacén de Windows (`certutil -user -addstore -f "Root"`), eliminando avisos de privacidad y activando el candado verde en Chrome y Edge.
+3. **Arranque en Segundo Plano y Apertura Web:** Arranca FastAPI + Uvicorn con TLS 1.3 en el puerto 8443 en segundo plano, y tan pronto como el puerto está listo, **abre automáticamente tu navegador web en `https://localhost:8443`** con la aplicación Web completa y despliega la consola HUD del Panel de Control.
 
 #### Matriz de Controles del Panel de Control de Windows
 
