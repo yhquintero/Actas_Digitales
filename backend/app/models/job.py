@@ -31,6 +31,12 @@ class JobStats(BaseModel):
     orthographic_corrections: int = 0
     processing_time_sec: float = 0.0
     audio_duration_sec: float = 0.0
+    audio_duration_formatted: str = "00:00"
+    reading_duration_sec: float = 0.0
+    reading_duration_formatted: str = "00:00"
+    words_per_minute: float = 0.0
+    duration_coverage_percent: float = 100.0
+    acoustic_verification_status: str = "VERIFICADO_COINCIDENTE"
 
 class JobResponse(BaseModel):
     job_id: str

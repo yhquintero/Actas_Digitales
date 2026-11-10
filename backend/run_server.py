@@ -18,6 +18,23 @@ if str(BASE_DIR) not in sys.path:
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
+# Silenciar excepcion benigna de Windows asyncio Proactor en desconexiones SSE
+if sys.platform == "win32":
+    try:
+        import asyncio
+        from asyncio.proactor_events import _ProactorBasePipeTransport
+        _orig_ccl = _ProactorBasePipeTransport._call_connection_lost
+        def _silent_ccl(self, exc):
+            try:
+                _orig_ccl(self, exc)
+            except ConnectionResetError:
+                pass
+            except Exception:
+                pass
+        _ProactorBasePipeTransport._call_connection_lost = _silent_ccl
+    except Exception:
+        pass
+
 def ejecutar_pip_install(py_exe, req_path):
     cmd = [str(py_exe), "-m", "pip", "install", "-r", str(req_path)]
     try:

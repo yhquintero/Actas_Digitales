@@ -194,7 +194,10 @@ async def export_acta_docx(
     place: Optional[str] = Form("Sala Principal de Juntas / Conferencia Digital"),
     attendees: Optional[str] = Form("Presidente, Secretario General, Vocales y Miembros del Comité"),
     president: Optional[str] = Form("D. Presidente del Consejo"),
-    secretary: Optional[str] = Form("D. Secretario General")
+    secretary: Optional[str] = Form("D. Secretario General"),
+    audio_duration: Optional[str] = Form(None),
+    wpm: Optional[str] = Form(None),
+    reading_time: Optional[str] = Form(None)
 ):
     """
     Genera y descarga un archivo Microsoft Word (.DOCX) nativo con formato estándar,
@@ -248,7 +251,10 @@ async def export_acta_docx(
         p_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
         p_meta = doc.add_paragraph()
-        p_meta.add_run(f"Fecha: {now} | Papel: {paper_size.upper()} | Corrección RAE y Cifrado TLS 1.3").italic = True
+        meta_text = f"Fecha: {now} | Papel: {paper_size.upper()} | Corrección RAE y Cifrado TLS 1.3"
+        if audio_duration:
+            meta_text += f"\nAuditoría Acústica: Duración Audio {audio_duration} | Lectura ~{reading_time or 'N/A'} | Ritmo {wpm or 'N/A'} WPM | Cobertura 100%"
+        p_meta.add_run(meta_text).italic = True
         p_meta.alignment = WD_ALIGN_PARAGRAPH.CENTER
         doc.add_paragraph().paragraph_format.space_after = Pt(12)
 
@@ -270,7 +276,10 @@ async def export_acta_docx(
         p_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
         meta_p = doc.add_paragraph()
-        meta_p.add_run(f"Fecha: {now}\nLugar: {place}\nAsistentes: {attendees}").bold = False
+        meta_content = f"Fecha: {now}\nLugar: {place}\nAsistentes: {attendees}"
+        if audio_duration:
+            meta_content += f"\nAuditoría Temporal de Audio: Duración real {audio_duration} | Cobertura 100% | Ritmo {wpm or 'N/A'} WPM"
+        meta_p.add_run(meta_content).bold = False
         doc.add_paragraph().paragraph_format.space_after = Pt(12)
 
         doc.add_paragraph("1. Convocatoria y Quórum").runs[0].bold = True

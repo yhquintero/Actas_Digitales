@@ -25,6 +25,9 @@ class PruebasDeFuegoSeguridad(unittest.TestCase):
     def setUpClass(cls):
         cls.client = TestClient(app)
         cls.certs_dir = BASE_DIR / "certs"
+        if not (cls.certs_dir / "server.crt").exists():
+            from tools.generar_certificados_https import generar_certificados_firmados
+            generar_certificados_firmados(salida_dir=cls.certs_dir)
 
     # ==========================================
     # 1. OWASP Top 10 & Fuzzing de Entradas
