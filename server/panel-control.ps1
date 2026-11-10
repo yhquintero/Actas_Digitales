@@ -111,12 +111,24 @@ $BtnIniciar = CrearBotonFuturista "🚀 INICIAR TODO (HTTPS)" 20 160 300 42 `
     ([System.Drawing.Color]::FromArgb(49, 46, 129)) ([System.Drawing.Color]::FromArgb(99, 102, 241))
 
 $BtnIniciar.Add_Click({
-    $TxtConsola.AppendText("`r`n[*] Levantando servidor FastAPI + Uvicorn con TLS 1.3 en puerto $Puerto...")
+    $TxtConsola.AppendText("`r`n[*] Verificando disponibilidad de puerto $Puerto para Actas Digitales...")
+    try {
+        $procs = Get-NetTCPConnection -LocalPort $Puerto -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
+        foreach ($pidOcupante in $procs) {
+            if ($pidOcupante -and $pidOcupante -ne $PID) {
+                $TxtConsola.AppendText("`r`n[!] Liberando proceso previo (PID $pidOcupante)...")
+                Stop-Process -Id $pidOcupante -Force -ErrorAction SilentlyContinue
+            }
+        }
+        Start-Sleep -Seconds 1
+    } catch { }
+
+    $TxtConsola.AppendText("`r`n[*] Levantando servidor ACTAS DIGITALES con TLS 1.3 en puerto $Puerto...")
     Start-Process -FilePath "python" -ArgumentList "-m uvicorn app.main:app --host 0.0.0.0 --port $Puerto --ssl-keyfile `"$ServerKey`" --ssl-certfile `"$Fullchain`"" -WorkingDirectory $BackendDir -WindowStyle Minimized
     Start-Sleep -Seconds 1
-    $LblEstado.Text = "ESTADO: [ EN LÍNEA (ONLINE) ] · PUERTO: $Puerto (HTTPS) · PROTOCOLO: TLS 1.3"
+    $LblEstado.Text = "ESTADO: [ EN LÍNEA (ONLINE) ] · PUERTO: $Puerto (HTTPS) · ACTAS DIGITALES ACTIVO"
     $LblEstado.ForeColor = [System.Drawing.Color]::FromArgb(52, 211, 153)
-    $TxtConsola.AppendText("`r`n[✓] Servidor activo en https://localhost:$Puerto")
+    $TxtConsola.AppendText("`r`n[✓] Servidor ACTAS DIGITALES activo en https://localhost:$Puerto")
 })
 $Form.Controls.Add($BtnIniciar)
 

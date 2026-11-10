@@ -147,5 +147,22 @@ class PruebasDeFuegoSeguridad(unittest.TestCase):
         self.assertIn("Presidente", data["formatted_acta"])
         self.assertIn("Secretario", data["formatted_acta"])
 
+    def test_11_exportacion_docx_por_tipo_de_hoja(self):
+        """Genera documento .DOCX nativo adaptado a hoja A4, Carta y Oficio."""
+        for papel in ["a4", "letter", "legal"]:
+            res = self.client.post(
+                "/api/audio/export-docx",
+                data={
+                    "text": "Texto completo y traducción de la reunión del comité.",
+                    "title": "Reunión de Consejo",
+                    "export_type": "full_text",
+                    "paper_size": papel,
+                    "margin_type": "standard"
+                }
+            )
+            self.assertEqual(res.status_code, 200)
+            self.assertIn("application/vnd.openxmlformats-officedocument", res.headers["content-type"])
+            self.assertGreater(len(res.content), 1000)
+
 if __name__ == "__main__":
     unittest.main()
