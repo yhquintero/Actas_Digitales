@@ -28,6 +28,12 @@ export interface JobStats {
   orthographic_corrections: number;
   processing_time_sec: number;
   audio_duration_sec: number;
+  audio_duration_formatted?: string;
+  reading_duration_sec?: number;
+  reading_duration_formatted?: string;
+  words_per_minute?: number;
+  duration_coverage_percent?: number;
+  acoustic_verification_status?: string;
 }
 
 export interface JobResponse {

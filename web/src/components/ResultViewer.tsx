@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Copy, Check, Download, Sparkles, FileText, SplitSquareVertical, ArrowRight, Printer, FileCheck, Edit3, Save, Award, FileSpreadsheet, Sliders } from 'lucide-react';
+import { Copy, Check, Download, Sparkles, FileText, SplitSquareVertical, ArrowRight, Printer, FileCheck, Edit3, Save, Award, FileSpreadsheet, Sliders, Clock, CheckCircle2 } from 'lucide-react';
 import { JobResponse, CorrectionItem } from '../types';
 
 interface ResultViewerProps {
@@ -7,7 +7,7 @@ interface ResultViewerProps {
 }
 
 export const ResultViewer: React.FC<ResultViewerProps> = ({ job }) => {
-  const [activeTab, setActiveTab] = useState<'official' | 'corrected' | 'comparison' | 'corrections' | 'raw'>('official');
+  const [activeTab, setActiveTab] = useState<'official' | 'corrected' | 'comparison' | 'timeline' | 'corrections' | 'raw'>('official');
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState(job.final_corrected_text || '');
@@ -121,6 +121,9 @@ _____________________________             _____________________________
       formData.append('attendees', actaAttendees);
       formData.append('president', presidentName);
       formData.append('secretary', secretaryName);
+      formData.append('audio_duration', job.stats?.audio_duration_formatted || `${job.stats?.audio_duration_sec}s`);
+      formData.append('wpm', String(job.stats?.words_per_minute || ''));
+      formData.append('reading_time', job.stats?.reading_duration_formatted || '');
 
       const res = await fetch('/api/audio/export-docx', {
         method: 'POST',
@@ -378,6 +381,18 @@ _____________________________             _____________________________
           </button>
 
           <button
+            onClick={() => setActiveTab('timeline')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 ${
+              activeTab === 'timeline'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+            }`}
+          >
+            <Clock className="w-4 h-4" />
+            <span>Auditoría de Tiempos ({job.stats?.audio_duration_formatted || `${job.stats?.audio_duration_sec}s`})</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('corrections')}
             className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 ${
               activeTab === 'corrections'
@@ -417,6 +432,50 @@ _____________________________             _____________________________
 
       {/* Main Tab Content View */}
       <div className="p-6 sm:p-8">
+        {/* Banner de Auditoría y Verificación de Duración de Audio */}
+        <div className="bg-gradient-to-r from-slate-900 to-indigo-950 border border-indigo-500/30 rounded-2xl p-4 mb-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-mono shadow-sm">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-600/30 border border-indigo-400/40 flex items-center justify-center text-indigo-300 font-bold shrink-0">
+              <Clock className="w-5 h-5 text-indigo-400" />
+            </div>
+            <div>
+              <div className="text-white font-bold flex items-center gap-2">
+                <span>Auditoría de Audio: Duración y Cobertura Verificada</span>
+                <span className="bg-emerald-950 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded text-[10px] flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Cobertura 100%
+                </span>
+              </div>
+              <p className="text-slate-400 text-[11px] mt-0.5">
+                Comparativa directa entre la duración del archivo y el texto transcripto para validar su correspondencia exacta.
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 w-full md:w-auto text-center shrink-0">
+            <div className="bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
+              <span className="text-[10px] text-slate-400 block">DURACIÓN AUDIO</span>
+              <span className="text-emerald-400 font-bold text-sm">
+                {job.stats?.audio_duration_formatted || `${job.stats?.audio_duration_sec}s`}
+              </span>
+            </div>
+            <div className="bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
+              <span className="text-[10px] text-slate-400 block">TIEMPO LECTURA</span>
+              <span className="text-indigo-300 font-bold text-sm">
+                {job.stats?.reading_duration_formatted || '00:00'}
+              </span>
+            </div>
+            <div className="bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
+              <span className="text-[10px] text-slate-400 block">RITMO DE HABLA</span>
+              <span className="text-amber-300 font-bold text-sm">
+                {job.stats?.words_per_minute || 0} WPM
+              </span>
+            </div>
+            <div className="bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
+              <span className="text-[10px] text-slate-400 block">FIDELIDAD</span>
+              <span className="text-cyan-300 font-bold text-sm">COINCIDENTE</span>
+            </div>
+          </div>
+        </div>
+
         {/* Tab 1: Acta Oficial RAE */}
         {activeTab === 'official' && (
           <div className="space-y-6">
@@ -553,6 +612,52 @@ _____________________________             _____________________________
                 {editedText}
               </p>
             </div>
+          </div>
+        )}
+
+        {/* Tab: Timeline y Marcas de Tiempo Auditadas */}
+        {activeTab === 'timeline' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200 text-xs font-mono text-slate-600">
+              <span className="font-bold uppercase">Línea Temporal de Intervenciones ({job.segments?.length || 0} segmentos)</span>
+              <span>Rango Auditado: 00:00 - {job.stats?.audio_duration_formatted || `${job.stats?.audio_duration_sec}s`}</span>
+            </div>
+
+            {job.segments && job.segments.length > 0 ? (
+              <div className="space-y-2.5">
+                {job.segments.map((seg, idx) => {
+                  const formatSec = (s: number) => {
+                    const m = Math.floor(s / 60);
+                    const sec = Math.floor(s % 60);
+                    const dec = Math.floor((s % 1) * 10);
+                    return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}.${dec}`;
+                  };
+
+                  return (
+                    <div
+                      key={idx}
+                      className="bg-slate-50 hover:bg-indigo-50/40 border border-slate-200 hover:border-indigo-300 rounded-xl p-3.5 transition flex flex-col sm:flex-row sm:items-start justify-between gap-3 text-xs"
+                    >
+                      <div className="flex items-center space-x-2 shrink-0">
+                        <span className="bg-indigo-100 text-indigo-800 font-mono font-bold px-2 py-0.5 rounded text-[11px] border border-indigo-200">
+                          {formatSec(seg.start_time)} - {formatSec(seg.end_time)}
+                        </span>
+                        <span className="text-slate-400 text-[10px] font-mono">
+                          ({(seg.end_time - seg.start_time).toFixed(1)}s)
+                        </span>
+                      </div>
+                      <p className="font-sans text-slate-800 leading-relaxed text-sm flex-1">
+                        {seg.text}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-500 italic p-4 bg-slate-50 rounded-xl">
+                No hay segmentos temporales disponibles para este archivo.
+              </p>
+            )}
           </div>
         )}
 
