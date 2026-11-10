@@ -80,6 +80,13 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleMultipleAudiosSubmit = async (files: File[]) => {
+    if (files.length === 0) return;
+    for (const f of files) {
+      await handleAudioSubmit(f);
+    }
+  };
+
   const subscribeToJobStream = (jobId: string) => {
     const eventSource = new EventSource(`/api/audio/jobs/${jobId}/stream`);
 
@@ -241,7 +248,11 @@ export const App: React.FC = () => {
 
             {/* Selected Input Component */}
             {activeInputTab === 'upload' ? (
-              <AudioUploader onFileSelected={handleAudioSubmit} isLoading={isUploading} />
+              <AudioUploader
+                onFileSelected={handleAudioSubmit}
+                onFilesSelected={handleMultipleAudiosSubmit}
+                isLoading={isUploading}
+              />
             ) : (
               <AudioRecorder onAudioRecorded={handleAudioSubmit} isLoading={isUploading} />
             )}

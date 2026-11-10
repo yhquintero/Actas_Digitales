@@ -47,7 +47,7 @@
 - **Navegadores recomendados:** Google Chrome 100+, Mozilla Firefox 100+, Microsoft Edge 100+, Safari 16+.
 - **Protocolo:** HTTPS con TLS 1.2 / TLS 1.3 mandatorio para habilitar el acceso al micrófono (`navigator.mediaDevices.getUserMedia`).
 - **Formatos de audio admitidos:** `.mp3`, `.wav`, `.m4a`, `.ogg`, `.webm`, `.flac`, `.aac`.
-- **Límite de tamaño sugerido:** Hasta 100 MB por archivo.
+- **Límite de tamaño sugerido:** Hasta **1 GB (1024 MB)** por archivo, con soporte para selección múltiple simultánea.
 
 ### 2.2. Aplicación Android
 - **Sistema Operativo:** Android 8.0 (Oreo / API 26) o superior (probado en Android 14+).
@@ -151,8 +151,8 @@ Para obtener una precisión superior al 95%:
 | :--- | :--- | :--- |
 | **El navegador no permite activar el micrófono** | La página se abrió por HTTP inseguro | Accede obligatoriamente mediante `https://`. Los navegadores modernos bloquean el micrófono en páginas no seguras. |
 | **Error 400: Formato no permitido** | El archivo tiene una extensión no soportada | Convierte el archivo a `.mp3`, `.wav` o `.m4a` antes de subirlo. |
-| **Error 413: Archivo excede el tamaño máximo** | La grabación pesa más de 100 MB | Comprime el audio a MP3 mono a 64 kbps o divide la grabación en partes de 1 hora. |
-| **Aviso de certificado no seguro en el navegador** | Certificado autofirmado pendiente de confiar | Instala el certificado `ca.crt` en tu sistema operativo como entidad emisora de confianza. |
+| **Error 413: Archivo excede el tamaño máximo** | La grabación pesa más de 1 GB (1024 MB) | Sube grabaciones de hasta 1 GB por archivo o divídelas si superan dicho volumen. |
+| **Aviso de certificado no seguro en el navegador (NET::ERR_CERT_AUTHORITY_INVALID)** | Certificado de CA local no registrado en Windows | Ejecuta el archivo `instalar-certificado-confianza.bat` o pulsa `[ 🔒 CONFIAR CA EN WINDOWS ]` en el Panel de Control para activar el candado verde en Chrome y Edge. |
 | **La app Android indica error de conexión** | IP o puerto inaccesible en la red | Verifica que el firewall del servidor permita el puerto configurado (ej. 8000 u 8443) y que ambos equipos estén en la misma subred. |
 
 ---

@@ -41,7 +41,7 @@ if (-not (Test-Path $Fullchain) -or -not (Test-Path $ServerKey)) {
 # 2. Construir Ventana Futurista WinForms
 $Form = New-Object System.Windows.Forms.Form
 $Form.Text = "Actas Digitales · Panel de Control Futurista [TLS 1.3 / HUD]"
-$Form.Size = New-Object System.Drawing.Size(680, 580)
+$Form.Size = New-Object System.Drawing.Size(680, 630)
 $Form.StartPosition = "CenterScreen"
 $Form.BackColor = [System.Drawing.Color]::FromArgb(15, 23, 42)
 $Form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedDialog
@@ -179,12 +179,31 @@ $BtnPurgar.Add_Click({
 })
 $Form.Controls.Add($BtnPurgar)
 
+# Fila 4: Confiar Certificado CA en Windows (Candado verde en Chrome / Edge)
+$BtnConfiar = CrearBotonFuturista "🔒 CONFIAR CA EN WINDOWS (CANDADO VERDE)" 20 310 625 40 `
+    ([System.Drawing.Color]::FromArgb(4, 120, 87)) ([System.Drawing.Color]::FromArgb(16, 185, 129))
+
+$BtnConfiar.Add_Click({
+    $TxtConsola.AppendText("`r`n[*] Registrando Autoridad Certificadora (ca.crt) en el almacén de Windows...")
+    $CaCertPath = Join-Path $Raiz "certs\ca.crt"
+    if (-not (Test-Path $CaCertPath)) {
+        python (Join-Path $Raiz 'tools\generar_certificados_https.py')
+    }
+    try {
+        certutil -user -addstore -f "Root" $CaCertPath | Out-Null
+        $TxtConsola.AppendText("`r`n[✓] ¡Certificado Raíz registrado con éxito! Chrome y Edge mostrarán el candado verde.")
+    } catch {
+        $TxtConsola.AppendText("`r`n[!] Error al registrar el certificado: $_")
+    }
+})
+$Form.Controls.Add($BtnConfiar)
+
 # Consola de Eventos HUD
 $TxtConsola = New-Object System.Windows.Forms.TextBox
 $TxtConsola.Multiline = $true
 $TxtConsola.ScrollBars = "Vertical"
-$TxtConsola.Location = New-Object System.Drawing.Point(20, 315)
-$TxtConsola.Size = New-Object System.Drawing.Size(625, 205)
+$TxtConsola.Location = New-Object System.Drawing.Point(20, 360)
+$TxtConsola.Size = New-Object System.Drawing.Size(625, 215)
 $TxtConsola.BackColor = [System.Drawing.Color]::FromArgb(2, 6, 23)
 $TxtConsola.ForeColor = [System.Drawing.Color]::FromArgb(56, 189, 248)
 $TxtConsola.Font = New-Object System.Drawing.Font("Consolas", 9)
