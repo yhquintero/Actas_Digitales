@@ -14,7 +14,9 @@ class AudioService:
         
         max_bytes = settings.MAX_FILE_SIZE_MB * 1024 * 1024
         if file_size > max_bytes:
-            return False, f"El archivo excede el tamaño máximo permitido de {settings.MAX_FILE_SIZE_MB} MB"
+            limite_gb = round(settings.MAX_FILE_SIZE_MB / 1024, 1)
+            limite_str = f"{limite_gb:g} GB" if limite_gb >= 1 else f"{settings.MAX_FILE_SIZE_MB} MB"
+            return False, f"El archivo excede el tamaño máximo permitido de {limite_str} ({settings.MAX_FILE_SIZE_MB} MB)"
             
         return True, None
 

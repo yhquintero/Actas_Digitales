@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Play, Pause, RotateCcw, Volume2, VolumeX, ShieldCheck, Sparkles, Smartphone, Globe, Lock } from 'lucide-react';
+import { X, Play, Pause, RotateCcw, Volume2, VolumeX, ShieldCheck, Sparkles, Smartphone, Globe, Lock, Mic } from 'lucide-react';
 
 interface PromoVideoModalProps {
   isOpen: boolean;
@@ -12,6 +12,7 @@ interface Scene {
   startSec: number;
   endSec: number;
   subtitles: string;
+  narrationText: string;
   visualType: 'problem' | 'ecosystem' | 'pipeline' | 'correction' | 'security' | 'outro';
 }
 
@@ -22,6 +23,7 @@ const SCENES: Scene[] = [
     startSec: 0,
     endSec: 30,
     subtitles: "En cada empresa o asamblea, las decisiones nacen de una conversación. Pero transcribir grabaciones a mano cuesta días enteros de trabajo agotador y propenso a errores.",
+    narrationText: "En cada empresa o asamblea, las decisiones más importantes nacen de una conversación. Pero transcribir grabaciones a mano cuesta días enteros de trabajo agotador, lleno de vacilaciones y propenso a errores.",
     visualType: 'problem'
   },
   {
@@ -30,6 +32,7 @@ const SCENES: Scene[] = [
     startSec: 30,
     endSec: 60,
     subtitles: "Te presentamos Actas Digitales: captura la voz de tus reuniones y transfórmala al instante en documentos formales limpios, en Web, Servidor propio y Android nativo.",
+    narrationText: "Te presentamos Actas Digitales. Captura la voz de tus reuniones y transfórmala al instante en documentos formales limpios. Disponible en Web instalable, Servidor privado y aplicación Android nativa.",
     visualType: 'ecosystem'
   },
   {
@@ -38,6 +41,7 @@ const SCENES: Scene[] = [
     startSec: 60,
     endSec: 105,
     subtitles: "Detección de voz (VAD), normalización de audio y transcripción fonética calibrada estrictamente para el idioma español, reconociendo términos técnicos y acentos.",
+    narrationText: "Nuestro pipeline de inteligencia acústica aplica detección de voz, normalización y transcripción fonética calibrada estrictamente para el idioma español, reconociendo términos técnicos y acentos.",
     visualType: 'pipeline'
   },
   {
@@ -46,6 +50,7 @@ const SCENES: Scene[] = [
     startSec: 105,
     endSec: 140,
     subtitles: "Aquí ocurre la verdadera magia: nuestro motor elimina tartamudeos, suprime muletillas orales, inyecta signos ¿ y ¡ obligatorios y corrige todas las tildes del español.",
+    narrationText: "Aquí ocurre la verdadera magia. Nuestro motor elimina tartamudeos, suprime muletillas orales, inyecta los signos de apertura reglamentarios y corrige todas las tildes del español según la Real Academia Española.",
     visualType: 'correction'
   },
   {
@@ -54,6 +59,7 @@ const SCENES: Scene[] = [
     startSec: 140,
     endSec: 165,
     subtitles: "Tu información confidencial está blindada: cifrado HTTPS de extremo a extremo, certificados firmados, HSTS y la opción de operar 100% en tu servidor privado.",
+    narrationText: "Tu información confidencial está totalmente blindada. Cifrado HTTPS de extremo a extremo con TLS 1.3, certificados firmados, HSTS y la opción de operar al cien por ciento en tu servidor privado.",
     visualType: 'security'
   },
   {
@@ -62,6 +68,7 @@ const SCENES: Scene[] = [
     startSec: 165,
     endSec: 180,
     subtitles: "Pasa de la voz al acuerdo formal en segundos. Exporta en Markdown, PDF y TXT listo para firmar. Descubre la potencia de Actas Digitales.",
+    narrationText: "Pasa de la voz al acuerdo formal en segundos. Exporta en Markdown, PDF y formato de texto listo para firmar. Descubre la potencia de Actas Digitales.",
     visualType: 'outro'
   }
 ];
@@ -70,40 +77,143 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
   const [isPlaying, setIsPlaying] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
+  const [activeVoice, setActiveVoice] = useState<SpeechSynthesisVoice | null>(null);
   const totalDuration = 180; // 3 minutos = 180 segundos
 
-  const lastTimestampRef = useRef<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const lastSpokenSceneRef = useRef<number | null>(null);
+
+  // Inicializar voces del sistema para narración fluida femenina en español
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      const loadVoices = () => {
+        const voices = window.speechSynthesis.getVoices();
+        // Buscar voz femenina en español (Mónica, Paulina, Lucía, Helena, Laura, etc.)
+        const spanishFemale = voices.find(
+          (v) =>
+            v.lang.startsWith('es') &&
+            (v.name.toLowerCase().includes('monica') ||
+              v.name.toLowerCase().includes('paulina') ||
+              v.name.toLowerCase().includes('lucia') ||
+              v.name.toLowerCase().includes('helena') ||
+              v.name.toLowerCase().includes('sabina') ||
+              v.name.toLowerCase().includes('female') ||
+              v.name.toLowerCase().includes('natural') ||
+              v.name.toLowerCase().includes('mujer'))
+        ) || voices.find((v) => v.lang.startsWith('es'));
+        
+        if (spanishFemale) {
+          setActiveVoice(spanishFemale);
+        }
+      };
+
+      loadVoices();
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }, []);
+
+  // Reproducir archivo de audio real o fallback con síntesis de voz
+  const playCurrentSceneAudio = (scene: Scene) => {
+    if (isMuted) return;
+
+    if (audioRef.current) {
+      audioRef.current.src = `/audio/escena_${scene.id}.mp3`;
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(() => {
+        speakCurrentSceneFallback(scene);
+      });
+    } else {
+      speakCurrentSceneFallback(scene);
+    }
+  };
+
+  const speakCurrentSceneFallback = (scene: Scene) => {
+    if (isMuted || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(scene.narrationText);
+    utterance.lang = 'es-ES';
+    utterance.rate = 1.0;
+    utterance.pitch = 1.05;
+    if (activeVoice) {
+      utterance.voice = activeVoice;
+    }
+    window.speechSynthesis.speak(utterance);
+  };
 
   // Reproductor con reloj sincronizado
   useEffect(() => {
     if (!isOpen) {
       setIsPlaying(false);
       setCurrentTime(0);
-      lastTimestampRef.current = null;
+      lastSpokenSceneRef.current = null;
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
       return;
     }
 
     let timer: number;
     if (isPlaying) {
+      if (audioRef.current && audioRef.current.paused && !isMuted) {
+        audioRef.current.play().catch(() => {});
+      }
       timer = window.setInterval(() => {
         setCurrentTime((prev) => {
           if (prev >= totalDuration) {
             setIsPlaying(false);
+            if (audioRef.current) {
+              audioRef.current.pause();
+            }
+            if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+              window.speechSynthesis.cancel();
+            }
             return totalDuration;
           }
           return prev + 1;
         });
       }, 1000);
+    } else {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.pause();
+      }
     }
 
     return () => clearInterval(timer);
   }, [isPlaying, isOpen]);
 
-  if (!isOpen) return null;
-
   const currentScene = SCENES.find(
     (s) => currentTime >= s.startSec && currentTime < s.endSec
   ) || SCENES[SCENES.length - 1];
+
+  // Disparar locución de audio cuando cambia la escena
+  useEffect(() => {
+    if (isOpen && isPlaying && !isMuted) {
+      if (lastSpokenSceneRef.current !== currentScene.id) {
+        lastSpokenSceneRef.current = currentScene.id;
+        playCurrentSceneAudio(currentScene);
+      }
+    }
+  }, [currentScene.id, isPlaying, isMuted, isOpen]);
+
+  // Si se silencia o reactiva audio
+  useEffect(() => {
+    if (isMuted) {
+      if (audioRef.current) audioRef.current.pause();
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    } else if (!isMuted && isPlaying) {
+      playCurrentSceneAudio(currentScene);
+    }
+  }, [isMuted]);
+
+  if (!isOpen) return null;
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
@@ -112,12 +222,17 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
   };
 
   const handleSeek = (newSec: number) => {
-    setCurrentTime(Math.min(totalDuration, Math.max(0, newSec)));
+    const target = Math.min(totalDuration, Math.max(0, newSec));
+    setCurrentTime(target);
+    lastSpokenSceneRef.current = null;
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in">
+    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in select-none">
       <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl flex flex-col">
+        {/* Elemento de Audio Nativo */}
+        <audio ref={audioRef} src="/audio/promocional_actas_digitales.mp3" preload="auto" />
+
         {/* Modal Top Bar */}
         <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -125,34 +240,40 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
             <h3 className="text-white font-bold text-base tracking-wide flex items-center gap-2">
               <span>Vídeo Promocional (3 Minutos)</span>
               <span className="text-xs bg-indigo-600/50 text-indigo-200 border border-indigo-400/30 px-2 py-0.5 rounded-full font-mono">
-                1080p · Español Oficial
+                1080p · Locución Femenina en Español
               </span>
             </h3>
           </div>
           <button
-            onClick={onClose}
+            onClick={() => {
+              if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+              }
+              onClose();
+            }}
             className="text-slate-400 hover:text-white p-1 rounded-lg transition hover:bg-slate-800"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Video Canvas / Screen Area */}
-        <div className="relative aspect-video bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 flex flex-col items-center justify-center p-8 overflow-hidden select-none">
-          {/* Background Ambient Effect */}
-          <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:16px_16px]"></div>
-
-          {/* Current Scene Badge */}
-          <div className="absolute top-4 left-6 flex items-center space-x-2">
-            <span className="text-xs font-mono font-bold bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 px-3 py-1 rounded-full">
+        {/* Video Canvas Area */}
+        <div className="relative aspect-video bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex flex-col items-center justify-between p-6 overflow-hidden">
+          {/* Top Badge: Scene Indicator & Audio Status */}
+          <div className="w-full flex items-center justify-between z-10">
+            <div className="bg-indigo-950/80 border border-indigo-500/30 px-3 py-1 rounded-full text-indigo-300 text-xs font-semibold backdrop-blur-sm">
               {currentScene.title}
-            </span>
-          </div>
+            </div>
 
-          <div className="absolute top-4 right-6 flex items-center space-x-2">
-            <span className="text-xs font-mono font-bold text-slate-400">
-              {formatTime(currentTime)} / 3:00
-            </span>
+            <div className="flex items-center space-x-2">
+              <span className="flex items-center gap-1.5 text-xs font-mono font-medium text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                <Mic className="w-3.5 h-3.5 animate-pulse" />
+                <span>Audio Femenino Activo</span>
+              </span>
+              <span className="text-xs font-mono font-bold text-slate-400">
+                {formatTime(currentTime)} / 3:00
+              </span>
+            </div>
           </div>
 
           {/* Dynamic Scene Content Graphic */}
@@ -220,23 +341,19 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
             )}
 
             {currentScene.visualType === 'correction' && (
-              <div className="space-y-3 animate-in zoom-in-95 duration-500 w-full text-left">
-                <h4 className="text-xl font-bold text-white text-center mb-2">Comparativa en Tiempo Real</h4>
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className="bg-rose-950/40 border border-rose-800/60 p-3 rounded-xl text-rose-200">
-                    <span className="text-[10px] font-bold text-rose-400 uppercase block mb-1">Transcripción Cruda (STT)</span>
-                    <p className="font-mono leading-relaxed line-through opacity-80">
-                      "bueno pues este... yo-yo creo que vamos a a a revisar la sesion del dia de hoy. ¿habra alguna duda?"
-                    </p>
+              <div className="space-y-4 animate-in zoom-in-95 duration-500 max-w-lg">
+                <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
+                  <Sparkles className="w-7 h-7" />
+                </div>
+                <h4 className="text-2xl font-extrabold text-white">Consolidación y Corrección RAE</h4>
+                <div className="grid grid-cols-2 gap-2 text-left text-xs font-mono">
+                  <div className="bg-slate-900/90 p-3 rounded-xl border border-rose-500/30 text-rose-300">
+                    <span className="text-[10px] text-slate-500 block">ANTES (CRUDO)</span>
+                    "la sesion de oy se aprueva..."
                   </div>
-                  <div className="bg-emerald-950/40 border border-emerald-500/60 p-3 rounded-xl text-emerald-100">
-                    <span className="text-[10px] font-bold text-emerald-400 uppercase block mb-1">Acta Consolidada y Corregida</span>
-                    <p className="font-sans font-medium leading-relaxed">
-                      "Damos inicio a la sesión del día de hoy. Yo creo que vamos a revisar la sesión del día de hoy. ¿Habrá alguna duda?"
-                    </p>
-                    <span className="text-[10px] font-bold text-emerald-400 mt-2 block">
-                      ✓ Muletillas eliminadas · Tildes RAE · Signos ¿ ¡
-                    </span>
+                  <div className="bg-slate-900/90 p-3 rounded-xl border border-emerald-500/30 text-emerald-300">
+                    <span className="text-[10px] text-slate-500 block">DESPUÉS (OFICIAL)</span>
+                    "¿La sesión de hoy se aprueba?"
                   </div>
                 </div>
               </div>
@@ -244,36 +361,35 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
 
             {currentScene.visualType === 'security' && (
               <div className="space-y-4 animate-in zoom-in-95 duration-500">
-                <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center mx-auto text-emerald-400">
+                <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400">
                   <Lock className="w-8 h-8" />
                 </div>
-                <h4 className="text-2xl font-extrabold text-white">Seguridad Criptográfica y TLS 1.3</h4>
-                <div className="grid grid-cols-3 gap-2 text-xs text-slate-300 max-w-lg mx-auto">
-                  <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700">
-                    <p className="font-bold text-white">Certificados Firmados</p>
-                    <span className="text-[10px] text-slate-400">RSA-4096 / ECDSA</span>
-                  </div>
-                  <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700">
-                    <p className="font-bold text-white">HSTS & CSP</p>
-                    <span className="text-[10px] text-slate-400">Anti-clickjacking</span>
-                  </div>
-                  <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700">
-                    <p className="font-bold text-white">Privacidad 100%</p>
-                    <span className="text-[10px] text-slate-400">Servidor propio</span>
-                  </div>
+                <h4 className="text-2xl font-extrabold text-white">Seguridad y Privacidad Absoluta</h4>
+                <div className="flex justify-center gap-3 text-xs font-mono">
+                  <span className="bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 px-3 py-1 rounded-full">
+                    TLS 1.3 / AES-256
+                  </span>
+                  <span className="bg-slate-800 text-slate-300 border border-slate-700 px-3 py-1 rounded-full">
+                    HSTS Activo
+                  </span>
+                  <span className="bg-indigo-950 text-indigo-300 border border-indigo-500/40 px-3 py-1 rounded-full">
+                    100% Servidor Local
+                  </span>
                 </div>
               </div>
             )}
 
             {currentScene.visualType === 'outro' && (
               <div className="space-y-4 animate-in zoom-in-95 duration-500">
-                <div className="w-16 h-16 rounded-2xl bg-indigo-600 flex items-center justify-center mx-auto text-white shadow-xl shadow-indigo-500/40">
-                  <Sparkles className="w-8 h-8" />
+                <div className="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center mx-auto text-indigo-400">
+                  <span className="text-3xl">📑</span>
                 </div>
-                <h4 className="text-3xl font-extrabold text-white">Actas Digitales</h4>
-                <p className="text-sm text-indigo-200">De la voz al documento oficial en segundos.</p>
-                <div className="inline-block bg-slate-800 px-4 py-2 rounded-xl text-xs font-mono text-slate-300 border border-slate-700">
-                  github.com/yhquintero/Actas_Digitales
+                <h4 className="text-3xl font-black text-white tracking-tight">Actas Digitales</h4>
+                <p className="text-sm text-indigo-200">Captura. Transcribe. Consolida. Formaliza.</p>
+                <div className="pt-2">
+                  <span className="bg-indigo-600 text-white font-semibold text-xs px-4 py-2 rounded-xl shadow-lg">
+                    Descubre el Futuro de las Actas Oficiales
+                  </span>
                 </div>
               </div>
             )}
@@ -301,7 +417,7 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
             />
             <div className="flex justify-between text-[11px] font-mono text-slate-500">
               <span>{formatTime(currentTime)}</span>
-              <span>180 segundos (3 minutos)</span>
+              <span>180 segundos (3 minutos) · Audio en Español</span>
               <span>{formatTime(totalDuration)}</span>
             </div>
           </div>
@@ -320,6 +436,7 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
                 onClick={() => {
                   setCurrentTime(0);
                   setIsPlaying(true);
+                  lastSpokenSceneRef.current = null;
                 }}
                 className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
                 title="Reiniciar"
@@ -329,7 +446,10 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
 
               <button
                 onClick={() => setIsMuted(!isMuted)}
-                className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
+                className={`p-2 rounded-lg transition ${
+                  isMuted ? 'text-rose-400 hover:bg-rose-950/50' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                }`}
+                title={isMuted ? "Activar audio" : "Silenciar audio"}
               >
                 {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
               </button>

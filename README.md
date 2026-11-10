@@ -98,7 +98,7 @@ Actas Digitales está compuesto por **tres componentes que trabajan de forma sin
 
 ### Operación y Captura Acústica
 - 🎙 **Grabación directa en navegador y móvil** — Web Audio API en navegador y `MediaRecorder` nativo en Android calibrado a 16 kHz / mono / AAC para máxima fidelidad fonética.
-- 📥 **Soporte multiformato** — Acepta `.mp3`, `.wav`, `.m4a`, `.ogg`, `.webm`, `.flac` y `.aac` de hasta 100 MB por sesión.
+- 📥 **Soporte multiformato y subida masiva** — Acepta `.mp3`, `.wav`, `.m4a`, `.ogg`, `.webm`, `.flac` y `.aac` individuales o en lote, con límite ampliado de hasta **1 GB (1024 MB)** por archivo.
 - 📡 **Subida resiliente y tolerante a fallos** — En Android, `WorkManager` gestiona la subida en segundo plano: si el usuario minimiza la app o se pierde el Wi-Fi, la transferencia se reanuda de forma transparente.
 
 ### Pipeline de Inteligencia Lingüística
@@ -241,6 +241,7 @@ La confidencialidad de las deliberaciones de reuniones es primordial. Actas Digi
 
 - **Cifrado en tránsito obligatorio:** Conexiones bajo **HTTPS / TLS 1.3** con cifrados modernos autenticados (AEAD).
 - **Generador de certificados con CA propia:** Herramienta automatizada (`tools/generar_certificados_https.py`) que emite certificados X.509 v3 con extensiones SAN para `localhost`, `127.0.0.1`, `0.0.0.0` y `actasdigitales.local`.
+- **Instalador de Confianza en Windows (1 Clic · Candado Verde):** Ejecuta **`instalar-certificado-confianza.bat`** (o el botón verde en el Panel de Control) para añadir `ca.crt` al almacén de Entidades de Certificación Raíz de Confianza de Windows. Esto elimina permanentemente el aviso `NET::ERR_CERT_AUTHORITY_INVALID` en Google Chrome, Microsoft Edge y Brave.
 - **Cabeceras de protección:**
   - `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload` (HSTS).
   - `X-Frame-Options: DENY` (anti-clickjacking).

@@ -60,8 +60,13 @@ class PruebasDeFuegoSeguridad(unittest.TestCase):
             self.assertIsInstance(corrected, str)
 
     def test_03_limite_de_tamano_maximo(self):
-        """OWASP A04: Rechaza archivos que excedan el límite de denegación de servicio (100 MB)."""
-        valid, err = AudioService.validate_file("grabacion.wav", 150 * 1024 * 1024)
+        """OWASP A04: Rechaza archivos que excedan el límite de denegación de servicio (1 GB / 1024 MB)."""
+        # Archivo de 500 MB ahora debe ser aceptado
+        valid_500mb, err_500mb = AudioService.validate_file("grabacion.wav", 500 * 1024 * 1024)
+        self.assertTrue(valid_500mb, "Archivos de hasta 1 GB deben ser aceptados")
+
+        # Archivo que supera 1 GB (1.2 GB) debe ser rechazado
+        valid, err = AudioService.validate_file("grabacion.wav", int(1.2 * 1024 * 1024 * 1024))
         self.assertFalse(valid)
         self.assertIn("excede el tamaño máximo", err)
 

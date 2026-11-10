@@ -43,6 +43,9 @@ async def health_check():
 static_dist_path = Path(__file__).resolve().parent.parent.parent / "web" / "dist"
 if static_dist_path.exists():
     app.mount("/assets", StaticFiles(directory=str(static_dist_path / "assets")), name="assets")
+    audio_dist_path = static_dist_path / "audio"
+    if audio_dist_path.exists():
+        app.mount("/audio", StaticFiles(directory=str(audio_dist_path)), name="audio")
 
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
