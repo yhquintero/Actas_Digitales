@@ -1,3 +1,5 @@
+<a id="readme-top"></a>
+
 # Digital Minutes (Actas Digitales) · Speech to Official Corrected Text
 
 <div align="center">
@@ -61,6 +63,6 @@
 
 <div align="center">
 
-<sub><b>Actas Digitales</b> · © 2026 yhquintero · <a href="#">Back to top ⬆</a></sub>
+<sub><b>Actas Digitales</b> · © 2026 yhquintero · <a href="#readme-top">Back to top ⬆</a></sub>
 
 </div>

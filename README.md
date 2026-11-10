@@ -1,3 +1,5 @@
+<a id="readme-top"></a>
+
 <div align="center">
 
 <img src="brand/actas-digitales-icon.png" width="104" alt="Logotipo de Actas Digitales" />
@@ -21,7 +23,7 @@
 [![Kotlin](https://img.shields.io/badge/Kotlin-Jetpack%20Compose-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](android/)
 [![Licencia](https://img.shields.io/badge/licencia-propietaria-475569?style=flat-square)](LICENSE)
 
-[Resumen](#-resumen) · [Ecosistema](#-ecosistema) · [Funciones](#-funciones) · [Capturas](#-capturas) · [Requisitos](#-requisitos) · [Inicio rápido](#-inicio-rápido) · [Seguridad HTTPS](#-seguridad-https-y-certificados) · [Documentación](#-documentación) · [Calidad y pruebas](#-calidad-y-pruebas) · [Preguntas frecuentes](#-preguntas-frecuentes) · [Licencia](#-licencia)
+[Resumen](#-resumen) · [Ecosistema](#-ecosistema) · [Funciones](#-funciones) · [Panel de Control](#-panel-de-control-futurista-y-ejecución-de-la-web) · [Capturas](#-capturas) · [Requisitos](#-requisitos) · [Inicio rápido](#-inicio-rápido) · [Seguridad HTTPS](#-seguridad-https-y-certificados) · [Documentación](#-documentación) · [Calidad y pruebas](#-calidad-y-pruebas) · [Preguntas frecuentes](#-preguntas-frecuentes) · [Licencia](#-licencia)
 
 </div>
 
@@ -114,6 +116,89 @@ Actas Digitales está compuesto por **tres componentes que trabajan de forma sin
 - 📑 **Estructuración en Acta Oficial RAE** — Convierte el texto corregido en un documento formal con título, asistentes, orden del día, acuerdos numerados (`ACUERDO-01`, etc.) y pie de firmas para Presidente y Secretario.
 - 💾 **Exportación multipropósito** — Copiado instantáneo al portapapeles, descarga en `.txt` UTF-8, archivo `.md` (Markdown) o impresión/guardado en PDF vectorial.
 
+<p align="right"><a href="#readme-top">Volver arriba ⬆</a></p>
+
+---
+
+## 🎛️ Panel de Control Futurista y Ejecución de la Web
+
+Actas Digitales incorpora un **Panel de Control Centralizado de Alto Rendimiento** con diseño HUD *Cyberpunk* que orquesta todos los subsistemas del proyecto: servidor asíncrono HTTPS, certificados criptográficos TLS 1.3, interfaz Web, purga de almacenamiento temporal y pruebas de seguridad OWASP, **sin necesidad de teclear comandos manuales en la terminal**.
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│  ACTAS DIGITALES :: PANEL DE CONTROL HUD FUTURISTA [TLS 1.3 / AES-256] │
+├────────────────────────────────────────────────────────────────────────┤
+│  [ TELEMETRÍA EN TIEMPO REAL ]                                         │
+│  ● Núcleo: ONLINE  ● Cifrado: TLS 1.3 AEAD  ● DoS: Token Bucket 120/min│
+├────────────────────────────────────────────────────────────────────────┤
+│  [🚀 INICIAR TODO (HTTPS)]   [🌐 ABRIR NAVEGADOR]   [🔥 PRUEBAS DE FUEGO]│
+│  [🛡️ RENOVAR TLS / SAN]     [🛑 DETENER SERVICIOS] [🧹 PURGAR CACHÉ]   │
+├────────────────────────────────────────────────────────────────────────┤
+│  CONSOLA: Servidor HTTPS activo en https://localhost:8443               │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 💻 1. Ejecución de la Web desde el Panel de Control en Windows (1 Clic)
+
+Diseñado siguiendo el patrón de arquitectura centralizada de herramientas de escritorio de alto rendimiento:
+
+1. **Lanzamiento:** Haz doble clic sobre el archivo ejecutable **`iniciar-panel.bat`** (o `server\panel-control.bat`) ubicado en la carpeta raíz del repositorio.
+2. **Auto-diagnóstico y Certificados:** El panel verifica en milisegundos que el entorno Python esté disponible y que existan los certificados TLS 1.3 firmados con SAN (`localhost`, `127.0.0.1`, `0.0.0.0`, `actasdigitales.local`). Si es la primera ejecución, los genera y firma automáticamente con su CA local RSA-4096.
+3. **Paso 1 · Iniciar el Servidor:** Pulsa el botón futurista iluminado **`[ 🚀 INICIAR TODO (HTTPS) ]`**. El panel arrancará el servidor FastAPI + Uvicorn con TLS 1.3 en el puerto 8443 en segundo plano de manera desacoplada. El indicador de telemetría pasará inmediatamente a `ESTADO: [ EN LÍNEA (ONLINE) ]` en color esmeralda brillante.
+4. **Paso 2 · Abrir la Web:** Pulsa el botón **`[ 🌐 ABRIR NAVEGADOR ]`**. El sistema abrirá automáticamente tu navegador web predeterminado en **`https://localhost:8443`**, cargando la aplicación Web completa con captura por micrófono, procesamiento fonético y exportador de actas RAE.
+
+#### Matriz de Controles del Panel de Control de Windows
+
+| Botón Futurista | Acción Ejecutada | Beneficio Técnico |
+|---|---|---|
+| 🚀 **`[ INICIAR TODO (HTTPS) ]`** | Levanta Uvicorn con FastAPI y TLS 1.3 en `https://localhost:8443` | Proceso minimizado asíncrono; no satura la terminal y responde inmediatamente |
+| 🌐 **`[ ABRIR NAVEGADOR ]`** | Abre el navegador predeterminado en `https://localhost:8443` | Carga directa de la Web PWA lista para operar |
+| 🔥 **`[ PRUEBAS DE FUEGO OWASP ]`** | Dispara la suite `test_pruebas_de_fuego.py` (10/10 pruebas) | Valida OWASP Top 10, sanitización contra inyecciones, rate limit y RAE |
+| 🛡️ **`[ RENOVAR TLS / SAN ]`** | Regenera y refirma certificados X.509 v3 con SAN y clave RSA | Mantiene los certificados actualizados sin interrumpir el entorno |
+| 🛑 **`[ DETENER SERVICIOS ]`** | Finaliza los procesos de Uvicorn liberando el puerto 8443 | Apagado limpio y seguro sin dejar procesos huérfanos |
+| 🧹 **`[ PURGAR CACHÉ Y TEMPORALES ]`** | Elimina archivos de audio en `backend/app/uploads/` | Retención cero de audio para cumplimiento estricto de privacidad |
+| 📜 **`[ CONSOLA EN TIEMPO REAL ]`** | Transmite en vivo los eventos, peticiones y diagnósticos | Visibilidad instantánea del estado operativo sin salir de la GUI |
+
+---
+
+### 🌐 2. Panel de Control Futurista Integrado en la Aplicación Web (HUD v2.0)
+
+Para operar el sistema sin abandonar el navegador, la aplicación Web incluye su propio **Panel de Control HUD Cyberpunk**:
+
+* **Acceso Inmediato:** Haz clic en el botón superior **`[ 🚀 Panel de Control ]`** situado en la barra de navegación (*Navbar*).
+* **Widgets de Telemetría Dinámica:**
+  * **Estado Núcleo:** Monitor con latido activo conectado al endpoint `/api/audio/system/status`.
+  * **Cifrado AES:** Muestra el cifrado activo `256-Bit AEAD` con TLS 1.3 y HSTS estricto.
+  * **Búfer de Audio:** Indicador `ÓPTIMO` que audita los algoritmos VAD y el gestor de memoria acústica.
+  * **Seguridad OWASP:** Certificación de cumplimiento del estándar ASVS v4.0 Nivel 2.
+* **Módulos de Ejecución con Botones Holográficos:**
+  * **`[ PRUEBAS DE FUEGO ]`:** Lanza fuzzing en vivo mediante petición REST asíncrona `/api/audio/system/run-fire-tests`.
+  * **`[ RENOVAR TLS / SAN ]`:** Refirma certificados sin necesidad de reiniciar el servicio web (`/api/audio/system/renew-certs`).
+  * **`[ PURGAR CACHÉ ]`:** Ejecuta borrado seguro de grabaciones residuales (`/api/audio/system/purge-cache`).
+  * **`[ VÍDEO DEMO (3 MIN) ]`:** Abre el reproductor interactivo con las 6 escenas animadas y locución oficial en español.
+  * **`[ MANUAL IMPRIMIBLE ]`:** Acceso directo a la documentación completa paso a paso en formato HTML/PDF.
+* **Terminal Cyberpunk en Vivo:** Muestra la traza cronológica de cada comando ejecutado con formato estricto de eventos.
+
+---
+
+### 🐧 3. Ejecución Multiplataforma (Linux, macOS, Docker)
+
+En entornos Unix o terminales de servidor, dispones de dos mecanismos equivalentes:
+
+```bash
+# Método A: Consola Interactiva HUD Cyberpunk Multiplataforma
+python3 tools/panel_control.py
+
+# Método B: Lanzamiento directo del servidor seguro HTTPS
+python3 tools/iniciar_https.py
+```
+
+Desde `tools/panel_control.py` dispondrás del menú interactivo numerado para arrancar/detener el servidor, abrir el navegador, pasar pruebas de fuego y refirmar certificados.
+
+<p align="right"><a href="#readme-top">Volver arriba ⬆</a></p>
+
 ---
 
 ## 📸 Capturas
@@ -146,6 +231,8 @@ Actas Digitales está compuesto por **tres componentes que trabajan de forma sin
 
 ▶️ **Vídeo:** [presentación oficial de 3 min (1080p60, narración en español y subtítulos)](docs/PROPUESTA_VIDEO_PROMOCIONAL.md) · [reproductor interactivo en la app Web](web/) · [manual imprimible de usuario](docs/MANUAL_USUARIO.html)
 
+<p align="right"><a href="#readme-top">Volver arriba ⬆</a></p>
+
 ---
 
 ## 🔒 Seguridad HTTPS y Certificados
@@ -164,6 +251,8 @@ La confidencialidad de las deliberaciones de reuniones es primordial. Actas Digi
 - **Privacidad absoluta:** Modo 100% autoalojado donde el audio y el texto nunca abandonan la red del cliente.
 
 Guía completa de despliegue y certificados: [docs/INSTALACION_HTTPS.md](docs/INSTALACION_HTTPS.md). Política de reporte: [SECURITY.md](SECURITY.md).
+
+<p align="right"><a href="#readme-top">Volver arriba ⬆</a></p>
 
 ---
 
@@ -249,6 +338,8 @@ npm run dev
 docker-compose up --build -d
 ```
 
+<p align="right"><a href="#readme-top">Volver arriba ⬆</a></p>
+
 ---
 
 ## ✅ Calidad y Pruebas
@@ -270,6 +361,8 @@ python3 tools/test_pruebas_de_fuego.py
 # 4. Verificación de compilación y tipado estricto de la Web
 cd web && npm run build && cd ..
 ```
+
+<p align="right"><a href="#readme-top">Volver arriba ⬆</a></p>
 
 ---
 
@@ -422,6 +515,8 @@ Sí. Por defecto el sistema funciona con el motor autónomo integrado. Si deseas
 
 </details>
 
+<p align="right"><a href="#readme-top">Volver arriba ⬆</a></p>
+
 ---
 
 ## 📄 Licencia
@@ -430,10 +525,12 @@ Sí. Por defecto el sistema funciona con el motor autónomo integrado. Si deseas
 
 Ver el código fuente en GitHub no concede ningún derecho de uso, copia, modificación o distribución comercial ni privada. Instalar Actas Digitales en una organización, comité o negocio requiere una licencia de uso autorizada por el titular. Condiciones completas en [LICENSE](LICENSE).
 
+<p align="right"><a href="#readme-top">Volver arriba ⬆</a></p>
+
 ---
 
 <div align="center">
 
-<sub><b>Actas Digitales</b> · Captura. Transcribe. Consolida. Formaliza. · © 2026 yhquintero · <a href="#">Volver arriba ⬆</a></sub>
+<sub><b>Actas Digitales</b> · Captura. Transcribe. Consolida. Formaliza. · © 2026 yhquintero · <a href="#readme-top">Volver arriba ⬆</a></sub>
 
 </div>
