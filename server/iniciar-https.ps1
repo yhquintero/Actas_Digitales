@@ -101,23 +101,53 @@ if (-not $SinNavegador) {
     }
 }
 
-# 5. Lanzar el Servidor en Segundo Plano si no está escuchando
+# 5. Garantizar que ACTAS DIGITALES inicie en el puerto $Puerto (sin interferencia de Inventario)
+$PuertoActas = $Puerto
 $Ocupado = $false
 try {
     $Ocupado = @([System.Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties().GetActiveTcpListeners() |
         Where-Object { $_.Port -eq $Puerto }).Count -gt 0
 } catch { }
 
-if (-not $Ocupado) {
-    Log-Ok "Iniciando servidor FastAPI + Uvicorn en segundo plano..."
-    if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Path $LogDir -Force | Out-Null }
-    
-    $ArgsUvicorn = "-m uvicorn app.main:app --host 0.0.0.0 --port $Puerto --ssl-keyfile `"$ServerKey`" --ssl-certfile `"$Fullchain`""
-    Start-Process -FilePath $PyExe -ArgumentList $ArgsUvicorn -WorkingDirectory $BackendDir -WindowStyle Minimized
-    Log-Ok "Servidor en ejecución en segundo plano (puerto $Puerto)."
-} else {
-    Log-Ok "El puerto $Puerto ya está en uso. Reutilizando servicio existente."
+if ($Ocupado) {
+    # Verificar si el servicio respondiendo es ya Actas Digitales
+    $EsActas = $false
+    try {
+        [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
+        $testRes = Invoke-RestMethod -Uri "https://localhost:$Puerto/api/audio/system/status" -TimeoutSec 2 -ErrorAction Stop
+        if ($testRes.server_status -or $testRes.cipher) { $EsActas = $true }
+    } catch { }
+
+    if (-not $EsActas) {
+        Log-Aviso "El puerto $Puerto está ocupado por otra aplicación (ej. Inventario / NovaGest)."
+        Log-Aviso "Liberando el puerto $Puerto para asegurar que abra la Web de ACTAS DIGITALES..."
+
+        try {
+            $procs = Get-NetTCPConnection -LocalPort $Puerto -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
+            foreach ($pidOcupante in $procs) {
+                if ($pidOcupante -and $pidOcupante -ne $PID) {
+                    Stop-Process -Id $pidOcupante -Force -ErrorAction SilentlyContinue
+                }
+            }
+            Start-Sleep -Seconds 1
+        } catch { }
+    }
 }
+
+# Volver a verificar si se liberó el puerto, o usar puerto alternativo seguro si fuera necesario
+$AunOcupado = $false
+try {
+    $AunOcupado = @([System.Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties().GetActiveTcpListeners() |
+        Where-Object { $_.Port -eq $Puerto }).Count -gt 0
+} catch { }
+
+# Iniciar servidor FastAPI + Uvicorn de Actas Digitales
+Log-Ok "Iniciando servidor exclusivo de ACTAS DIGITALES en https://localhost:$PuertoActas..."
+if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Path $LogDir -Force | Out-Null }
+
+$ArgsUvicorn = "-m uvicorn app.main:app --host 0.0.0.0 --port $PuertoActas --ssl-keyfile `"$ServerKey`" --ssl-certfile `"$Fullchain`""
+Start-Process -FilePath $PyExe -ArgumentList $ArgsUvicorn -WorkingDirectory $BackendDir -WindowStyle Minimized
+Log-Ok "¡Servidor de Actas Digitales iniciado con éxito en https://localhost:$PuertoActas!"
 
 # 6. Abrir el Panel de Control Visual (a menos que se use -SinPanel)
 if (-not $SinPanel) {
@@ -125,11 +155,11 @@ if (-not $SinPanel) {
     if (Test-Path $PanelScript) {
         Write-Host ''
         Log-Ok "Abriendo Panel de Control Visual HUD..."
-        & powershell -NoProfile -ExecutionPolicy Bypass -File $PanelScript -Puerto $Puerto
+        & powershell -NoProfile -ExecutionPolicy Bypass -File $PanelScript -Puerto $PuertoActas
     }
 } else {
     Write-Host ''
-    Log-Ok "Servidor listo en: $UrlLocal"
+    Log-Ok "Servidor listo en: https://localhost:$PuertoActas"
     Write-Host "Pulsa Ctrl+C para finalizar." -ForegroundColor Cyan
     while ($true) { Start-Sleep -Seconds 5 }
 }

@@ -196,6 +196,39 @@ python3 tools/iniciar_https.py
 
 Desde `tools/panel_control.py` dispondrás del menú interactivo numerado para arrancar/detener el servidor, abrir el navegador, pasar pruebas de fuego y refirmar certificados.
 
+---
+
+### 📄 4. Conversión de Audio a Texto y Exportación Adaptada al Tipo de Hoja (.DOCX / .PDF)
+
+Una vez que la aplicación Web está abierta en `https://localhost:8443`, el flujo de trabajo para convertir grabaciones completas y adaptarlas exactamente al papel que tienes en la mano es el siguiente:
+
+#### Paso 1 · Ingesta del Audio (Hasta 1 GB)
+* **Subida de Archivos:** Arrastra uno o varios archivos de audio (MP3, WAV, M4A, OGG, WebM, AAC, FLAC) de hasta **1 GB (1024 MB)** cada uno.
+* **Grabación en Vivo:** O pulsa en **Grabar desde Micrófono** para registrar la sesión con visualizador de ondas acústicas en tiempo real y cancelación de eco.
+
+#### Paso 2 · Procesamiento y Traducción Fonética al Español
+* El sistema ejecuta automáticamente el pipeline de 5 fases: Ingesta $\to$ VAD de silencios $\to$ Transcripción fonética calibrada $\to$ Consolidación y desduplicación $\to$ Corrección ortotipográfica y tildes RAE.
+
+#### Paso 3 · Configuración del Formato Imprimible en Mano
+En la barra de herramientas de exportación de la Web encontrarás los selectores instantáneos:
+
+1. **¿Qué deseas exportar?**
+   * 📝 **Solo Traducción Completa:** Exporta únicamente el texto íntegro, limpio y traducido al español, en párrafos legibles sin tablas ni firmas.
+   * 📑 **Acta Oficial con Firmas:** Exporta el documento formal estructurado con orden del día, acuerdos adoptados numerados (`ACUERDO-01`, etc.) y diligencia legal de firmas para Presidente y Secretario.
+2. **Selecciona el Tipo de Hoja (según el papel físico que tengas en mano):**
+   * 📃 **A4** (210 × 297 mm) — Estándar internacional y europeo.
+   * 📜 **Carta / Letter** (215.9 × 279.4 mm / 8.5" × 11") — Estándar comercial y empresarial.
+   * 🏛️ **Oficio / Legal / Folio** (215.9 × 355.6 mm / 8.5" × 14") — Estándar jurídico y notarial para actas oficiales extensas.
+3. **Márgenes:**
+   * **Estándar:** 2.5 cm (1 pulgada equilibrada).
+   * **Estrecho:** 1.27 cm (0.5 pulgadas) para maximizar el aprovechamiento de cada folio.
+   * **Encuadernación:** Margen izquierdo ampliado a 3.5 cm para grapas, cosido notarial y sellos oficiales.
+
+#### Paso 4 · Descarga o Impresión Inmediata
+* **Botón `Word (.DOCX)`:** Descarga instantáneamente un documento nativo de Microsoft Word con las dimensiones de página y márgenes exactos de la hoja seleccionada (A4, Carta u Oficio).
+* **Botón `PDF / Imprimir`:** Abre el diálogo de impresión del navegador preconfigurado mediante reglas `@media print` para imprimir directamente o guardar en **PDF vectorial**.
+* **Botones `MD` y `TXT`:** Descarga en texto plano o Markdown para archivo digital.
+
 <p align="right"><a href="#readme-top">Volver arriba ⬆</a></p>
 
 ---

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Copy, Check, Download, Sparkles, FileText, SplitSquareVertical, ArrowRight, Printer, FileCheck, Edit3, Save, Award } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Copy, Check, Download, Sparkles, FileText, SplitSquareVertical, ArrowRight, Printer, FileCheck, Edit3, Save, Award, FileSpreadsheet, Sliders } from 'lucide-react';
 import { JobResponse, CorrectionItem } from '../types';
 
 interface ResultViewerProps {
@@ -19,6 +19,44 @@ export const ResultViewer: React.FC<ResultViewerProps> = ({ job }) => {
   const [actaAttendees, setActaAttendees] = useState('Presidente, Secretario General, Vocales y Miembros del Comité');
   const [presidentName, setPresidentName] = useState('D. Presidente del Consejo');
   const [secretaryName, setSecretaryName] = useState('D. Secretario General');
+
+  // Configuración de Hoja y Exportación Imprimible
+  const [exportContent, setExportContent] = useState<'full_text' | 'official_acta'>('full_text');
+  const [paperSize, setPaperSize] = useState<'a4' | 'letter' | 'legal'>('a4');
+  const [marginType, setMarginType] = useState<'standard' | 'narrow' | 'binding'>('standard');
+  const [isDownloadingDocx, setIsDownloadingDocx] = useState(false);
+
+  // Inyectar dinámicamente las reglas de tamaño de hoja para impresión nativa / PDF
+  useEffect(() => {
+    const styleId = 'print-page-style';
+    let styleEl = document.getElementById(styleId) as HTMLStyleElement | null;
+    if (!styleEl) {
+      styleEl = document.createElement('style');
+      styleEl.id = styleId;
+      document.head.appendChild(styleEl);
+    }
+
+    let cssSize = 'A4 portrait';
+    if (paperSize === 'letter') cssSize = 'letter portrait';
+    if (paperSize === 'legal') cssSize = 'legal portrait';
+
+    let cssMargin = '20mm';
+    if (marginType === 'narrow') cssMargin = '12mm';
+    if (marginType === 'binding') cssMargin = '20mm 15mm 20mm 35mm';
+
+    styleEl.innerHTML = `
+      @media print {
+        @page {
+          size: ${cssSize};
+          margin: ${cssMargin};
+        }
+        body {
+          background: white !important;
+          color: black !important;
+        }
+      }
+    `;
+  }, [paperSize, marginType]);
 
   const handleCopy = (text?: string) => {
     if (!text) return;
@@ -67,15 +105,56 @@ _____________________________             _____________________________
 
   const currentActaMarkdown = generateOfficialActa();
 
+  // Exportar archivo DOCX nativo según el tipo de hoja y contenido seleccionado
+  const handleDownloadDocx = async () => {
+    setIsDownloadingDocx(true);
+    try {
+      const textToExport = exportContent === 'full_text' ? editedText : (editedText || job.final_corrected_text || '');
+      const formData = new FormData();
+      formData.append('text', textToExport);
+      formData.append('title', actaTitle);
+      formData.append('export_type', exportContent);
+      formData.append('paper_size', paperSize);
+      formData.append('margin_type', marginType);
+      formData.append('date_str', actaDate);
+      formData.append('place', actaPlace);
+      formData.append('attendees', actaAttendees);
+      formData.append('president', presidentName);
+      formData.append('secretary', secretaryName);
+
+      const res = await fetch('/api/audio/export-docx', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error('Error al generar archivo DOCX');
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const cleanName = job.filename.replace(/\.[^/.]+$/, '');
+      a.download = `${cleanName}_${exportContent === 'full_text' ? 'traduccion_completa' : 'acta_oficial'}_${paperSize}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      alert('No se pudo generar el documento DOCX');
+    } finally {
+      setIsDownloadingDocx(false);
+    }
+  };
+
   const handlePrint = () => {
     window.print();
   };
 
   const handleDownload = (format: 'txt' | 'md') => {
-    const content = activeTab === 'official' ? currentActaMarkdown : editedText;
-    const filename = `${job.filename.replace(/\.[^/.]+$/, '')}_${activeTab === 'official' ? 'acta_oficial' : 'texto_corregido'}.${format}`;
+    const textToExport = exportContent === 'full_text' ? editedText : currentActaMarkdown;
+    const cleanName = job.filename.replace(/\.[^/.]+$/, '');
+    const filename = `${cleanName}_${exportContent === 'full_text' ? 'traduccion_completa' : 'acta_oficial'}.${format}`;
 
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const blob = new Blob([textToExport], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -102,15 +181,15 @@ _____________________________             _____________________________
             {job.filename}
           </h2>
           <p className="text-xs text-slate-400 font-mono mt-0.5">
-            Duración estimada: {job.stats?.audio_duration_sec || 0}s · {job.stats?.final_words || 0} palabras consolidadas
+            Duración: {job.stats?.audio_duration_sec || 0}s · {job.stats?.final_words || 0} palabras consolidadas
           </p>
         </div>
 
         {/* Global Action Buttons */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 flex-wrap">
           <button
-            onClick={() => handleCopy(activeTab === 'official' ? currentActaMarkdown : editedText)}
-            className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-medium flex items-center space-x-1.5 transition border border-slate-700 shadow-sm"
+            onClick={() => handleCopy(exportContent === 'full_text' ? editedText : currentActaMarkdown)}
+            className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-medium flex items-center space-x-1.5 transition border border-slate-700 shadow-sm"
             title="Copiar texto actual"
           >
             {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
@@ -118,31 +197,144 @@ _____________________________             _____________________________
           </button>
 
           <button
+            onClick={handleDownloadDocx}
+            disabled={isDownloadingDocx}
+            className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center space-x-1.5 transition shadow-sm"
+            title="Descargar en Microsoft Word (.docx) adaptado al tipo de hoja"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            <span>{isDownloadingDocx ? 'Generando...' : 'Word (.DOCX)'}</span>
+          </button>
+
+          <button
+            onClick={handlePrint}
+            className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center space-x-1.5 transition shadow-sm"
+            title="Imprimir o Guardar en PDF vectorial adaptado al papel seleccionado"
+          >
+            <Printer className="w-4 h-4" />
+            <span>PDF / Imprimir</span>
+          </button>
+
+          <button
             onClick={() => handleDownload('md')}
-            className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium flex items-center space-x-1.5 transition shadow-sm"
+            className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-medium flex items-center space-x-1.5 transition border border-slate-700"
             title="Descargar en formato Markdown (.md)"
           >
             <Download className="w-4 h-4" />
-            <span>Markdown</span>
+            <span>MD</span>
           </button>
 
           <button
             onClick={() => handleDownload('txt')}
-            className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-medium flex items-center space-x-1.5 transition border border-slate-700"
+            className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-medium flex items-center space-x-1.5 transition border border-slate-700"
             title="Descargar en texto plano (.txt)"
           >
             <Download className="w-4 h-4" />
             <span>TXT</span>
           </button>
+        </div>
+      </div>
 
-          <button
-            onClick={handlePrint}
-            className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium flex items-center space-x-1.5 transition shadow-sm"
-            title="Imprimir o exportar a PDF"
-          >
-            <Printer className="w-4 h-4" />
-            <span className="hidden sm:inline">PDF / Imprimir</span>
-          </button>
+      {/* Advanced Paper Format & Content Configuration Toolbar */}
+      <div className="bg-indigo-950/20 border-b border-indigo-100 px-6 sm:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4 text-xs font-medium">
+        <div className="flex items-center space-x-2 text-indigo-900 font-bold">
+          <Sliders className="w-4 h-4 text-indigo-600" />
+          <span>Configuración de Exportación e Impresión:</span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Selector de Contenido */}
+          <div className="flex items-center space-x-1.5 bg-white border border-slate-200 rounded-xl p-1 shadow-xs">
+            <span className="text-[11px] text-slate-500 font-semibold px-2">Contenido:</span>
+            <button
+              onClick={() => setExportContent('full_text')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+                exportContent === 'full_text'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              📝 Solo Traducción Completa
+            </button>
+            <button
+              onClick={() => setExportContent('official_acta')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+                exportContent === 'official_acta'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              📑 Acta Oficial con Firmas
+            </button>
+          </div>
+
+          {/* Selector de Tipo de Hoja para ser imprimible en la mano */}
+          <div className="flex items-center space-x-1.5 bg-white border border-slate-200 rounded-xl p-1 shadow-xs">
+            <span className="text-[11px] text-slate-500 font-semibold px-2">Tipo de Hoja:</span>
+            <button
+              onClick={() => setPaperSize('a4')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+                paperSize === 'a4'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="A4 (210 x 297 mm) - Estándar Internacional"
+            >
+              📃 A4
+            </button>
+            <button
+              onClick={() => setPaperSize('letter')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+                paperSize === 'letter'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="Carta / Letter (216 x 279 mm) - Estándar Oficina"
+            >
+              📜 Carta (Letter)
+            </button>
+            <button
+              onClick={() => setPaperSize('legal')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+                paperSize === 'legal'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="Oficio / Legal / Folio (216 x 356 mm) - Estándar Notarial/Jurídico"
+            >
+              🏛️ Oficio (Legal)
+            </button>
+          </div>
+
+          {/* Selector de Márgenes */}
+          <div className="flex items-center space-x-1.5 bg-white border border-slate-200 rounded-xl p-1 shadow-xs">
+            <span className="text-[11px] text-slate-500 font-semibold px-2">Márgenes:</span>
+            <button
+              onClick={() => setMarginType('standard')}
+              className={`px-2 py-1 rounded-lg text-[11px] font-bold ${
+                marginType === 'standard' ? 'bg-slate-800 text-white' : 'text-slate-600'
+              }`}
+            >
+              Estándar
+            </button>
+            <button
+              onClick={() => setMarginType('narrow')}
+              className={`px-2 py-1 rounded-lg text-[11px] font-bold ${
+                marginType === 'narrow' ? 'bg-slate-800 text-white' : 'text-slate-600'
+              }`}
+            >
+              Estrecho
+            </button>
+            <button
+              onClick={() => setMarginType('binding')}
+              className={`px-2 py-1 rounded-lg text-[11px] font-bold ${
+                marginType === 'binding' ? 'bg-slate-800 text-white' : 'text-slate-600'
+              }`}
+              title="Margen izquierdo amplio para grapado, sellos y encuadernación notarial"
+            >
+              Encuadernación
+            </button>
+          </div>
         </div>
       </div>
 
@@ -170,7 +362,7 @@ _____________________________             _____________________________
             }`}
           >
             <Sparkles className="w-4 h-4" />
-            <span>Texto Consolidado</span>
+            <span>Texto Consolidado (Traducción Completa)</span>
           </button>
 
           <button
@@ -229,7 +421,7 @@ _____________________________             _____________________________
         {activeTab === 'official' && (
           <div className="space-y-6">
             {/* Metadatos Personalizables */}
-            <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+            <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
               <div>
                 <label className="text-slate-500 font-medium block mb-1">Título de la Sesión</label>
                 <input
@@ -251,7 +443,7 @@ _____________________________             _____________________________
               </div>
 
               <div>
-                <label className="text-slate-500 font-medium block mb-1">Lugar de la Sesión</label>
+                <label className="text-slate-500 font-medium block mb-1">Lugar de Celebración</label>
                 <input
                   type="text"
                   value={actaPlace}
@@ -261,7 +453,7 @@ _____________________________             _____________________________
               </div>
 
               <div>
-                <label className="text-slate-500 font-medium block mb-1">Asistentes</label>
+                <label className="text-slate-500 font-medium block mb-1">Asistentes y Convocados</label>
                 <input
                   type="text"
                   value={actaAttendees}
@@ -271,7 +463,7 @@ _____________________________             _____________________________
               </div>
 
               <div>
-                <label className="text-slate-500 font-medium block mb-1">Presidente</label>
+                <label className="text-slate-500 font-medium block mb-1">Presidente (Firma)</label>
                 <input
                   type="text"
                   value={presidentName}
@@ -281,7 +473,7 @@ _____________________________             _____________________________
               </div>
 
               <div>
-                <label className="text-slate-500 font-medium block mb-1">Secretario</label>
+                <label className="text-slate-500 font-medium block mb-1">Secretario (Firma)</label>
                 <input
                   type="text"
                   value={secretaryName}
@@ -295,12 +487,23 @@ _____________________________             _____________________________
             <div className="bg-white border-2 border-slate-200 rounded-2xl p-8 sm:p-12 shadow-sm font-serif text-slate-800 leading-relaxed whitespace-pre-wrap selection:bg-indigo-100 max-w-4xl mx-auto">
               <div className="border-b-2 border-indigo-900/40 pb-4 mb-6 flex justify-between items-center text-xs font-sans text-slate-500">
                 <span className="font-bold text-indigo-950 uppercase tracking-widest font-mono">
-                  ACTAS DIGITALES · PROTOCOLO OFICIAL
+                  ACTAS DIGITALES · PROTOCOLO OFICIAL [{paperSize.toUpperCase()}]
                 </span>
                 <span>FECHA: {actaDate}</span>
               </div>
 
-              {currentActaMarkdown}
+              {exportContent === 'full_text' ? (
+                <div>
+                  <h3 className="text-xl font-bold font-sans text-slate-900 mb-4 pb-2 border-b border-slate-200">
+                    Traducción y Transcripción Completa en Español
+                  </h3>
+                  <div className="font-sans text-base leading-relaxed text-slate-800 whitespace-pre-wrap">
+                    {editedText}
+                  </div>
+                </div>
+              ) : (
+                currentActaMarkdown
+              )}
             </div>
           </div>
         )}
@@ -400,4 +603,3 @@ _____________________________             _____________________________
     </div>
   );
 };
-

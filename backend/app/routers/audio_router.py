@@ -183,6 +183,134 @@ _____________________________             _____________________________
         "formatted_acta": acta_markdown
     }
 
+@router.post("/export-docx")
+async def export_acta_docx(
+    text: str = Form(...),
+    title: str = Form("Sesión Ordinaria de Consejo"),
+    export_type: str = Form("full_text"),
+    paper_size: str = Form("a4"),
+    margin_type: str = Form("standard"),
+    date_str: Optional[str] = Form(None),
+    place: Optional[str] = Form("Sala Principal de Juntas / Conferencia Digital"),
+    attendees: Optional[str] = Form("Presidente, Secretario General, Vocales y Miembros del Comité"),
+    president: Optional[str] = Form("D. Presidente del Consejo"),
+    secretary: Optional[str] = Form("D. Secretario General")
+):
+    """
+    Genera y descarga un archivo Microsoft Word (.DOCX) nativo con formato estándar,
+    configurado para el tipo de hoja imprimible seleccionado (A4, Carta/Letter, Oficio/Legal).
+    Soporta exportar 'full_text' (solo traducción/texto limpio) o 'official_acta' (acta legal con firmas).
+    """
+    import io
+    import docx
+    from docx.shared import Inches, Pt, Mm
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from fastapi.responses import Response
+
+    doc = docx.Document()
+    section = doc.sections[0]
+
+    # Configurar tamaño de hoja para coincidir con el papel en mano
+    if paper_size == "letter":  # Carta: 215.9 x 279.4 mm
+        section.page_width = Inches(8.5)
+        section.page_height = Inches(11.0)
+    elif paper_size == "legal":  # Oficio / Legal: 215.9 x 355.6 mm
+        section.page_width = Inches(8.5)
+        section.page_height = Inches(14.0)
+    else:  # A4 estándar internacional: 210 x 297 mm
+        section.page_width = Mm(210)
+        section.page_height = Mm(297)
+
+    # Configurar márgenes
+    if margin_type == "narrow":
+        section.top_margin = Inches(0.5)
+        section.bottom_margin = Inches(0.5)
+        section.left_margin = Inches(0.5)
+        section.right_margin = Inches(0.5)
+    elif margin_type == "binding":  # Margen notarial para grapas y sellos
+        section.top_margin = Inches(1.0)
+        section.bottom_margin = Inches(1.0)
+        section.left_margin = Inches(1.4)
+        section.right_margin = Inches(0.8)
+    else:  # Estándar
+        section.top_margin = Inches(1.0)
+        section.bottom_margin = Inches(1.0)
+        section.left_margin = Inches(1.0)
+        section.right_margin = Inches(1.0)
+
+    now = date_str or datetime.utcnow().strftime("%d/%m/%Y")
+
+    if export_type == "full_text":
+        p_title = doc.add_paragraph()
+        run_title = p_title.add_run(f"TRANSCRIPCIÓN Y TRADUCCIÓN OFICIAL COMPLETA\n{title.upper()}")
+        run_title.bold = True
+        run_title.font.size = Pt(14)
+        p_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+        p_meta = doc.add_paragraph()
+        p_meta.add_run(f"Fecha: {now} | Papel: {paper_size.upper()} | Corrección RAE y Cifrado TLS 1.3").italic = True
+        p_meta.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        doc.add_paragraph().paragraph_format.space_after = Pt(12)
+
+        paragraphs = [p.strip() for p in text.split("\n") if p.strip()]
+        if not paragraphs:
+            paragraphs = [text]
+
+        for para in paragraphs:
+            p = doc.add_paragraph(para)
+            p.paragraph_format.line_spacing = 1.15
+            p.paragraph_format.space_after = Pt(8)
+            p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+
+    else:
+        p_title = doc.add_paragraph()
+        run_title = p_title.add_run(f"ACTA OFICIAL: {title.upper()}")
+        run_title.bold = True
+        run_title.font.size = Pt(15)
+        p_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+        meta_p = doc.add_paragraph()
+        meta_p.add_run(f"Fecha: {now}\nLugar: {place}\nAsistentes: {attendees}").bold = False
+        doc.add_paragraph().paragraph_format.space_after = Pt(12)
+
+        doc.add_paragraph("1. Convocatoria y Quórum").runs[0].bold = True
+        doc.add_paragraph("Reunidos los comparecientes señalados en la fecha y lugar indicados, se verifica el quórum legal y se declara abierta la sesión.")
+
+        doc.add_paragraph("2. Resumen de Intervenciones y Deliberaciones").runs[0].bold = True
+        for para in [p.strip() for p in text.split("\n") if p.strip()]:
+            p = doc.add_paragraph(para)
+            p.paragraph_format.line_spacing = 1.15
+            p.paragraph_format.space_after = Pt(6)
+            p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+
+        doc.add_paragraph("3. Acuerdos Adoptados").runs[0].bold = True
+        sentences = [s.strip() for s in text.split(".") if len(s.strip()) > 15]
+        acuerdos = sentences[:4] if sentences else ["Aprobación de la agenda y seguimiento de acuerdos previos."]
+        for idx, ac in enumerate(acuerdos, 1):
+            doc.add_paragraph(f"{idx}. ACUERDO-{idx:02d}: {ac}.")
+
+        doc.add_paragraph("4. Cierre y Diligencia de Firmas").runs[0].bold = True
+        doc.add_paragraph("No habiendo más asuntos que tratar, se levanta la sesión formal:")
+        doc.add_paragraph().paragraph_format.space_after = Pt(20)
+
+        sig_p = doc.add_paragraph()
+        sig_p.add_run("______________________________                ______________________________\n")
+        sig_p.add_run(f"   {president}                                   {secretary}\n")
+        sig_p.add_run("          Presidente                                                 Secretario")
+
+    buf = io.BytesIO()
+    doc.save(buf)
+    buf.seek(0)
+
+    filename_prefix = "traduccion_completa" if export_type == "full_text" else "acta_oficial"
+    filename = f"{filename_prefix}_{paper_size}.docx"
+
+    return Response(
+        content=buf.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
+
 @router.get("/system/status")
 async def get_system_status():
     """
