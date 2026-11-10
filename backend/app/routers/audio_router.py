@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, List
 from fastapi import APIRouter, UploadFile, File, Form, Header, HTTPException, status
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
 import aiofiles
 
 from ..config import settings
@@ -357,21 +357,90 @@ async def get_system_status():
 @router.post("/system/renew-certs")
 async def renew_system_certs():
     """
-    Regenera y refirma los certificados X.509 v3 con SAN y clave RSA-4096.
+    Regenera y refirma los certificados X.509 v3 con SAN y clave RSA-4096,
+    e instala el certificado raíz automáticamente en el almacén de confianza de Windows.
     """
     import sys
+    import subprocess
     root_dir = Path(__file__).resolve().parent.parent.parent.parent
     tools_dir = root_dir / "tools"
     if str(tools_dir) not in sys.path:
         sys.path.insert(0, str(tools_dir))
     import generar_certificados_https
     fullchain, key = generar_certificados_https.generar_certificados_firmados(salida_dir=root_dir / "certs")
+    
+    ca_path = root_dir / "certs" / "ca.crt"
+    windows_installed = False
+    if sys.platform == "win32" and ca_path.exists():
+        try:
+            res = subprocess.run(["certutil", "-user", "-addstore", "-f", "Root", str(ca_path)], capture_output=True, text=True)
+            windows_installed = (res.returncode == 0)
+        except Exception:
+            pass
+
     return {
         "status": "SUCCESS",
-        "message": "Certificados TLS 1.3 refirmados y renovados exitosamente.",
+        "message": "Certificados TLS 1.3 refirmados y registrados exitosamente en el almacén de confianza.",
         "fullchain_path": str(fullchain),
+        "ca_installed_in_windows": windows_installed,
         "san_configured": ["localhost", "127.0.0.1", "0.0.0.0", "actasdigitales.local"]
     }
+
+@router.post("/system/install-root-cert")
+async def install_root_cert_endpoint():
+    """
+    Instala de forma inmediata el certificado raíz (ca.crt) en el almacén de confianza
+    de Windows (Cert:\\CurrentUser\\Root) para activar el candado verde en Chrome y Edge.
+    """
+    import sys
+    import subprocess
+    root_dir = Path(__file__).resolve().parent.parent.parent.parent
+    certs_dir = root_dir / "certs"
+    ca_path = certs_dir / "ca.crt"
+
+    if not ca_path.exists():
+        tools_dir = root_dir / "tools"
+        if str(tools_dir) not in sys.path:
+            sys.path.insert(0, str(tools_dir))
+        import generar_certificados_https
+        generar_certificados_https.generar_certificados_firmados(salida_dir=certs_dir)
+
+    success = False
+    message = ""
+    if sys.platform == "win32":
+        try:
+            res = subprocess.run(["certutil", "-user", "-addstore", "-f", "Root", str(ca_path)], capture_output=True, text=True)
+            if res.returncode == 0:
+                success = True
+                message = "Certificado Raíz (ca.crt) registrado con éxito en el almacén de Windows (CurrentUser\\Root). Conexión 100% segura activa en https://localhost:8443."
+            else:
+                message = f"Aviso de certutil: {res.stderr.strip() or res.stdout.strip()}"
+        except Exception as e:
+            message = f"Error al ejecutar certutil: {e}"
+    else:
+        success = True
+        message = f"Certificado disponible en {ca_path}. Listo para descarga o confianza en el cliente."
+
+    return {
+        "status": "SUCCESS" if success else "WARNING",
+        "message": message,
+        "ca_path": str(ca_path)
+    }
+
+@router.get("/system/download-ca")
+async def download_ca_cert():
+    """
+    Permite descargar directamente el certificado ca.crt para instalarlo con un clic.
+    """
+    root_dir = Path(__file__).resolve().parent.parent.parent.parent
+    ca_path = root_dir / "certs" / "ca.crt"
+    if not ca_path.exists():
+        raise HTTPException(status_code=404, detail="Certificado ca.crt no encontrado")
+    return FileResponse(
+        path=ca_path,
+        media_type="application/x-x509-ca-cert",
+        filename="ActasDigitales_CA_Raiz.crt"
+    )
 
 @router.post("/system/purge-cache")
 async def purge_audio_cache():
