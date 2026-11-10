@@ -152,13 +152,17 @@ Diseñado siguiendo el patrón de arquitectura centralizada de herramientas de e
 
 | Botón Futurista | Acción Ejecutada | Beneficio Técnico |
 |---|---|---|
-| 🚀 **`[ INICIAR TODO (HTTPS) ]`** | Levanta Uvicorn con FastAPI y TLS 1.3 en `https://localhost:8443` | Proceso minimizado asíncrono; no satura la terminal y responde inmediatamente |
-| 🌐 **`[ ABRIR NAVEGADOR ]`** | Abre el navegador predeterminado en `https://localhost:8443` | Carga directa de la Web PWA lista para operar |
-| 🔥 **`[ PRUEBAS DE FUEGO OWASP ]`** | Dispara la suite `test_pruebas_de_fuego.py` (10/10 pruebas) | Valida OWASP Top 10, sanitización contra inyecciones, rate limit y RAE |
+| 🚀 **`[ INICIAR TODO (HTTPS) ]`** | Desaloja Inventario/NovaGest y levanta Actas Digitales en `https://localhost:8443` | Proceso verificado contra `/api/health`; garantiza el servicio exclusivo de Actas Digitales |
+| 🌐 **`[ ABRIR NAVEGADOR ]`** | Abre el navegador predeterminado en `https://localhost:8443` | Carga directa de la Web lista para operar |
+| 🛡️ **`[ ABRIR EN EDGE INPRIVATE (SIN CACHE) ]`** | Abre Microsoft Edge en Modo InPrivate sin caché ni Service Workers previos | **Bypass total de Service Workers de Inventario / NovaGest**. Carga 100% limpia e instantánea |
+| 🧹 **`[ PURGAR CACHE NAVEGADOR / SW ]`** | Elimina Service Workers, almacenamiento local y caché de Edge/Chrome | Borra cachés persistentes residuales e invoca cabecera `Clear-Site-Data` |
+| 🔥 **`[ PRUEBAS DE FUEGO OWASP ]`** | Dispara la suite `test_pruebas_de_fuego.py` (11/11 pruebas) | Valida OWASP Top 10, sanitización contra inyecciones, rate limit, exportador Word DOCX y RAE |
 | 🛡️ **`[ RENOVAR TLS / SAN ]`** | Regenera y refirma certificados X.509 v3 con SAN y clave RSA | Mantiene los certificados actualizados sin interrumpir el entorno |
 | 🛑 **`[ DETENER SERVICIOS ]`** | Finaliza los procesos de Uvicorn liberando el puerto 8443 | Apagado limpio y seguro sin dejar procesos huérfanos |
-| 🧹 **`[ PURGAR CACHÉ Y TEMPORALES ]`** | Elimina archivos de audio en `backend/app/uploads/` | Retención cero de audio para cumplimiento estricto de privacidad |
 | 📜 **`[ CONSOLA EN TIEMPO REAL ]`** | Transmite en vivo los eventos, peticiones y diagnósticos | Visibilidad instantánea del estado operativo sin salir de la GUI |
+
+> **💡 Herramienta de Purga Rápida de Caché en 1 Clic:**  
+> Si tu navegador Microsoft Edge guardó la web de Inventario/NovaGest en caché o Service Worker, haz doble clic en **`server/purgar-cache.bat`**. Este script eliminará automáticamente los Service Workers residuales y abrirá Microsoft Edge en Modo InPrivate cargando Actas Digitales de inmediato. También puedes forzar una recarga limpia en tu navegador pulsando **`Ctrl + Shift + R`** o **`Ctrl + F5`**.
 
 ---
 
