@@ -1,7 +1,8 @@
 # Cert
 certs/
 *.crt
-*.key*.pem
+*.key
+*.pem
 
 # Node
 node_modules/
