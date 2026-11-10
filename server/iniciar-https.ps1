@@ -1,31 +1,30 @@
-<#
+﻿<#
 .SYNOPSIS
-  Actas Digitales - Arranque HTTPS Automático en Windows
-  Configura certificados, confianza en el sistema operativo, inicia el servidor en segundo plano
-  y abre automáticamente la aplicación Web en el navegador (modelo yhquintero/inventario).
+  Actas Digitales - Arranque HTTPS Automatico en Windows
+  Garantiza el inicio exclusivo de Actas Digitales en https://localhost:8443 (liberando Inventario u otros procesos).
 
 .DESCRIPTION
   Arranque todo en uno de Actas Digitales en Windows:
-  1) Valida el entorno Python y dependencias necesarias.
-  2) Detecta IPs locales (localhost, 127.0.0.1, LAN) y genera certificados X.509 v3 con SAN.
-  3) Registra automáticamente la CA raíz en el almacén de Windows (certutil -user -addstore -f "Root")
-     para garantizar el candado verde en Chrome, Edge, Firefox y Brave sin avisos de privacidad.
-  4) Inicia el servidor asíncrono FastAPI + Uvicorn con TLS 1.3 en el puerto 8443 en segundo plano.
-  5) Programa un job que sondea el puerto 8443 y abre de inmediato la Web en https://localhost:8443.
-  6) Despliega el Panel de Control Visual con telemetría en tiempo real e icono en la bandeja del sistema.
+  1) Libera el puerto 8443 si esta ocupado por Inventario / NovaGest u otra aplicacion.
+  2) Valida Python y librerias necesarias.
+  3) Genera certificados TLS 1.3 con SAN si faltan.
+  4) Registra la CA raiz en el almacen de Windows para activar el candado verde.
+  5) Inicia el servidor de Actas Digitales en segundo plano en el puerto 8443.
+  6) Abre automaticamente la Web en https://localhost:8443 y despliega el Panel de Control.
 
 .PARAMETER Puerto
   Puerto del servidor HTTPS. Por defecto 8443.
 
 .PARAMETER SinNavegador
-  No abre automáticamente el navegador.
+  No abre automaticamente el navegador.
 #>
 
 [CmdletBinding()]
 param(
     [int]$Puerto = 8443,
     [switch]$SinNavegador,
-    [switch]$SinPanel
+    [switch]$SinPanel,
+    [switch]$Forzar
 )
 
 $ErrorActionPreference = 'Continue'
@@ -40,126 +39,136 @@ $CaCert = Join-Path $CertsDir 'ca.crt'
 $BackendDir = Join-Path $Raiz 'backend'
 $LogDir = Join-Path $Raiz 'logs'
 
-function Log-Ok($m)    { Write-Host "  [✓] $m" -ForegroundColor Green }
+function Log-Ok($m)    { Write-Host "  [OK] $m" -ForegroundColor Green }
 function Log-Aviso($m) { Write-Host "  [!] $m" -ForegroundColor Yellow }
 function Log-Fallo($m) { Write-Host "  [X] $m" -ForegroundColor Red }
 
+function Test-PuertoEnUso([int]$p) {
+    try {
+        return (@([System.Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties().GetActiveTcpListeners() |
+            Where-Object { $_.Port -eq $p }).Count -gt 0)
+    } catch { return $false }
+}
+
+function Liberar-Puerto([int]$p) {
+    $ocupantes = @()
+    try {
+        $conns = @(Get-NetTCPConnection -State Listen -LocalPort $p -ErrorAction SilentlyContinue)
+        foreach ($c in $conns) {
+            if ($c.OwningProcess -and $c.OwningProcess -gt 4 -and $c.OwningProcess -ne $PID) {
+                $ocupantes += $c.OwningProcess
+            }
+        }
+    } catch { }
+
+    try {
+        $lineas = @(netstat -ano | Select-String ":$p\s+.*LISTENING|:$p\s+.*ESCUCHANDO")
+        foreach ($l in $lineas) {
+            if ($l -match '(?:\s+)(\d+)$') {
+                $pidNum = [int]$matches[1]
+                if ($pidNum -and $pidNum -gt 4 -and $pidNum -ne $PID) {
+                    $ocupantes += $pidNum
+                }
+            }
+        }
+    } catch { }
+
+    $unicos = $ocupantes | Select-Object -Unique
+    foreach ($procId in $unicos) {
+        Log-Aviso "Deteniendo proceso previo en puerto $p (PID $procId: Inventario u otra app)..."
+        try { Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue } catch { }
+        try { taskkill /F /PID $procId 2>$null | Out-Null } catch { }
+    }
+    Start-Sleep -Milliseconds 1200
+}
+
 Write-Host ''
 Write-Host '  ===============================================================' -ForegroundColor Cyan
-Write-Host '    ACTAS DIGITALES - INICIADOR AUTOMÁTICO SEGURO (HTTPS / TLS 1.3)' -ForegroundColor Magenta
+Write-Host '    ACTAS DIGITALES - INICIADOR AUTOMATICO EXCLUSIVO (HTTPS 8443)' -ForegroundColor Magenta
 Write-Host '  ===============================================================' -ForegroundColor Cyan
 Write-Host ''
 
-# 1. Verificar Python
+# 1. Garantizar que el puerto 8443 este libre para Actas Digitales (eliminando Inventario/NovaGest)
+if (Test-PuertoEnUso $Puerto) {
+    Log-Aviso "El puerto $Puerto esta ocupado (por ejemplo por Inventario / NovaGest)."
+    Log-Aviso "Liberando el puerto $Puerto para asegurar que abra ACTAS DIGITALES..."
+    Liberar-Puerto $Puerto
+}
+
+if (Test-PuertoEnUso $Puerto) {
+    Log-Aviso "El puerto $Puerto sigue ocupado. Intentando una liberacion forzada..."
+    Liberar-Puerto $Puerto
+}
+
+# 2. Localizar Python
 $PyExe = (Get-Command 'python', 'py' -ErrorAction SilentlyContinue | Select-Object -First 1).Source
 if (-not $PyExe) {
-    Log-Fallo "No se encontró Python. Instálalo desde https://www.python.org/"
+    Log-Fallo "No se encontro Python. Instalalo desde https://www.python.org/"
     pause
     exit 1
 }
 Log-Ok "Python detectado: $PyExe"
 
-# 2. Generar Certificados si no existen
+# 3. Certificados TLS 1.3
 if (-not (Test-Path $Fullchain) -or -not (Test-Path $ServerKey) -or -not (Test-Path $CaCert)) {
-    Log-Aviso "Generando certificados criptográficos TLS 1.3 con CA local y SAN..."
+    Log-Aviso "Generando certificados criptograficos TLS 1.3 con CA local y SAN..."
     & $PyExe (Join-Path $Raiz 'tools\generar_certificados_https.py')
 }
 Log-Ok "Certificados TLS 1.3 listos en: $CertsDir"
 
-# 3. Registrar Certificado Raíz en Windows para Candado Verde
+# 4. Registrar CA en Windows para candado verde
 if (Test-Path $CaCert) {
     try {
         certutil -user -addstore -f "Root" $CaCert | Out-Null
-        Log-Ok "Autoridad Raíz (ca.crt) instalada en el almacén de confianza de Windows (Candado Verde activo)."
+        Log-Ok "Autoridad Raiz instalada en almacen de Windows (Candado verde en Chrome/Edge)."
     } catch {
-        Log-Aviso "No se pudo registrar la CA automáticamente: $_"
+        Log-Aviso "Registro de CA opcional omitido: $_"
     }
 }
 
-# 4. Programar apertura automática del navegador en cuanto escuche el puerto
-$UrlLocal = "https://localhost:$Puerto"
-if (-not $SinNavegador) {
-    try {
-        $null = Start-Job -ArgumentList $UrlLocal, $Puerto -ScriptBlock {
-            param([string]$url, [int]$p)
-            $fin = (Get-Date).AddSeconds(45)
-            while ((Get-Date) -lt $fin) {
-                $escucha = $false
-                try {
-                    $escucha = @([System.Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties().GetActiveTcpListeners() |
-                        Where-Object { $_.Port -eq $p }).Count -gt 0
-                } catch { }
-                if ($escucha) { break }
-                Start-Sleep -Milliseconds 400
-            }
-            Start-Sleep -Milliseconds 600
-            try { Start-Process $url } catch { }
-        }
-        Log-Ok "El navegador abrirá automáticamente la Web en $UrlLocal cuando el servidor esté listo."
-    } catch {
-        Log-Aviso "Abre manualmente la Web en: $UrlLocal"
-    }
-}
-
-# 5. Garantizar que ACTAS DIGITALES inicie en el puerto $Puerto (sin interferencia de Inventario)
-$PuertoActas = $Puerto
-$Ocupado = $false
-try {
-    $Ocupado = @([System.Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties().GetActiveTcpListeners() |
-        Where-Object { $_.Port -eq $Puerto }).Count -gt 0
-} catch { }
-
-if ($Ocupado) {
-    # Verificar si el servicio respondiendo es ya Actas Digitales
-    $EsActas = $false
-    try {
-        [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
-        $testRes = Invoke-RestMethod -Uri "https://localhost:$Puerto/api/audio/system/status" -TimeoutSec 2 -ErrorAction Stop
-        if ($testRes.server_status -or $testRes.cipher) { $EsActas = $true }
-    } catch { }
-
-    if (-not $EsActas) {
-        Log-Aviso "El puerto $Puerto está ocupado por otra aplicación (ej. Inventario / NovaGest)."
-        Log-Aviso "Liberando el puerto $Puerto para asegurar que abra la Web de ACTAS DIGITALES..."
-
-        try {
-            $procs = Get-NetTCPConnection -LocalPort $Puerto -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
-            foreach ($pidOcupante in $procs) {
-                if ($pidOcupante -and $pidOcupante -ne $PID) {
-                    Stop-Process -Id $pidOcupante -Force -ErrorAction SilentlyContinue
-                }
-            }
-            Start-Sleep -Seconds 1
-        } catch { }
-    }
-}
-
-# Volver a verificar si se liberó el puerto, o usar puerto alternativo seguro si fuera necesario
-$AunOcupado = $false
-try {
-    $AunOcupado = @([System.Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties().GetActiveTcpListeners() |
-        Where-Object { $_.Port -eq $Puerto }).Count -gt 0
-} catch { }
-
-# Iniciar servidor FastAPI + Uvicorn de Actas Digitales
-Log-Ok "Iniciando servidor exclusivo de ACTAS DIGITALES en https://localhost:$PuertoActas..."
+# 5. Iniciar servidor de Actas Digitales en segundo plano
 if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Path $LogDir -Force | Out-Null }
+$LogServidor = Join-Path $LogDir 'servidor.log'
+$ArgsUvicorn = "-m uvicorn app.main:app --host 0.0.0.0 --port $Puerto --ssl-keyfile `"$ServerKey`" --ssl-certfile `"$Fullchain`""
 
-$ArgsUvicorn = "-m uvicorn app.main:app --host 0.0.0.0 --port $PuertoActas --ssl-keyfile `"$ServerKey`" --ssl-certfile `"$Fullchain`""
-Start-Process -FilePath $PyExe -ArgumentList $ArgsUvicorn -WorkingDirectory $BackendDir -WindowStyle Minimized
-Log-Ok "¡Servidor de Actas Digitales iniciado con éxito en https://localhost:$PuertoActas!"
+Log-Ok "Iniciando servidor de ACTAS DIGITALES en puerto $Puerto..."
+$ProcServidor = Start-Process -FilePath $PyExe -ArgumentList $ArgsUvicorn -WorkingDirectory $BackendDir `
+    -WindowStyle Minimized -PassThru
 
-# 6. Abrir el Panel de Control Visual (a menos que se use -SinPanel)
+# 6. Esperar a que el servidor de Actas Digitales escuche en el puerto
+$Listo = $false
+$Limite = (Get-Date).AddSeconds(20)
+while ((Get-Date) -lt $Limite) {
+    if (Test-PuertoEnUso $Puerto) {
+        $Listo = $true
+        break
+    }
+    Start-Sleep -Milliseconds 400
+}
+
+$UrlLocal = "https://localhost:$Puerto"
+if ($Listo) {
+    Log-Ok "Servidor ACTAS DIGITALES activo y respondiendo en: $UrlLocal"
+    if (-not $SinNavegador) {
+        Start-Sleep -Milliseconds 500
+        Log-Ok "Abriendo aplicacion Web de Actas Digitales en el navegador..."
+        try { Start-Process $UrlLocal } catch { }
+    }
+} else {
+    Log-Fallo "El servidor tardo en responder. Revisa que el puerto $Puerto este libre."
+}
+
+# 7. Lanzar el Panel de Control Visual (si no se omitio)
 if (-not $SinPanel) {
     $PanelScript = Join-Path $PSScriptRoot 'panel-control.ps1'
     if (Test-Path $PanelScript) {
         Write-Host ''
-        Log-Ok "Abriendo Panel de Control Visual HUD..."
-        & powershell -NoProfile -ExecutionPolicy Bypass -File $PanelScript -Puerto $PuertoActas
+        Log-Ok "Abriendo Panel de Control Visual..."
+        & powershell -NoProfile -ExecutionPolicy Bypass -File $PanelScript -Puerto $Puerto
     }
 } else {
     Write-Host ''
-    Log-Ok "Servidor listo en: https://localhost:$PuertoActas"
+    Log-Ok "Actas Digitales listo en: $UrlLocal"
     Write-Host "Pulsa Ctrl+C para finalizar." -ForegroundColor Cyan
     while ($true) { Start-Sleep -Seconds 5 }
 }
