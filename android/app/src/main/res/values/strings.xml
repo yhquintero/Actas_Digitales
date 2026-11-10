@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Actas Digitales</string>
+    <string name="record_audio">Grabar Audio</string>
+    <string name="upload_audio">Subir Archivo</string>
+    <string name="transcribing">Transcribiendo y corrigiendo…</string>
+    <string name="permission_required">Se requiere permiso de micrófono para grabar actas.</string>
+</resources>
