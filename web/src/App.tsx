@@ -6,6 +6,7 @@ import { JobProgress } from './components/JobProgress';
 import { ResultViewer } from './components/ResultViewer';
 import { RecentJobs } from './components/RecentJobs';
 import { PromoVideoModal } from './components/PromoVideoModal';
+import { FuturisticControlPanel } from './components/FuturisticControlPanel';
 import { JobResponse } from './types';
 import { UploadCloud, Mic, Sparkles, CheckCircle2 } from 'lucide-react';
 
@@ -16,6 +17,7 @@ export const App: React.FC = () => {
   const [recentJobs, setRecentJobs] = useState<JobResponse[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isPromoOpen, setIsPromoOpen] = useState(false);
+  const [isControlPanelOpen, setIsControlPanelOpen] = useState(false);
   const [testText, setTestText] = useState(
     'bueno pues este... yo-yo creo que vamos a a a revisar la sesion del dia de hoy. ¿habra alguna duda sobre el acta?'
   );
@@ -172,8 +174,18 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      <Navbar apiKey={apiKey} onApiKeyChange={handleApiKeyChange} onOpenPromoVideo={() => setIsPromoOpen(true)} />
+      <Navbar
+        apiKey={apiKey}
+        onApiKeyChange={handleApiKeyChange}
+        onOpenPromoVideo={() => setIsPromoOpen(true)}
+        onOpenControlPanel={() => setIsControlPanelOpen(true)}
+      />
       <PromoVideoModal isOpen={isPromoOpen} onClose={() => setIsPromoOpen(false)} />
+      <FuturisticControlPanel
+        isOpen={isControlPanelOpen}
+        onClose={() => setIsControlPanelOpen(false)}
+        onOpenPromoVideo={() => setIsPromoOpen(true)}
+      />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Hero section */}

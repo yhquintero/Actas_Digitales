@@ -169,6 +169,34 @@ Guía completa de despliegue y certificados: [docs/INSTALACION_HTTPS.md](docs/IN
 
 ## 🚀 Inicio Rápido
 
+### 💻 Método Recomendado en Windows: Panel de Control Futurista (1 Clic)
+
+Ejecuta el archivo **`iniciar-panel.bat`** (o `server\panel-control.ps1`) haciendo doble clic desde el Explorador de Windows:
+- Arranca la interfaz visual HUD en modo oscuro con botones futuristas iluminados.
+- Verifica y genera automáticamente los certificados TLS 1.3 con SAN.
+- Inicia el servidor seguro HTTPS en segundo plano y abre el navegador en `https://localhost:8443`.
+- Proporciona botones de acción directa: **Iniciar Todo**, **Abrir Navegador**, **Pruebas de Fuego OWASP**, **Renovar Certificados** y consola de eventos en vivo.
+
+---
+
+### 📥 Solución Rápida si GitHub Desktop Da Error («curl 56 Recv failure»):
+
+Si GitHub Desktop muestra error de conexión al descargar, se debe al tamaño mínimo por defecto del búfer de Git en Windows. Para solucionarlo al instante:
+
+1. **Opción Automática (1 Clic):**
+   Descarga y ejecuta el archivo **`clonar_o_actualizar.bat`**. Configurará el búfer y clonará de forma optimizada.
+2. **Opción Manual en PowerShell o CMD:**
+   ```powershell
+   git config --global http.postBuffer 524288000
+   git config --global http.maxRequestBuffer 100M
+   git config --global core.compression 0
+   git clone --depth 1 https://github.com/yhquintero/Actas_Digitales.git
+   ```
+3. **Vincular a GitHub Desktop:**
+   Una vez clonado, abre GitHub Desktop $\to$ **File** $\to$ **Add Local Repository** $\to$ selecciona la carpeta `Actas_Digitales`. ¡Se abrirá de inmediato sin errores!
+
+---
+
 ### 1. Requisitos Previos
 - Python 3.10 o superior.
 - Node.js 18+ (para compilar la aplicación Web).
