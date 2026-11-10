@@ -91,6 +91,24 @@ def asegurar_dependencias():
         ret = subprocess.call([sys.executable] + sys.argv)
         sys.exit(ret)
 
+def instalar_certificado_en_almacen_windows(ca_path: Path):
+    """
+    Instala de forma automática y transparente ca.crt en el almacén de Certificados
+    Raíz de Windows (CurrentUser\\Root) para activar el candado verde en Chrome y Edge.
+    """
+    if sys.platform != "win32":
+        return
+    try:
+        cmd = ["certutil", "-user", "-addstore", "-f", "Root", str(ca_path)]
+        res = subprocess.run(cmd, capture_output=True, text=True)
+        if res.returncode == 0:
+            print("[✓] Certificado Raíz (ca.crt) registrado automáticamente en el almacén de Windows (CurrentUser\\Root).")
+            print("    -> Google Chrome y Microsoft Edge confían en https://localhost:8443 (Candado Verde Seguro).")
+        else:
+            print(f"[!] Certutil devolvió aviso: {res.stderr.strip() or res.stdout.strip()}")
+    except Exception as e:
+        print(f"[!] No se pudo registrar automáticamente en almacén Windows: {e}")
+
 def asegurar_certificados():
     certs_dir = ROOT_DIR / "certs"
     key_path = certs_dir / "server.key"
@@ -105,6 +123,10 @@ def asegurar_certificados():
             print("[OK] Certificados generados exitosamente.")
         except Exception as e:
             print(f"[!] Error al generar certificados: {e}")
+
+    # Registrar automáticamente en Windows si ca.crt existe
+    if ca_path.exists():
+        instalar_certificado_en_almacen_windows(ca_path)
 
     return key_path, cert_path
 

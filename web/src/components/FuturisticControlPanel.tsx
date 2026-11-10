@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, ShieldCheck, Terminal, Cpu, HardDrive, RefreshCw, Trash2, Play, Flame, CheckCircle, Activity, Lock, Layers } from 'lucide-react';
+import { X, ShieldCheck, Terminal, Cpu, HardDrive, RefreshCw, Trash2, Play, Flame, CheckCircle, Activity, Lock, Layers, Download } from 'lucide-react';
 
 interface FuturisticControlPanelProps {
   isOpen: boolean;
@@ -60,6 +60,25 @@ export const FuturisticControlPanel: React.FC<FuturisticControlPanelProps> = ({
 
   if (!isOpen) return null;
 
+  const handleInstallRootCert = async () => {
+    setLoadingAction('cert_install');
+    addLog("REGISTRANDO CERTIFICADO RAÍZ (ca.crt) EN ALMACÉN DE WINDOWS...");
+    try {
+      const res = await fetch('/api/audio/system/install-root-cert', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        addLog(`[✓] CONFIANZA RAÍZ: ${data.message}`);
+        fetchTelemetry();
+      } else {
+        addLog("AVISO AL REGISTRAR CERTIFICADO");
+      }
+    } catch (e) {
+      addLog("ERROR EN SERVICIO DE CERTIFICADOS");
+    } finally {
+      setLoadingAction(null);
+    }
+  };
+
   const handleRenewCerts = async () => {
     setLoadingAction('renew');
     addLog("SOLICITANDO REGENERACIÓN CRIPTOGRÁFICA DE CERTIFICADOS...");
@@ -67,7 +86,10 @@ export const FuturisticControlPanel: React.FC<FuturisticControlPanelProps> = ({
       const res = await fetch('/api/audio/system/renew-certs', { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
-        addLog(`CERTIFICADOS REFIRMADOS: SAN [${data.san_configured.join(', ')}]`);
+        addLog(`CERTIFICADOS REFIRMADOS CON ÉXITO: SAN [${data.san_configured.join(', ')}]`);
+        if (data.ca_installed_in_windows) {
+          addLog("CERTIFICADO RAÍZ ACTUALIZADO EN EL ALMACÉN DE WINDOWS (CANDADO VERDE ACTIVO)");
+        }
         fetchTelemetry();
       }
     } catch (e) {
@@ -128,7 +150,7 @@ export const FuturisticControlPanel: React.FC<FuturisticControlPanelProps> = ({
                   Panel de Control Futurista
                 </h2>
                 <span className="text-[10px] bg-cyan-950 text-cyan-400 border border-cyan-500/50 px-2.5 py-0.5 rounded-full font-mono font-bold">
-                  HUD v2.0
+                  HUD v2.5
                 </span>
               </div>
               <p className="text-xs text-indigo-300 font-mono">
@@ -177,7 +199,7 @@ export const FuturisticControlPanel: React.FC<FuturisticControlPanelProps> = ({
             <span className="text-lg font-bold text-amber-300">
               {telemetry?.audio_buffer_status || 'ÓPTIMO'}
             </span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">VAD Silencios Activo</span>
+            <span className="text-[10px] text-slate-400 block mt-0.5">M4A/MP3/WAV Nativo</span>
           </div>
 
           <div className="bg-slate-900/80 border border-indigo-500/30 p-3.5 rounded-2xl relative overflow-hidden">
@@ -196,28 +218,42 @@ export const FuturisticControlPanel: React.FC<FuturisticControlPanelProps> = ({
         <div>
           <h3 className="text-xs font-mono font-bold uppercase text-indigo-400 tracking-wider mb-3 flex items-center gap-1.5">
             <Layers className="w-4 h-4 text-indigo-400" />
-            <span>Módulos de Ejecución Inmediata (Botones Futuristas)</span>
+            <span>Módulos de Ejecución Inmediata (Panel de Control y Seguridad)</span>
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Botón Certificado de Confianza Raíz */}
             <button
-              onClick={handleRunFireTests}
-              disabled={loadingAction === 'tests'}
-              className="group relative p-4 rounded-2xl bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 border border-indigo-500/50 hover:border-cyan-400 text-left transition-all duration-300 shadow-[0_0_15px_rgba(79,70,229,0.2)] hover:shadow-[0_0_25px_rgba(6,182,212,0.4)] disabled:opacity-50"
+              onClick={handleInstallRootCert}
+              disabled={loadingAction === 'cert_install'}
+              className="group relative p-4 rounded-2xl bg-gradient-to-br from-cyan-950 via-slate-900 to-indigo-950 border border-cyan-500/50 hover:border-cyan-400 text-left transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.25)] hover:shadow-[0_0_25px_rgba(6,182,212,0.45)] disabled:opacity-50"
             >
-              <div className="flex items-center space-x-3 mb-2">
-                <div className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center border border-cyan-400/40">
-                  <Flame className="w-4 h-4" />
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center border border-cyan-400/40">
+                    <ShieldCheck className={`w-4 h-4 ${loadingAction === 'cert_install' ? 'animate-pulse' : ''}`} />
+                  </div>
+                  <span className="text-xs font-bold text-white font-mono group-hover:text-cyan-300">
+                    {loadingAction === 'cert_install' ? 'INSTALANDO...' : 'CERTIFICADO CONFIANZA'}
+                  </span>
                 </div>
-                <span className="text-sm font-bold text-white font-mono group-hover:text-cyan-300">
-                  {loadingAction === 'tests' ? 'VERIFICANDO...' : 'PRUEBAS DE FUEGO'}
-                </span>
+                <a
+                  href="/api/audio/system/download-ca"
+                  download="ActasDigitales_CA_Raiz.crt"
+                  onClick={(e) => e.stopPropagation()}
+                  className="p-1 rounded bg-slate-800 hover:bg-cyan-900 text-slate-300 hover:text-cyan-200 text-[10px] font-mono border border-slate-700 flex items-center gap-1"
+                  title="Descargar archivo ca.crt para importar manualmente"
+                >
+                  <Download className="w-3 h-3" />
+                  <span>CA</span>
+                </a>
               </div>
               <p className="text-[11px] text-slate-400 leading-snug">
-                Ejecuta fuzzing contra OWASP Top 10, inyección, XSS y límites acústicos.
+                Registra ca.crt en el almacén de Windows (CurrentUser\Root) para candado verde seguro en Chrome y Edge.
               </p>
             </button>
 
+            {/* Renovar TLS / SAN */}
             <button
               onClick={handleRenewCerts}
               disabled={loadingAction === 'renew'}
@@ -227,15 +263,35 @@ export const FuturisticControlPanel: React.FC<FuturisticControlPanelProps> = ({
                 <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-400/40">
                   <RefreshCw className={`w-4 h-4 ${loadingAction === 'renew' ? 'animate-spin' : ''}`} />
                 </div>
-                <span className="text-sm font-bold text-white font-mono group-hover:text-emerald-300">
+                <span className="text-xs font-bold text-white font-mono group-hover:text-emerald-300">
                   {loadingAction === 'renew' ? 'REFIRMANDO...' : 'RENOVAR TLS / SAN'}
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 leading-snug">
-                Emite y firma certificados X.509 v3 con CA local RSA-4096.
+                Emite certificados X.509 v3 con SAN (localhost, 127.0.0.1) y clave RSA-4096.
               </p>
             </button>
 
+            {/* Pruebas de Fuego */}
+            <button
+              onClick={handleRunFireTests}
+              disabled={loadingAction === 'tests'}
+              className="group relative p-4 rounded-2xl bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 border border-indigo-500/50 hover:border-cyan-400 text-left transition-all duration-300 shadow-[0_0_15px_rgba(79,70,229,0.2)] hover:shadow-[0_0_25px_rgba(6,182,212,0.4)] disabled:opacity-50"
+            >
+              <div className="flex items-center space-x-3 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center border border-cyan-400/40">
+                  <Flame className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-bold text-white font-mono group-hover:text-cyan-300">
+                  {loadingAction === 'tests' ? 'VERIFICANDO...' : 'PRUEBAS DE FUEGO'}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-snug">
+                Ejecuta fuzzing contra OWASP Top 10, inyección, XSS y límites acústicos.
+              </p>
+            </button>
+
+            {/* Purgar Caché */}
             <button
               onClick={handlePurgeCache}
               disabled={loadingAction === 'purge'}
@@ -245,15 +301,16 @@ export const FuturisticControlPanel: React.FC<FuturisticControlPanelProps> = ({
                 <div className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center border border-purple-400/40">
                   <Trash2 className="w-4 h-4" />
                 </div>
-                <span className="text-sm font-bold text-white font-mono group-hover:text-purple-300">
+                <span className="text-xs font-bold text-white font-mono group-hover:text-purple-300">
                   {loadingAction === 'purge' ? 'PURGANDO...' : 'PURGAR CACHÉ'}
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 leading-snug">
-                Limpia grabaciones temporales asegurando retención cero.
+                Limpia grabaciones temporales asegurando retención cero y privacidad.
               </p>
             </button>
 
+            {/* Vídeo Demo */}
             <button
               onClick={() => {
                 onClose();
@@ -265,7 +322,7 @@ export const FuturisticControlPanel: React.FC<FuturisticControlPanelProps> = ({
                 <div className="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center border border-rose-400/40">
                   <Play className="w-4 h-4 ml-0.5" />
                 </div>
-                <span className="text-sm font-bold text-white font-mono group-hover:text-rose-300">
+                <span className="text-xs font-bold text-white font-mono group-hover:text-rose-300">
                   VÍDEO DEMO (3 MIN)
                 </span>
               </div>
@@ -274,52 +331,46 @@ export const FuturisticControlPanel: React.FC<FuturisticControlPanelProps> = ({
               </p>
             </button>
 
+            {/* Manual de Usuario */}
             <a
               href="/docs/MANUAL_USUARIO.html"
               target="_blank"
-              rel="noreferrer"
-              className="group relative p-4 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 border border-slate-700 hover:border-indigo-400 text-left transition-all duration-300"
+              rel="noopener noreferrer"
+              className="group relative p-4 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-slate-700 hover:border-indigo-400 text-left transition-all duration-300 shadow-sm"
             >
               <div className="flex items-center space-x-3 mb-2">
                 <div className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-400/40">
-                  <Terminal className="w-4 h-4" />
+                  <CheckCircle className="w-4 h-4" />
                 </div>
-                <span className="text-sm font-bold text-white font-mono group-hover:text-indigo-300">
-                  MANUAL IMPRIMIBLE
+                <span className="text-xs font-bold text-white font-mono group-hover:text-indigo-300">
+                  MANUAL TÉCNICO
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 leading-snug">
-                Abre la documentación paso a paso lista para exportar a PDF.
+                Documentación completa de arquitectura, endpoints y despliegue.
               </p>
             </a>
-
-            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex flex-col justify-center items-center text-center">
-              <span className="text-[10px] uppercase font-mono text-slate-500">Trabajos Procesados</span>
-              <span className="text-2xl font-mono font-bold text-cyan-400">
-                {telemetry?.total_jobs_processed ?? 0}
-              </span>
-              <span className="text-[10px] text-emerald-400 font-mono mt-1 flex items-center gap-1">
-                <CheckCircle className="w-3 h-3" /> Cero errores críticos
-              </span>
-            </div>
           </div>
         </div>
 
-        {/* Live Cyberpunk Terminal Log */}
-        <div className="bg-black/90 border border-indigo-500/40 rounded-2xl p-4 font-mono text-xs shadow-inner">
-          <div className="flex items-center justify-between pb-2 mb-2 border-b border-indigo-500/20 text-slate-400 text-[10px]">
-            <span className="flex items-center gap-1.5 text-cyan-400">
-              <Terminal className="w-3.5 h-3.5" />
-              <span>TERMINAL DE EVENTOS EN VIVO</span>
+        {/* Live HUD Terminal Console */}
+        <div className="bg-slate-950 border border-indigo-500/30 rounded-2xl p-4 font-mono text-xs">
+          <div className="flex items-center justify-between pb-2 mb-2 border-b border-indigo-500/20 text-indigo-400">
+            <div className="flex items-center space-x-2">
+              <Terminal className="w-4 h-4 text-cyan-400" />
+              <span className="text-[11px] font-bold uppercase tracking-wider">Consola HUD en Tiempo Real</span>
+            </div>
+            <span className="text-[10px] text-emerald-400 flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+              STREAM CONECTADO
             </span>
-            <span className="text-emerald-400 animate-pulse">● TRANSMISIÓN SEGURA</span>
           </div>
 
-          <div className="space-y-1 max-h-36 overflow-y-auto pr-1 text-slate-300">
+          <div className="h-28 overflow-y-auto space-y-1 text-slate-300 font-mono text-[11px] scrollbar-thin scrollbar-thumb-indigo-600">
             {logs.map((log, i) => (
-              <div key={i} className="flex items-start space-x-2 text-[11px]">
-                <span className="text-cyan-500 select-none">&gt;</span>
-                <span className={i === 0 ? "text-cyan-300 font-semibold" : "text-slate-400"}>
+              <div key={i} className="flex items-start space-x-2">
+                <span className="text-cyan-400 select-none">&gt;</span>
+                <span className={i === 0 ? "text-cyan-300 font-bold" : "text-slate-400"}>
                   {log}
                 </span>
               </div>
