@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manual de Usuario · Actas Digitales</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-dark: #3730a3;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --emerald: #059669;
+      --emerald-bg: #ecfdf5;
+      --rose: #e11d48;
+      --rose-bg: #fff1f2;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 3rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    header {
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      background: #eef2ff;
+      color: var(--primary);
+      border: 1px solid #c7d2fe;
+    }
+
+    h1 { font-size: 2rem; color: var(--text); }
+    h2 { font-size: 1.4rem; color: var(--primary-dark); margin: 2rem 0 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+    h3 { font-size: 1.1rem; color: var(--text); margin: 1.2rem 0 0.5rem; }
+    p, ul, ol { margin-bottom: 1rem; color: var(--text-muted); font-size: 0.95rem; }
+    ul, ol { padding-left: 1.5rem; }
+    li { margin-bottom: 0.35rem; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.75rem;
+      text-align: left;
+    }
+
+    th {
+      background: #f1f5f9;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .callout {
+      background: var(--emerald-bg);
+      border-left: 4px solid var(--emerald);
+      padding: 1rem;
+      border-radius: 6px;
+      margin: 1.5rem 0;
+      font-size: 0.9rem;
+      color: #065f46;
+    }
+
+    .print-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .container { border: none; box-shadow: none; padding: 0; max-width: 100%; }
+      .print-btn { display: none; }
+      h2 { page-break-after: avoid; }
+      table, .callout { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div>
+          <h1>Actas Digitales · Manual de Usuario</h1>
+          <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Guía oficial de operación para Web, Android y Servidor HTTPS</p>
+        </div>
+      </div>
+      <div>
+        <span class="badge">Versión 1.1.0</span>
+        <button class="print-btn" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+      </div>
+    </header>
+
+    <h2>1. Resumen y Ecosistema</h2>
+    <p>
+      Actas Digitales convierte grabaciones de voz en documentos oficiales listos para firmar mediante un proceso de cinco etapas:
+      <strong>ingesta de audio</strong>, <strong>detección de actividad de voz (VAD)</strong>, <strong>transcripción fonética en español</strong>,
+      <strong>fusión y supresión de muletillas</strong> y <strong>corrección ortotipográfica</strong>.
+    </p>
+
+    <div class="callout">
+      <strong>🔒 Seguridad Garantizada:</strong> Toda la transmisión se efectúa bajo HTTPS con certificados firmados y TLS 1.3. Los datos pueden almacenarse exclusivamente en la red privada de tu negocio sin depender de servicios en la nube pública.
+    </div>
+
+    <h2>2. Guía de Uso: Aplicación Web</h2>
+    <ol>
+      <li><strong>Acceso Seguro:</strong> Abre el navegador en la URL segura con protocolo HTTPS (ej. <code>https://localhost:8443</code>).</li>
+      <li><strong>Subir o Grabar:</strong> Arrastra tu archivo de audio (.mp3, .wav, .m4a, .ogg, .webm) o pulsa el micrófono para grabar la reunión en directo.</li>
+      <li><strong>Procesamiento:</strong> Observa las 5 etapas del pipeline. El servidor te notificará automáticamente cuando el texto esté consolidado.</li>
+      <li><strong>Revisión:</strong> Comprueba el texto final o activa la <em>Comparativa Antes / Después</em> para auditar qué muletillas y tildes se corrigieron.</li>
+      <li><strong>Acta Oficial:</strong> Pulsa <em>Acta Oficial RAE</em> para estructurar el documento con orden del día, acuerdos y pie de firmas.</li>
+      <li><strong>Exportación:</strong> Descarga en TXT o Markdown, o pulsa <em>PDF / Imprimir</em> para guardar el documento formal.</li>
+    </ol>
+
+    <h2>3. Guía de Uso: Aplicación Android</h2>
+    <ul>
+      <li><strong>Permisos:</strong> Concede el permiso de micrófono al abrir la app por primera vez.</li>
+      <li><strong>Grabación Nativa:</strong> Pulsa el botón principal de micrófono para iniciar la captura en formato AAC 16 kHz.</li>
+      <li><strong>Subida Resiliente con WorkManager:</strong> Si sales de la app o se interrumpe la red, la tarea de subida se reanudará automáticamente al recuperar la señal.</li>
+      <li><strong>Compartir:</strong> Al finalizar, copia el texto al portapapeles o compártelo al instante por correo o mensajería corporativa.</li>
+    </ul>
+
+    <h2>4. Solución de Problemas Frecuentes</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Problema</th>
+          <th>Causa</th>
+          <th>Solución</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>El micrófono no activa en la Web</td>
+          <td>Página abierta por HTTP inseguro</td>
+          <td>Accede siempre con <code>https://</code> para cumplir las políticas de seguridad del navegador.</td>
+        </tr>
+        <tr>
+          <td>Formato no permitido</td>
+          <td>Extensión de archivo desconocida</td>
+          <td>Utiliza formatos estándar: MP3, WAV, M4A, AAC, OGG o WebM.</td>
+        </tr>
+        <tr>
+          <td>Aviso de certificado no seguro</td>
+          <td>Certificado autofirmado local</td>
+          <td>Instala el certificado raíz <code>ca.crt</code> en las autoridades de confianza de tu equipo.</td>
+        </tr>
+        <tr>
+          <td>Error de red en Android</td>
+          <td>IP del servidor inaccesible</td>
+          <td>Verifica que el móvil y el servidor compartan la misma red Wi-Fi y puerto.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>5. Lista de Verificación (Checklist)</h2>
+    <ul>
+      <li>[ ] Servidor HTTPS iniciado y con certificados vigentes.</li>
+      <li>[ ] Micrófono centrado en la mesa sin tapar el sensor acústico.</li>
+      <li>[ ] Prueba de audio de 5 segundos realizada antes de comenzar la sesión.</li>
+      <li>[ ] Grabación detenida al concluir y enviada al servidor.</li>
+      <li>[ ] Acta estructurada con acuerdos y enviada a los firmantes.</li>
+    </ul>
+
+    <footer style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.8rem; color: var(--text-muted); text-align: center;">
+      Actas Digitales · Documentación Oficial del Sistema · © 2026 yhquintero
+    </footer>
+  </div>
+
+</body>
+</html>

@@ -7,12 +7,16 @@ from fastapi.responses import FileResponse
 
 from .config import settings
 from .routers.audio_router import router as audio_router
+from .middlewares.security_middleware import SecurityMiddleware
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="Backend API para procesamiento, transcripción, consolidación y corrección de audio a texto."
+    description="Backend API seguro con TLS para procesamiento, transcripción, consolidación y corrección de audio a texto."
 )
+
+# Middleware de Seguridad y Cabeceras HTTPS
+app.add_middleware(SecurityMiddleware, max_requests_per_minute=180)
 
 # CORS
 app.add_middleware(

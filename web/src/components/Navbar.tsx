@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Mic, Key, ShieldCheck } from 'lucide-react';
+import { Mic, Key, Film, Lock, ShieldCheck } from 'lucide-react';
 
 interface NavbarProps {
   apiKey: string;
   onApiKeyChange: (key: string) => void;
+  onOpenPromoVideo: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ apiKey, onApiKeyChange }) => {
+export const Navbar: React.FC<NavbarProps> = ({ apiKey, onApiKeyChange, onOpenPromoVideo }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [tempKey, setTempKey] = useState(apiKey);
 
@@ -16,7 +17,7 @@ export const Navbar: React.FC<NavbarProps> = ({ apiKey, onApiKeyChange }) => {
   };
 
   return (
-    <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
+    <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-100">
@@ -26,7 +27,7 @@ export const Navbar: React.FC<NavbarProps> = ({ apiKey, onApiKeyChange }) => {
             <div className="flex items-center space-x-2">
               <span className="font-bold text-lg text-slate-900 tracking-tight">Actas Digitales</span>
               <span className="text-xs bg-indigo-50 text-indigo-700 font-semibold px-2 py-0.5 rounded-full border border-indigo-200">
-                v1.0
+                v1.1 · HTTPS
               </span>
             </div>
             <p className="text-xs text-slate-500 hidden sm:block">
@@ -35,10 +36,22 @@ export const Navbar: React.FC<NavbarProps> = ({ apiKey, onApiKeyChange }) => {
           </div>
         </div>
 
-        <div className="flex items-center space-x-3">
-          <div className="hidden md:flex items-center space-x-1.5 text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="font-medium">Motor NLP Español Activo</span>
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          {/* Promo Video Trigger */}
+          <button
+            onClick={onOpenPromoVideo}
+            className="flex items-center space-x-1.5 text-xs text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors border border-indigo-200 font-semibold"
+            title="Ver presentación oficial de 3 minutos"
+          >
+            <Film className="w-3.5 h-3.5 text-indigo-600" />
+            <span className="hidden sm:inline">Vídeo (3 min)</span>
+            <span className="sm:hidden">Vídeo</span>
+          </button>
+
+          {/* HTTPS / Security Pill */}
+          <div className="hidden lg:flex items-center space-x-1.5 text-xs text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+            <Lock className="w-3.5 h-3.5 text-emerald-600" />
+            <span className="font-medium">TLS 1.3 Seguro</span>
           </div>
 
           <button

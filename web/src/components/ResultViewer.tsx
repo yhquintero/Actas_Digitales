@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Check, Download, Sparkles, FileText, SplitSquareVertical, ArrowRight } from 'lucide-react';
+import { Copy, Check, Download, Sparkles, FileText, SplitSquareVertical, ArrowRight, Printer, FileCheck } from 'lucide-react';
 import { JobResponse } from '../types';
 
 interface ResultViewerProps {
@@ -7,8 +7,10 @@ interface ResultViewerProps {
 }
 
 export const ResultViewer: React.FC<ResultViewerProps> = ({ job }) => {
-  const [activeTab, setActiveTab] = useState<'corrected' | 'comparison' | 'raw' | 'corrections'>('corrected');
+  const [activeTab, setActiveTab] = useState<'corrected' | 'official' | 'comparison' | 'corrections' | 'raw'>('corrected');
   const [copied, setCopied] = useState(false);
+  const [officialActa, setOfficialActa] = useState<string | null>(null);
+  const [isFormatting, setIsFormatting] = useState(false);
 
   const handleCopy = (text?: string) => {
     if (!text) return;
@@ -17,12 +19,46 @@ export const ResultViewer: React.FC<ResultViewerProps> = ({ job }) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleDownload = (format: 'txt' | 'md') => {
-    const textToExport = job.final_corrected_text || '';
-    let content = textToExport;
-    let filename = `${job.filename.replace(/\.[^/.]+$/, '')}_corregido.${format}`;
+  const handleFormatOfficial = async () => {
+    if (officialActa) {
+      setActiveTab('official');
+      return;
+    }
 
-    if (format === 'md') {
+    setIsFormatting(true);
+    try {
+      const formData = new FormData();
+      formData.append('title', 'Sesión Ordinaria de Consejo');
+      formData.append('attendees', 'Presidente, Secretario General, Miembros del Comité');
+      formData.append('text', job.final_corrected_text || '');
+
+      const res = await fetch('/api/audio/format-official-acta', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setOfficialActa(data.formatted_acta);
+        setActiveTab('official');
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsFormatting(false);
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleDownload = (format: 'txt' | 'md') => {
+    const textToExport = activeTab === 'official' && officialActa ? officialActa : (job.final_corrected_text || '');
+    let content = textToExport;
+    let filename = `${job.filename.replace(/\.[^/.]+$/, '')}_${activeTab === 'official' ? 'acta_oficial' : 'corregido'}.${format}`;
+
+    if (format === 'md' && activeTab !== 'official') {
       content = `# Acta Transcrita y Corregida\n\n**Archivo Original:** ${job.filename}\n**Fecha:** ${new Date(job.created_at).toLocaleString('es-ES')}\n**Duración:** ${job.stats?.audio_duration_sec || 0}s\n\n---\n\n## Texto Corregido\n\n${textToExport}\n\n---\n\n### Estadísticas de Procesamiento\n- Palabras originales: ${job.stats?.original_words}\n- Palabras finales consolidadas: ${job.stats?.final_words}\n- Muletillas y cortes eliminados: ${job.stats?.removed_fillers}\n- Correcciones ortotipográficas: ${job.stats?.orthographic_corrections}\n`;
     }
 
@@ -36,9 +72,9 @@ export const ResultViewer: React.FC<ResultViewerProps> = ({ job }) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-8 animate-in fade-in">
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-8 animate-in fade-in print:border-none print:shadow-none">
       {/* Header bar with stats */}
-      <div className="bg-slate-900 text-white p-6">
+      <div className="bg-slate-900 text-white p-6 print:hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-400/30">
@@ -51,13 +87,32 @@ export const ResultViewer: React.FC<ResultViewerProps> = ({ job }) => {
           </div>
 
           {/* Quick actions */}
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
-              onClick={() => handleCopy(job.final_corrected_text)}
-              className="flex items-center space-x-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-medium rounded-lg transition border border-slate-700"
+              onClick={handleFormatOfficial}
+              disabled={isFormatting}
+              className="flex items-center space-x-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg transition shadow-sm"
+              title="Estructurar como documento formal con convocatoria, acuerdos y firmas"
+            >
+              <FileCheck className="w-4 h-4" />
+              <span>{isFormatting ? 'Estructurando...' : 'Acta Oficial RAE'}</span>
+            </button>
+
+            <button
+              onClick={() => handleCopy(activeTab === 'official' && officialActa ? officialActa : job.final_corrected_text)}
+              className="flex items-center space-x-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-medium rounded-lg transition border border-slate-700"
             >
               {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-              <span>{copied ? 'Copiado al portapapeles' : 'Copiar Texto'}</span>
+              <span>{copied ? 'Copiado' : 'Copiar'}</span>
+            </button>
+
+            <button
+              onClick={handlePrint}
+              className="flex items-center space-x-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-medium rounded-lg transition border border-slate-700"
+              title="Imprimir o guardar como PDF"
+            >
+              <Printer className="w-4 h-4" />
+              <span>PDF / Imprimir</span>
             </button>
 
             <button
@@ -65,7 +120,7 @@ export const ResultViewer: React.FC<ResultViewerProps> = ({ job }) => {
               className="flex items-center space-x-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg transition"
             >
               <Download className="w-4 h-4" />
-              <span>Descargar .TXT</span>
+              <span>.TXT</span>
             </button>
 
             <button
@@ -84,47 +139,59 @@ export const ResultViewer: React.FC<ResultViewerProps> = ({ job }) => {
             <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
               <span className="text-[11px] text-slate-400 uppercase tracking-wider block">Tiempo Procesamiento</span>
               <span className="text-xl font-bold font-mono text-indigo-300">{job.stats.processing_time_sec}s</span>
-              <span className="text-[10px] text-slate-500 block">audio: ~{job.stats.audio_duration_sec}s</span>
+              <span className="text-[10px] text-slate-500 block">duración: ~{job.stats.audio_duration_sec}s</span>
             </div>
 
             <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
               <span className="text-[11px] text-slate-400 uppercase tracking-wider block">Palabras</span>
               <span className="text-xl font-bold font-mono text-emerald-400">{job.stats.final_words}</span>
-              <span className="text-[10px] text-slate-500 block">orig: {job.stats.original_words}</span>
+              <span className="text-[10px] text-slate-500 block">originales: {job.stats.original_words}</span>
             </div>
 
             <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
               <span className="text-[11px] text-slate-400 uppercase tracking-wider block">Muletillas / Cortes</span>
               <span className="text-xl font-bold font-mono text-amber-400">{job.stats.removed_fillers}</span>
-              <span className="text-[10px] text-slate-500 block">eliminadas</span>
+              <span className="text-[10px] text-slate-500 block">suprimidas</span>
             </div>
 
             <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
               <span className="text-[11px] text-slate-400 uppercase tracking-wider block">Correcciones Ortotip.</span>
               <span className="text-xl font-bold font-mono text-cyan-400">{job.stats.orthographic_corrections}</span>
-              <span className="text-[10px] text-slate-500 block">tildes y puntuación</span>
+              <span className="text-[10px] text-slate-500 block">tildes y signos ¿ ¡</span>
             </div>
           </div>
         )}
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-slate-200 px-6 flex space-x-6 text-sm font-medium">
+      <div className="border-b border-slate-200 px-6 flex space-x-6 text-sm font-medium print:hidden overflow-x-auto">
         <button
           onClick={() => setActiveTab('corrected')}
-          className={`py-3.5 border-b-2 flex items-center space-x-1.5 ${
+          className={`py-3.5 border-b-2 flex items-center space-x-1.5 whitespace-nowrap ${
             activeTab === 'corrected'
               ? 'border-indigo-600 text-indigo-600 font-semibold'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
           <Sparkles className="w-4 h-4" />
-          <span>Texto Final Corregido</span>
+          <span>Texto Corregido</span>
+        </button>
+
+        <button
+          onClick={handleFormatOfficial}
+          className={`py-3.5 border-b-2 flex items-center space-x-1.5 whitespace-nowrap ${
+            activeTab === 'official'
+              ? 'border-indigo-600 text-indigo-600 font-semibold'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <FileCheck className="w-4 h-4 text-emerald-600" />
+          <span>Acta Formal Estructurada</span>
         </button>
 
         <button
           onClick={() => setActiveTab('comparison')}
-          className={`py-3.5 border-b-2 flex items-center space-x-1.5 ${
+          className={`py-3.5 border-b-2 flex items-center space-x-1.5 whitespace-nowrap ${
             activeTab === 'comparison'
               ? 'border-indigo-600 text-indigo-600 font-semibold'
               : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -136,7 +203,7 @@ export const ResultViewer: React.FC<ResultViewerProps> = ({ job }) => {
 
         <button
           onClick={() => setActiveTab('corrections')}
-          className={`py-3.5 border-b-2 flex items-center space-x-1.5 ${
+          className={`py-3.5 border-b-2 flex items-center space-x-1.5 whitespace-nowrap ${
             activeTab === 'corrections'
               ? 'border-indigo-600 text-indigo-600 font-semibold'
               : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -147,7 +214,7 @@ export const ResultViewer: React.FC<ResultViewerProps> = ({ job }) => {
 
         <button
           onClick={() => setActiveTab('raw')}
-          className={`py-3.5 border-b-2 flex items-center space-x-1.5 ${
+          className={`py-3.5 border-b-2 flex items-center space-x-1.5 whitespace-nowrap ${
             activeTab === 'raw'
               ? 'border-indigo-600 text-indigo-600 font-semibold'
               : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -162,6 +229,12 @@ export const ResultViewer: React.FC<ResultViewerProps> = ({ job }) => {
         {activeTab === 'corrected' && (
           <div className="bg-slate-50/70 p-6 rounded-xl border border-slate-200 text-slate-800 leading-relaxed font-sans text-base whitespace-pre-wrap selection:bg-indigo-100">
             {job.final_corrected_text || 'No hay texto disponible'}
+          </div>
+        )}
+
+        {activeTab === 'official' && (
+          <div className="bg-white p-8 rounded-xl border border-slate-200 text-slate-900 leading-relaxed font-serif text-sm whitespace-pre-wrap shadow-xs print:border-none print:p-0">
+            {officialActa || 'Cargando formato oficial...'}
           </div>
         )}
 
