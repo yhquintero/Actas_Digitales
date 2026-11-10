@@ -12,15 +12,22 @@ node_modules/
 .npm
 .vite
 
-# Python
+# Python & Entornos Virtuales
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .env
 .venv
-env/
+.venv/
+venv
 venv/
+**/venv/
+**/.venv/
+backend/venv/
+backend/.venv/
+env/
+**/env/
 ENV/
 build/
 develop-eggs/
