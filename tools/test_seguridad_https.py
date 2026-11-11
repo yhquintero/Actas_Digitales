@@ -39,10 +39,12 @@ class TestSeguridadHTTPS(unittest.TestCase):
         self.assertTrue(fullchain.exists(), "Falta certs/fullchain.pem")
 
     def test_02_extensiones_san_certificado(self):
-        """Verifica que el certificado del servidor contenga Subject Alternative Names reglamentarios."""
+        """Verifica que el certificado del servidor contenga Subject Alternative Names y módulo RSA-4096."""
         server_cert_path = self.certs_dir / "server.crt"
         with open(server_cert_path, "rb") as f:
             cert = x509.load_pem_x509_certificate(f.read())
+
+        self.assertEqual(cert.public_key().key_size, 4096, "El módulo de la clave del servidor debe ser de 4096 bits")
 
         san_ext = cert.extensions.get_extension_for_oid(ExtensionOID.SUBJECT_ALTERNATIVE_NAME)
         self.assertIsNotNone(san_ext, "El certificado debe contener la extensión X509v3 Subject Alternative Name")

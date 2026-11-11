@@ -111,8 +111,57 @@ fun HomeScreen(viewModel: AudioViewModel) {
                 text = "Sube un archivo de audio o graba desde el micrófono",
                 style = MaterialTheme.typography.labelSmall,
                 color = Color.Gray,
-                modifier = Modifier.padding(bottom = 20.dp)
+                modifier = Modifier.padding(bottom = 12.dp)
             )
+
+            // Banner Ejecutivo de los 4 Pilares y Seguridad Criptográfica
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "PIPELINE DE INTELIGENCIA ACÚSTICA",
+                            color = Color(0xFF818CF8),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Surface(
+                            color = Color(0xFF064E3B),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(
+                                "TLS 1.3 · RSA-4096",
+                                color = Color(0xFF34D399),
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        "Captura · Transcribe · Consolida · Formaliza",
+                        color = Color.White,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 14.sp
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        "Decodificación universal de audio y ortotipografía oficial RAE",
+                        color = Color(0xFF94A3B8),
+                        fontSize = 11.sp
+                    )
+                }
+            }
 
             // Contenedor principal de acciones (Grabar o Seleccionar Archivo)
             Card(
@@ -343,6 +392,40 @@ fun SuccessResultCard(job: JobResponse, onReset: () -> Unit) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("${stats.orthographicCorrections}", fontWeight = FontWeight.Bold, color = EmeraldAccent)
                         Text("Ortografía", fontSize = 10.sp, color = Color.Gray)
+                    }
+                }
+
+                // Sello de Cadena de Custodia Criptográfica SHA-256
+                stats.audioSha256?.let { sha ->
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Surface(
+                        color = Color(0xFFF8FAFC),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(8.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Default.Shield,
+                                    contentDescription = null,
+                                    tint = EmeraldAccent,
+                                    modifier = Modifier.size(13.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    "Cadena de Custodia Criptográfica (SHA-256):",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF334155)
+                                )
+                            }
+                            Text(
+                                sha,
+                                fontSize = 9.sp,
+                                color = Color(0xFF64748B),
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                            )
+                        }
                     }
                 }
             }

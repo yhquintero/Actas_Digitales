@@ -83,10 +83,10 @@ def generar_certificados_firmados(
         .sign(ca_private_key, hashes.SHA256())
     )
 
-    print(f"[3/4] Generando clave y certificado del servidor firmado por la CA...")
+    print(f"[3/4] Generando clave y certificado del servidor (RSA-4096) firmado por la CA...")
     server_private_key = rsa.generate_private_key(
         public_exponent=65537,
-        key_size=2048
+        key_size=4096
     )
 
     server_subject = x509.Name([
@@ -189,6 +189,7 @@ def generar_certificados_firmados(
         f.write(ca_cert_pem)
 
     print(f"✓ Certificados HTTPS generados y firmados exitosamente:")
+    print(f"  - Módulo Criptográfico: RSA-4096 bits (CA Raíz y Servidor End-Entity)")
     print(f"  - CA Raíz:            {ca_cert_path}")
     print(f"  - Clave Servidor:     {server_key_path}")
     print(f"  - Certificado:        {server_cert_path}")

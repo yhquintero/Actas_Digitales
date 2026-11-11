@@ -9,7 +9,7 @@ export const SECURITY_FEATURES: SecurityFeature[] = [
     description:
       'Túnel HTTPS seguro con suites de cifrado de última generación (ECDHE-ECDSA / AES-GCM 256 bits). Candado verde verificado en Chrome, Edge y navegadores corporativos.',
     impact: 'Inmunidad ante escuchas clandestinas (Eavesdropping) e interceptación en redes locales.',
-    technicalDetails: 'Certificados SAN generados con RSA-4096 / ECC y registro automático en Windows CurrentUser\\Root.'
+    technicalDetails: 'Certificados SAN con clave RSA-4096 bits (módulo ampliado de 2048 a 4096 bits para CA y servidor) y registro automático en Windows CurrentUser\\Root.'
   },
   {
     id: 'sha256-custodia',
