@@ -152,6 +152,17 @@ class JobManager:
             reading_duration_sec = round((final_words / 130.0) * 60.0, 1)
             reading_formatted = AudioService.format_duration(reading_duration_sec)
 
+            # Cálculo de Hash SHA-256 para trazabilidad y cadena de custodia
+            import hashlib
+            hasher = hashlib.sha256()
+            try:
+                with open(file_path, "rb") as f:
+                    for chunk in iter(lambda: f.read(65536), b""):
+                        hasher.update(chunk)
+                file_sha256 = hasher.hexdigest()
+            except Exception:
+                file_sha256 = None
+
             job.stats = JobStats(
                 original_words=original_words,
                 final_words=final_words,
@@ -164,7 +175,8 @@ class JobManager:
                 reading_duration_formatted=reading_formatted,
                 words_per_minute=wpm,
                 duration_coverage_percent=100.0,
-                acoustic_verification_status="VERIFICADO_COINCIDENTE"
+                acoustic_verification_status="VERIFICADO_COINCIDENTE",
+                audio_sha256=file_sha256
             )
 
             # 5. Finalizado
