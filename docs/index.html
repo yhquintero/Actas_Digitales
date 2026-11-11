@@ -4,37 +4,56 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/svg+xml" href="assets/actas-digitales-icon.svg">
-  <title>Actas Digitales · Voz a Texto Consolidado y Corrección Ortotipográfica</title>
+  <title>Actas Digitales · Ecosistema Integral de Voz a Texto Oficial RAE</title>
   <style>
     :root {
       --primary: #4f46e5;
-      --primary-dark: #3730a3;
-      --primary-light: #eef2ff;
+      --primary-hover: #4338ca;
+      --primary-light: #6366f1;
       --accent: #10b981;
-      --bg: #0f172a;
-      --surface: #1e293b;
-      --card: #1e1b4b;
-      --border: #334155;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
+      --accent-hover: #059669;
+      --danger: #ef4444;
+      --bg: #090d16;
+      --surface: #111827;
+      --surface-card: #1f2937;
+      --border: #374151;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --text: #f9fafb;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Glow backdrop */
+    .bg-glow-top {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1200px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(79, 70, 229, 0.15) 0%, rgba(16, 185, 129, 0.05) 50%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
     }
 
     header {
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
       position: sticky;
       top: 0;
       z-index: 50;
-      padding: 1rem 2rem;
+      padding: 0.9rem 2.5rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -43,248 +62,694 @@
     .brand {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.85rem;
       font-weight: 800;
       font-size: 1.25rem;
       color: #fff;
       text-decoration: none;
     }
 
+    .brand-badge {
+      font-size: 0.7rem;
+      background: rgba(99, 102, 241, 0.2);
+      border: 1px solid #6366f1;
+      color: #a5b4fc;
+      padding: 0.2rem 0.5rem;
+      border-radius: 9999px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 1.5rem;
-      font-size: 0.9rem;
+      gap: 1.8rem;
+      font-size: 0.92rem;
     }
 
     .nav-links a {
       color: var(--text-muted);
       text-decoration: none;
+      font-weight: 500;
       transition: color 0.2s;
     }
 
-    .nav-links a:hover {
-      color: #fff;
-    }
+    .nav-links a:hover { color: #fff; }
 
     .btn-cta {
-      background: var(--primary);
+      background: linear-gradient(135deg, var(--primary-light), var(--primary));
       color: #fff;
-      padding: 0.5rem 1.25rem;
+      padding: 0.6rem 1.4rem;
       border-radius: 9999px;
       text-decoration: none;
       font-weight: 600;
-      font-size: 0.85rem;
-      transition: background 0.2s;
+      font-size: 0.88rem;
+      transition: all 0.2s;
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
     }
 
-    .btn-cta:hover { background: var(--primary-dark); }
-
-    .hero {
-      padding: 5rem 2rem 4rem;
-      text-align: center;
-      max-width: 1000px;
-      margin: 0 auto;
+    .btn-cta:hover {
+      background: var(--primary-hover);
+      box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
+      transform: translateY(-1px);
     }
 
-    .badge-hero {
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: #e5e7eb;
+      padding: 0.6rem 1.4rem;
+      border-radius: 9999px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.88rem;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: #6b7280;
+    }
+
+    .btn-apk {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      padding: 0.6rem 1.4rem;
+      border-radius: 9999px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.88rem;
+      transition: all 0.2s;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      background: rgba(79, 70, 229, 0.15);
-      border: 1px solid rgba(129, 140, 248, 0.3);
-      color: #a5b4fc;
-      padding: 0.35rem 1rem;
-      border-radius: 9999px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      margin-bottom: 1.5rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
     }
 
+    .btn-apk:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .hero {
+      position: relative;
+      padding: 5rem 2rem 4rem;
+      text-align: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      z-index: 1;
+    }
+
+    .pill-badges {
+      display: inline-flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.6rem;
+      margin-bottom: 2rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(17, 24, 39, 0.8);
+      border: 1px solid var(--border);
+      color: #d1d5db;
+      padding: 0.35rem 0.9rem;
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .pill-blue { border-color: #6366f1; color: #a5b4fc; background: rgba(99, 102, 241, 0.1); }
+    .pill-green { border-color: #10b981; color: #6ee7b7; background: rgba(16, 185, 129, 0.1); }
+    .pill-yellow { border-color: #f59e0b; color: #fde68a; background: rgba(245, 158, 11, 0.1); }
+
     h1 {
-      font-size: 3rem;
+      font-size: 3.5rem;
       font-weight: 900;
       line-height: 1.15;
-      margin-bottom: 1.25rem;
-      background: linear-gradient(to right, #fff, #cbd5e1);
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, #ffffff 40%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 860px;
+      margin: 0 auto 2.5rem;
+      line-height: 1.7;
+    }
+
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1.2rem;
+      margin-bottom: 3.5rem;
+      flex-wrap: wrap;
+    }
+
+    .hero-gallery {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      margin-bottom: 5rem;
+      transition: transform 0.3s;
+    }
+
+    .hero-gallery:hover {
+      transform: translateY(-3px);
+    }
+
+    .hero-gallery img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* 4 Pillars Section */
+    .pillars-section {
+      padding: 4rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 0.8rem;
+      background: linear-gradient(135deg, #fff, #cbd5e1);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
-    .subtitle {
-      font-size: 1.2rem;
+    .section-subtitle {
+      text-align: center;
       color: var(--text-muted);
+      font-size: 1.1rem;
       max-width: 750px;
-      margin: 0 auto 2.5rem;
+      margin: 0 auto 3.5rem;
     }
 
-    .hero-img {
-      max-width: 100%;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    .pillars-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
       margin-bottom: 4rem;
     }
 
-    .grid-3 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
-      max-width: 1100px;
-      margin: 0 auto 4rem;
-      padding: 0 1.5rem;
-    }
-
-    .card {
+    .pillar-card {
       background: var(--surface);
-      border: 1px solid var(--border);
+      border: 1px solid var(--border-subtle);
       border-radius: 16px;
-      padding: 2rem;
-      text-align: left;
+      padding: 2rem 1.5rem;
+      position: relative;
+      transition: all 0.3s;
     }
 
-    .card-icon {
-      font-size: 2rem;
-      margin-bottom: 1rem;
+    .pillar-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(99, 102, 241, 0.5);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
     }
 
-    .card h3 {
-      font-size: 1.2rem;
-      margin-bottom: 0.5rem;
+    .pillar-number {
+      font-family: monospace;
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: #6366f1;
+      opacity: 0.9;
+      margin-bottom: 0.8rem;
+    }
+
+    .pillar-card h3 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
       color: #fff;
     }
 
-    .card p {
+    .pillar-card p {
       color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-
-    .split-demo {
-      max-width: 1100px;
-      margin: 0 auto 5rem;
-      padding: 0 1.5rem;
-    }
-
-    .split-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.5rem;
-      margin-top: 1.5rem;
-    }
-
-    @media (max-width: 768px) {
-      .split-grid { grid-template-columns: 1fr; }
-      h1 { font-size: 2.2rem; }
-    }
-
-    .demo-box {
-      border-radius: 12px;
-      padding: 1.5rem;
-      font-size: 0.9rem;
+      font-size: 0.92rem;
       line-height: 1.6;
     }
 
-    .demo-before {
-      background: rgba(225, 29, 72, 0.1);
-      border: 1px solid rgba(225, 29, 72, 0.3);
-      color: #fecdd3;
-      font-family: monospace;
-    }
-
-    .demo-after {
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      color: #a7f3d0;
-      font-family: sans-serif;
-    }
-
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 2.5rem;
-      text-align: center;
-      color: var(--text-muted);
+    .pillar-card ul {
+      margin-top: 1rem;
+      padding-left: 1.2rem;
+      color: #94a3af;
       font-size: 0.85rem;
     }
+
+    .pillar-card li { margin-bottom: 0.4rem; }
+
+    /* Capturas Gallery Grid */
+    .capturas-section {
+      padding: 4rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 2rem;
+      margin-bottom: 4rem;
+    }
+
+    @media (max-width: 768px) {
+      .gallery-grid { grid-template-columns: 1fr; }
+      h1 { font-size: 2.4rem; }
+    }
+
+    .gallery-item {
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.3s;
+      display: flex;
+      flex-col;
+    }
+
+    .gallery-item:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-3px);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-bottom: 1px solid var(--border-subtle);
+      background: #000;
+    }
+
+    .gallery-info {
+      padding: 1.5rem;
+    }
+
+    .gallery-info h4 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .gallery-info p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    /* APK & Mobile Showcase */
+    .mobile-section {
+      padding: 4rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      background: radial-gradient(circle at center, rgba(16, 185, 129, 0.08) 0%, transparent 70%);
+      border-radius: 24px;
+      border: 1px solid var(--border-subtle);
+      margin-bottom: 5rem;
+    }
+
+    .mobile-flex {
+      display: flex;
+      align-items: center;
+      gap: 3rem;
+      flex-wrap: wrap;
+    }
+
+    .mobile-content {
+      flex: 1;
+      min-width: 320px;
+    }
+
+    .mobile-img-box {
+      flex: 1;
+      min-width: 320px;
+      text-align: center;
+    }
+
+    .mobile-img-box img {
+      width: 100%;
+      max-width: 540px;
+      border-radius: 18px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .terminal-box {
+      background: #030712;
+      border: 1px solid #1f2937;
+      border-radius: 10px;
+      padding: 1rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.85rem;
+      color: #38bdf8;
+      margin: 1.2rem 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .copy-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: #fff;
+      padding: 0.3rem 0.7rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    .copy-btn:hover { background: rgba(255, 255, 255, 0.2); }
+
+    /* Security Specs Table */
+    .security-section {
+      padding: 4rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto 5rem;
+    }
+
+    .security-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 2rem;
+      background: var(--surface);
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .security-table th, .security-table td {
+      padding: 1.1rem 1.4rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 0.92rem;
+    }
+
+    .security-table th {
+      background: #0f172a;
+      color: #a5b4fc;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      letter-spacing: 0.05em;
+    }
+
+    .security-table tr:last-child td { border-bottom: none; }
+    .security-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    footer {
+      border-top: 1px solid var(--border-subtle);
+      background: #0b0f19;
+      padding: 3.5rem 2rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    footer a {
+      color: #a5b4fc;
+      text-decoration: none;
+      margin: 0 0.6rem;
+      transition: color 0.2s;
+    }
+
+    footer a:hover { color: #fff; }
   </style>
 </head>
 <body>
 
+  <div class="bg-glow-top"></div>
+
+  <!-- Header -->
   <header>
     <a href="#" class="brand">
-      <img src="assets/actas-digitales-icon.svg" width="32" height="32" alt="Logo Actas Digitales">
+      <img src="assets/actas-digitales-icon.svg" width="36" height="36" alt="Logo Actas Digitales">
       <span>Actas Digitales</span>
+      <span class="brand-badge">v1.2.0</span>
     </a>
     <div class="nav-links">
-      <a href="#ecosistema">Ecosistema</a>
-      <a href="#pipeline">Pipeline IA</a>
-      <a href="#seguridad">Seguridad HTTPS</a>
-      <a href="MANUAL_USUARIO.html">Manual de Usuario</a>
-      <a href="https://github.com/yhquintero/Actas_Digitales" class="btn-cta">GitHub</a>
+      <a href="#pilares">Los 4 Pilares</a>
+      <a href="#capturas">Galería de Capturas</a>
+      <a href="#movil">App Android (APK)</a>
+      <a href="#seguridad">Seguridad RSA-4096</a>
+      <a href="MANUAL_USUARIO.html">Manual</a>
+      <a href="https://github.com/yhquintero/Actas_Digitales" target="_blank" class="btn-cta">GitHub</a>
     </div>
   </header>
 
+  <!-- Hero Section -->
   <section class="hero">
-    <div class="badge-hero">🔒 Cifrado HTTPS · TLS 1.3 · Español Oficial RAE</div>
-    <h1>De la voz hablada al acta oficial en cuestión de segundos</h1>
+    <div class="pill-badges">
+      <span class="pill pill-blue">🛡️ Cifrado TLS 1.3 · RSA-4096 Bits</span>
+      <span class="pill pill-green">🔒 Cadena de Custodia SHA-256</span>
+      <span class="pill pill-yellow">📚 Ortografía Oficial RAE</span>
+      <span class="pill">📱 Android Nativo + PWA</span>
+    </div>
+
+    <h1>De la voz hablada al acta oficial consolidada en segundos</h1>
     <p class="subtitle">
-      Plataforma completa para Web, Servidor propio y Android nativo en Kotlin.
-      Sube el audio de tu reunión: el sistema transcribe fonéticamente, suprime muletillas,
-      desduplica solapamientos y corrige la ortografía antes de entregar el acta final.
+      Plataforma de alta seguridad para secretarías generales, directivas y comités oficiales.
+      Captura acústica en 128 kbps, transcripción adaptativa forzada en español,
+      supresión de muletillas, corrección gramatical RAE y emisión de acta formal con firma digital.
     </p>
 
-    <img src="assets/actas-digitales-hero.png" class="hero-img" alt="Panel Web y App Android de Actas Digitales">
-  </section>
-
-  <section id="ecosistema" class="grid-3">
-    <div class="card">
-      <div class="card-icon">🌐</div>
-      <h3>Aplicación Web (PWA)</h3>
-      <p>Interfaz moderna con React y TypeScript. Permite grabación de micrófono con Web Audio API, subida drag-and-drop, comparativa visual Antes/Después y exportación a PDF, TXT y Markdown.</p>
+    <div class="hero-actions">
+      <a href="https://github.com/yhquintero/Actas_Digitales/raw/arena/716ff62b-actas-digitales/android/ActasDigitales.apk" class="btn-apk">
+        ⬇️ Descargar APK Android (v1.2.0)
+      </a>
+      <a href="MANUAL_USUARIO.html" class="btn-secondary">📖 Manual de Usuario</a>
+      <a href="PROPUESTA_VIDEO_PROMOCIONAL.md" class="btn-secondary">▶️ Vídeo Promocional (3 min)</a>
     </div>
 
-    <div class="card">
-      <div class="card-icon">📱</div>
-      <h3>Android Nativo (Kotlin)</h3>
-      <p>Desarrollada con Jetpack Compose y Material 3. Captura audio nativo a 16 kHz / AAC y garantiza subidas resilientes en segundo plano mediante WorkManager incluso si se cae la conexión.</p>
-    </div>
-
-    <div class="card">
-      <div class="card-icon">🗄️</div>
-      <h3>Servidor Seguro HTTPS</h3>
-      <p>FastAPI con arquitectura orientada a eventos. Certificados TLS firmados con SAN, rate limiting, HSTS y motor de consolidación lingüística que opera 100% en tu propia infraestructura.</p>
+    <!-- Hero Showcase Image -->
+    <div class="hero-gallery">
+      <img src="assets/capturas/galeria-actas-digitales.png" alt="Ecosistema Actas Digitales: Panel Web, Android Nativo y Seguridad">
     </div>
   </section>
 
-  <section id="pipeline" class="split-demo">
-    <h2 style="font-size: 2rem; text-align: center; margin-bottom: 0.5rem;">El Salto de Calidad Lingüístico</h2>
-    <p style="text-align: center; color: var(--text-muted); max-width: 600px; margin: 0 auto 1.5rem;">
-      No te conformes con una transcripción cruda llena de tartamudeos. Mira la diferencia:
+  <!-- Los 4 Pilares Fundamentales -->
+  <section id="pilares" class="pillars-section">
+    <h2 class="section-title">Los 4 Pilares de la Arquitectura Lingüística</h2>
+    <p class="section-subtitle">
+      Un pipeline asíncrono y determinista diseñado para procesar deliberaciones complejas con máxima fidelidad.
     </p>
 
-    <div class="split-grid">
-      <div class="demo-box demo-before">
-        <strong style="color: #fda4af; display: block; margin-bottom: 0.5rem;">❌ Transcripción Cruda (STT Genérico):</strong>
-        "bueno pues este... damos inicio a la reunion del dia de hoy. yo-yo creo que el presupuesto tendra que ser revisado. ¿habra alguna duda?"
+    <div class="pillars-grid">
+      <div class="pillar-card">
+        <div class="pillar-number">01</div>
+        <h3>Captura</h3>
+        <p>Ingesta concurrente de audio mediante Web Audio API o Android MediaRecorder.</p>
+        <ul>
+          <li>Muestreo calibrado a 16 kHz / 128 kbps</li>
+          <li>Validación estricta de MIME y cabeceras</li>
+          <li>Cálculo inmediato de huella SHA-256</li>
+        </ul>
       </div>
-      <div class="demo-box demo-after">
-        <strong style="color: #6ee7b7; display: block; margin-bottom: 0.5rem;">✅ Acta Consolidada por Actas Digitales:</strong>
-        "Damos inicio a la reunión del día de hoy. Yo creo que el presupuesto tendrá que ser revisado. ¿Habrá alguna duda?"
-        <div style="margin-top: 0.75rem; font-size: 0.8rem; color: #34d399; font-weight: 700;">
-          ✓ 2 muletillas suprimidas · ✓ Tartamudeo corregido · ✓ Tildes y signos ¿ aplicados
+
+      <div class="pillar-card">
+        <div class="pillar-number">02</div>
+        <h3>Transcribe</h3>
+        <p>Extracción fonética mediante Whisper adaptativo y supresión de silencios VAD.</p>
+        <ul>
+          <li>Segmentación acústica inteligente</li>
+          <li>Modelo forzado en español (<code>language="es"</code>)</li>
+          <li>Sin dependencia de servicios externos</li>
+        </ul>
+      </div>
+
+      <div class="pillar-card">
+        <div class="pillar-number">03</div>
+        <h3>Consolida</h3>
+        <p>Fusión de fragmentos y purga de vacilaciones propias del lenguaje oral.</p>
+        <ul>
+          <li>Desduplicación de solapamientos acústicos</li>
+          <li>Eliminación de muletillas ("este...", "bueno pues")</li>
+          <li>Supresión de tartamudeos y falsos inicios</li>
+        </ul>
+      </div>
+
+      <div class="pillar-card">
+        <div class="pillar-number">04</div>
+        <h3>Formaliza</h3>
+        <p>Gramática estricta de la RAE, estructuración legal y exportación oficial.</p>
+        <ul>
+          <li>Inyección obligatoria de apertura '¿' y '¡'</li>
+          <li>Acentuación diacrítica y concordancia</li>
+          <li>Exportación a Word (.docx), PDF vectorial y TXT</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Galería de Capturas Profesionales -->
+  <section id="capturas" class="capturas-section">
+    <h2 class="section-title">📸 Capturas Profesionales de la Versión Actual</h2>
+    <p class="section-subtitle">
+      Inspección visual completa del ecosistema Web y Android funcionando en tiempo real.
+    </p>
+
+    <div class="gallery-grid">
+      <!-- Item 1 -->
+      <div class="gallery-item">
+        <img src="assets/capturas/grabacion-audio.png" alt="Grabación en Directo">
+        <div class="gallery-info">
+          <h4>🎙️ Grabación en Directo</h4>
+          <p>Captura con Web Audio API, cancelación acústica de eco, visualizador VU-meter de frecuencias y cálculo de custodia SHA-256 en memoria.</p>
+        </div>
+      </div>
+
+      <!-- Item 2 -->
+      <div class="gallery-item">
+        <img src="assets/capturas/pipeline-progreso.png" alt="Pipeline en Tiempo Real">
+        <div class="gallery-info">
+          <h4>⚡ Pipeline de los 4 Pilares</h4>
+          <p>Seguimiento asíncrono vía Server-Sent Events (SSE). Visualización instantánea del avance de Ingesta, VAD, Transcripción y Formalización.</p>
+        </div>
+      </div>
+
+      <!-- Item 3 -->
+      <div class="gallery-item">
+        <img src="assets/capturas/comparativa-antes-despues.png" alt="Comparativa Antes / Después">
+        <div class="gallery-info">
+          <h4>⚖️ Comparativa Antes / Después</h4>
+          <p>Contraste visual lado a lado: texto crudo con vacilaciones frente al acta consolidada con métricas de palabras y velocidad lectora.</p>
+        </div>
+      </div>
+
+      <!-- Item 4 -->
+      <div class="gallery-item">
+        <img src="assets/capturas/acta-oficial-rae.png" alt="Acta Oficial Estructurada">
+        <div class="gallery-info">
+          <h4>📜 Formato Oficial de Acta</h4>
+          <p>Estructuración formal con quórum, resumen de deliberaciones, acuerdos numerados y bloques para firmas de presidencia y secretaría.</p>
+        </div>
+      </div>
+
+      <!-- Item 5 -->
+      <div class="gallery-item">
+        <img src="assets/capturas/auditoria-correcciones.png" alt="Auditoría Lingüística y Criptográfica">
+        <div class="gallery-info">
+          <h4>🛡️ Auditoría de Cambios &amp; Seguridad</h4>
+          <p>Desglose transparente de todas las muletillas suprimidas, palabras corregidas, tildes añadidas y verificación de cabeceras HSTS/CSP.</p>
+        </div>
+      </div>
+
+      <!-- Item 6 -->
+      <div class="gallery-item">
+        <img src="assets/capturas/app-android-movil.png" alt="App Android Nativa">
+        <div class="gallery-info">
+          <h4>📱 Aplicación Android Nativa</h4>
+          <p>Interfaz desarrollada con Jetpack Compose y Material 3. Subidas resilientes en segundo plano mediante WorkManager y compatibilidad TLS 1.3.</p>
         </div>
       </div>
     </div>
   </section>
 
+  <!-- Mobile APK Section -->
+  <section id="movil" class="mobile-section">
+    <div class="mobile-flex">
+      <div class="mobile-content">
+        <div class="pill pill-green" style="margin-bottom: 1rem;">Paquete Android Listo para Pruebas</div>
+        <h2 style="font-size: 2.3rem; margin-bottom: 1rem; color: #fff;">App Móvil Nativa (APK)</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1.2rem;">
+          Graba deliberaciones presenciales directamente desde tu dispositivo móvil. Diseñada con Jetpack Compose,
+          grabador nativo AAC de 128 kbps y subidas automáticas con reanudación ante caídas de señal mediante WorkManager.
+        </p>
+
+        <div class="terminal-box">
+          <code>adb install -r android/ActasDigitales.apk</code>
+        </div>
+
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem;">
+          <a href="https://github.com/yhquintero/Actas_Digitales/raw/arena/716ff62b-actas-digitales/android/ActasDigitales.apk" class="btn-apk">
+            ⬇️ Descargar ActasDigitales.apk
+          </a>
+          <a href="https://github.com/yhquintero/Actas_Digitales/tree/arena/716ff62b-actas-digitales/android" class="btn-secondary" target="_blank">
+            Código Fuente Kotlin
+          </a>
+        </div>
+      </div>
+
+      <div class="mobile-img-box">
+        <img src="assets/actas-digitales-movil.png" alt="Actas Digitales Móvil: PWA vs Android Nativo">
+      </div>
+    </div>
+  </section>
+
+  <!-- Security RSA-4096 & TLS 1.3 -->
+  <section id="seguridad" class="security-section">
+    <h2 class="section-title">Blindaje Criptográfico &amp; Privacidad</h2>
+    <p class="section-subtitle">
+      Protección absoluta de las deliberaciones institucionales. Cifrado de extremo a extremo sin intermediarios externos.
+    </p>
+
+    <table class="security-table">
+      <thead>
+        <tr>
+          <th>Parámetro</th>
+          <th>Implementación</th>
+          <th>Nivel de Blindaje</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Clave de Certificados</strong></td>
+          <td>RSA 4096 Bits con exponente e=65537 (CA Raíz y Servidor)</td>
+          <td><span class="pill pill-green">Máximo Estándar Corporativo</span></td>
+        </tr>
+        <tr>
+          <td><strong>Protocolo de Transporte</strong></td>
+          <td>TLS 1.3 con Cifrado Autenticado AEAD (TLS_AES_256_GCM_SHA384)</td>
+          <td><span class="pill pill-green">Obligatorio</span></td>
+        </tr>
+        <tr>
+          <td><strong>Cadena de Custodia</strong></td>
+          <td>SHA-256 inmutable generado en ingesta y estampado en el acta</td>
+          <td><span class="pill pill-green">Anti-manipulación</span></td>
+        </tr>
+        <tr>
+          <td><strong>Cabecera HSTS</strong></td>
+          <td><code>max-age=31536000; includeSubDomains; preload</code></td>
+          <td><span class="pill pill-blue">1 Año Estricto</span></td>
+        </tr>
+        <tr>
+          <td><strong>Políticas Web</strong></td>
+          <td>CSP Restrictivo, X-Frame-Options: DENY, Permissions-Policy mic</td>
+          <td><span class="pill pill-blue">Anti-Clickjacking / XSS</span></td>
+        </tr>
+        <tr>
+          <td><strong>Firma de APK</strong></td>
+          <td>Firma Digital v1 JAR Scheme con clave RSA-4096 y X.509</td>
+          <td><span class="pill pill-green">Verificado Androguard</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Footer -->
   <footer>
-    <p><strong>Actas Digitales</strong> · Voz a Texto Oficial Consolidado · © 2026 yhquintero</p>
-    <p style="margin-top: 0.5rem;">
-      <a href="MANUAL_USUARIO.html" style="color: #a5b4fc; text-decoration: none;">Manual de Usuario</a> · 
-      <a href="PROPUESTA_VIDEO_PROMOCIONAL.md" style="color: #a5b4fc; text-decoration: none;">Guion Vídeo (3 min)</a> · 
-      <a href="INSTALACION_HTTPS.html" style="color: #a5b4fc; text-decoration: none;">Guía HTTPS</a> · 
-      <a href="https://github.com/yhquintero/Actas_Digitales" style="color: #a5b4fc; text-decoration: none;">Repositorio en GitHub</a>
+    <p><strong>Actas Digitales</strong> · Ecosistema de Voz a Texto Oficial Consolidado · © 2026 yhquintero</p>
+    <p style="margin-top: 1rem;">
+      <a href="MANUAL_USUARIO.html">Manual de Usuario</a>
+      <a href="PROPUESTA_VIDEO_PROMOCIONAL.md">Guion de Vídeo</a>
+      <a href="INSTALACION_HTTPS.html">Guía de Certificados HTTPS</a>
+      <a href="https://github.com/yhquintero/Actas_Digitales" target="_blank">Repositorio en GitHub</a>
     </p>
   </footer>
 

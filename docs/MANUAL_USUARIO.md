@@ -1,6 +1,6 @@
 # Manual de Usuario · Actas Digitales
 
-**Versión:** 1.1.0 · **Fecha:** Noviembre 2026 · **Clasificación:** Guía Oficial de Operación  
+**Versión:** 1.2.0 · **Fecha:** Noviembre 2026 · **Clasificación:** Guía Oficial de Operación  
 **Plataformas:** Web (PWA instalable), Android nativo (Kotlin) y Servidor Seguro (HTTPS / TLS 1.3)
 
 ---
@@ -118,7 +118,10 @@ Para convertir el texto en un documento legal formal:
 ## 4. Guía de la Aplicación Android
 
 ### 4.1. Instalación y permisos
-1. Instala el paquete APK en tu dispositivo móvil.
+1. Instala el paquete precompilado disponible en [`android/ActasDigitales.apk`](../android/ActasDigitales.apk) en tu dispositivo móvil mediante transferencia de archivo o ejecutando:
+   ```bash
+   adb install -r android/ActasDigitales.apk
+   ```
 2. Al abrir la aplicación por primera vez, pulsa el botón del micrófono: Android solicitará el permiso `android.permission.RECORD_AUDIO`. Pulsa **Permitir**.
 
 ### 4.2. Conexión con el servidor

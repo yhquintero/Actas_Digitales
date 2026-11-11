@@ -16,9 +16,10 @@
 🌐 **Español** · [English](docs/readme/README_en.md)
 
 [![CI](https://github.com/yhquintero/Actas_Digitales/actions/workflows/ci.yml/badge.svg)](https://github.com/yhquintero/Actas_Digitales/actions/workflows/ci.yml)
-[![Versión](https://img.shields.io/badge/versi%C3%B3n-1.1.0-4f46e5?style=flat-square)](CHANGELOG.md)
+[![Versión](https://img.shields.io/badge/versi%C3%B3n-1.2.0-4f46e5?style=flat-square)](CHANGELOG.md)
 [![Plataformas](https://img.shields.io/badge/plataformas-Web%C2%B7Android%C2%B7Servidor-1e1b4b?style=flat-square)](#-ecosistema)
-[![Seguridad](https://img.shields.io/badge/Seguridad-HTTPS%20%7C%20TLS%201.3-059669?style=flat-square)](#-seguridad-https-y-certificados)
+[![Seguridad](https://img.shields.io/badge/Seguridad-TLS%201.3%20%7C%20RSA--4096-059669?style=flat-square)](#-seguridad-https-y-certificados)
+[![APK Android](https://img.shields.io/badge/APK-Android%20v1.2.0-10b981?style=flat-square&logo=android&logoColor=white)](android/ActasDigitales.apk)
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)](#-requisitos)
 [![Kotlin](https://img.shields.io/badge/Kotlin-Jetpack%20Compose-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](android/)
 [![Licencia](https://img.shields.io/badge/licencia-propietaria-475569?style=flat-square)](LICENSE)
@@ -56,7 +57,7 @@ La interfaz Web se instala como app (PWA) y ofrece preescucha y comparativa visu
 | **Cómo está hecho** | Python 3.11 (FastAPI + Pydantic + Uvicorn) · React 18 + TypeScript + Vite + Tailwind (Web) · Kotlin + Jetpack Compose + WorkManager (Android) · Cryptography (TLS 1.3 con certificados X.509 v3 y SAN) |
 | **Dónde corre** | Servidor propio (Linux, Windows, macOS, Docker) en red local o nube privada. Sin dependencia obligatoria de terceros |
 | **Cómo se usa** | Navegador web instalable (PC o móvil), app Android nativa con subida resiliente en segundo plano, o API REST |
-| **Estado** | Versión **1.1.0** estable · integración continua en verde con pruebas de seguridad y pipeline lingüístico |
+| **Estado** | Versión **1.2.0** estable · integración continua en verde · blindaje RSA-4096 y APK disponible |
 | **Modelo** | Software propietario con derechos reservados © 2026 yhquintero |
 
 ---
@@ -239,31 +240,43 @@ En la barra de herramientas de exportación de la Web encontrarás los selectore
 
 ## 📸 Capturas
 
-*Datos de demostración del proyecto: sesión oficial simulada con supresión de muletillas y corrección ortotipográfica RAE.*
+*Datos de demostración del proyecto: sesión oficial simulada con supresión de muletillas, los 4 pilares lingüísticos, blindaje RSA-4096 y corrección ortotipográfica RAE.*
 
 <p align="center">
-  <img src="docs/assets/capturas/galeria-actas-digitales.png" width="100%" alt="Actas Digitales: Panel Web, App Android, Comparativa de calidad y Pipeline lingüístico" />
+  <img src="docs/assets/capturas/galeria-actas-digitales.png" width="100%" alt="Actas Digitales: Panel Web, App Android, Comparativa de calidad, Cadena de Custodia SHA-256 y Pipeline lingüístico" />
 </p>
 
 <table>
   <tr>
-    <td width="50%" valign="top"><img src="docs/assets/capturas/grabacion-audio.png" alt="Grabación de audio en vivo con micrófono y muestreo de 16 kHz" /><br /><sub><b>Grabación en directo</b> — captura acústica con cancelación de eco y medidor de tiempo.</sub></td>
-    <td width="50%" valign="top"><img src="docs/assets/capturas/pipeline-progreso.png" alt="Pipeline de 5 fases en tiempo real con SSE" /><br /><sub><b>Pipeline en 5 fases</b> — Ingesta, VAD, STT fonético, Consolidación y Corrección RAE.</sub></td>
+    <td width="50%" valign="top"><img src="docs/assets/capturas/grabacion-audio.png" alt="Grabación de audio en vivo a 128 kbps con visualizador VU-meter y custodia SHA-256" /><br /><sub><b>01 · Grabación en directo</b> — captura acústica a 128 kbps con cancelación de eco, medidor VU-meter y cálculo en memoria de huella SHA-256.</sub></td>
+    <td width="50%" valign="top"><img src="docs/assets/capturas/pipeline-progreso.png" alt="Pipeline de los 4 Pilares en tiempo real con telemetría SSE" /><br /><sub><b>02 · Los 4 Pilares en tiempo real</b> — Ingesta (01), Transcripción adaptativa (02), Consolidación (03) y Formalización RAE (04).</sub></td>
   </tr>
   <tr>
-    <td width="50%" valign="top"><img src="docs/assets/capturas/comparativa-antes-despues.png" alt="Comparativa Antes y Después con texto crudo vs consolidado" /><br /><sub><b>Comparativa Antes / Después</b> — texto crudo con tartamudeos frente al acta limpia.</sub></td>
-    <td width="50%" valign="top"><img src="docs/assets/capturas/acta-oficial-rae.png" alt="Acta Oficial RAE con orden del día, acuerdos y firmas" /><br /><sub><b>Acta Oficial RAE</b> — orden del día, acuerdos numerados y espacio legal para firmas.</sub></td>
+    <td width="50%" valign="top"><img src="docs/assets/capturas/comparativa-antes-despues.png" alt="Comparativa Antes y Después con texto crudo vs consolidado" /><br /><sub><b>03 · Comparativa de calidad</b> — texto crudo con tartamudeos y muletillas frente al acta oficial depurada y fluida.</sub></td>
+    <td width="50%" valign="top"><img src="docs/assets/capturas/acta-oficial-rae.png" alt="Acta Oficial RAE con orden del día, acuerdos y firmas" /><br /><sub><b>04 · Formato Oficial de Acta</b> — orden del día, deliberaciones, acuerdos numerados y certificación criptográfica con RSA-4096.</sub></td>
   </tr>
   <tr>
-    <td width="50%" valign="top"><img src="docs/assets/capturas/auditoria-correcciones.png" alt="Auditoría de correcciones y muletillas eliminadas" /><br /><sub><b>Auditoría de cambios</b> — desglose de muletillas, repeticiones y tildes corregidas.</sub></td>
-    <td width="50%" valign="top"><img src="docs/assets/capturas/app-android-movil.png" alt="Aplicación Android nativa en Kotlin con Jetpack Compose" /><br /><sub><b>App Android nativa</b> — interfaz Compose con subida resiliente en segundo plano.</sub></td>
+    <td width="50%" valign="top"><img src="docs/assets/capturas/auditoria-correcciones.png" alt="Auditoría de correcciones lingüísticas y seguridad criptográfica" /><br /><sub><b>05 · Auditoría transparente</b> — desglose de muletillas suprimidas, palabras normalizadas, tildes diacríticas y verificación HSTS/CSP.</sub></td>
+    <td width="50%" valign="top"><img src="docs/assets/capturas/app-android-movil.png" alt="Aplicación Android nativa en Kotlin con Jetpack Compose y APK listo" /><br /><sub><b>06 · App Android nativa</b> — arquitectura Jetpack Compose con subida resiliente WorkManager y firma digital RSA-4096.</sub></td>
   </tr>
 </table>
 
 <p align="center">
   <img src="docs/assets/actas-digitales-movil.png" width="100%" alt="Actas Digitales en el móvil: Web PWA instalable y Android nativo con Jetpack Compose" />
-  <br /><sub>Actas Digitales en movilidad: Web PWA instalable y app Android nativa con WorkManager.</sub>
+  <br /><sub>Actas Digitales en movilidad: Web PWA instalable y app Android nativa con APK directo (<a href="android/ActasDigitales.apk">android/ActasDigitales.apk</a>).</sub>
 </p>
+
+### 📱 Paquete de Instalación Móvil Android (APK)
+
+Para pruebas inmediatas en dispositivos Android físicos o emuladores sin necesidad de compilar el código fuente en Android Studio, el repositorio incluye el paquete compilado y firmado:
+
+* 📦 **Ruta del APK:** [`android/ActasDigitales.apk`](android/ActasDigitales.apk) (y copia en `android/app/build/outputs/apk/debug/app-debug.apk`)
+* 🔑 **Firma Criptográfica:** v1 JAR Scheme con clave **RSA de 4096 bits** emitida por la Autoridad de Certificación de Actas Digitales.
+* 📲 **Instalación rápida vía ADB:**
+  ```bash
+  adb install -r android/ActasDigitales.apk
+  ```
+* 🛠 **Herramienta de compilación autónoma:** Puedes regenerar el APK en cualquier momento ejecutando `python3 tools/compilar_apk.py`.
 
 ▶️ **Vídeo:** [presentación oficial de 3 min (1080p60, narración en español y subtítulos)](docs/PROPUESTA_VIDEO_PROMOCIONAL.md) · [reproductor interactivo en la app Web](web/) · [manual imprimible de usuario](docs/MANUAL_USUARIO.html)
 
@@ -275,8 +288,19 @@ En la barra de herramientas de exportación de la Web encontrarás los selectore
 
 La confidencialidad de las deliberaciones de reuniones es primordial. Actas Digitales incorpora una arquitectura de seguridad robusta:
 
-- **Cifrado en tránsito obligatorio:** Conexiones bajo **HTTPS / TLS 1.3** con cifrados modernos autenticados (AEAD).
-- **Generador de certificados con CA propia:** Herramienta automatizada (`tools/generar_certificados_https.py`) que emite certificados X.509 v3 con extensiones SAN para `localhost`, `127.0.0.1`, `0.0.0.0` y `actasdigitales.local`.
+- **Claves RSA-4096:** Toda la jerarquía criptográfica (tanto la Autoridad de Certificación raíz `ca.key` como el certificado del servidor `server.key` y la firma de la app móvil) opera con claves **RSA de 4096 bits**, superando las recomendaciones NIST y ENS para entornos de alta confidencialidad.
+- **Cifrado en tránsito obligatorio:** Conexiones bajo **HTTPS / TLS 1.3** con cifrados modernos autenticados (AEAD: `TLS_AES_256_GCM_SHA384`, `TLS_CHACHA20_POLY1305_SHA256`).
+- **Cadena de Custodia SHA-256:** Cada pista de audio recibe una huella hash SHA-256 en el momento exacto de la ingesta, la cual se propaga y estampa indeleblemente en el acta final.
+- **Generador de certificados con CA propia:** Herramienta automatizada (`tools/generar_certificados_https.py`) que emite certificados X.509 v3 con módulo de 4096 bits y extensiones SAN para `localhost`, `127.0.0.1`, `0.0.0.0` y `actasdigitales.local`.
+- **Instalador de Confianza en Windows (1 Clic · Candado Verde):** Ejecuta **`instalar-certificado-confianza.bat`** (o el botón verde en el Panel de Control) para añadir `ca.crt` al almacén de Entidades de Certificación Raíz de Confianza de Windows. Esto elimina permanentemente el aviso `NET::ERR_CERT_AUTHORITY_INVALID` en Google Chrome, Microsoft Edge y Brave.
+- **Cabeceras de protección:**
+  - `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload` (HSTS de 1 año).
+  - `X-Frame-Options: DENY` (anti-clickjacking).
+  - `X-Content-Type-Options: nosniff` (anti-MIME sniffing).
+  - `Content-Security-Policy (CSP)` estricto y `Permissions-Policy: microphone=(self)`.
+- **Mitigación DoS y Rate Limiting:** Middleware en FastAPI que restringe ráfagas de peticiones por dirección IP.
+- **Android Network Security Config:** El cliente móvil confía tanto en las CAs del sistema como en certificados corporativos instalados por el usuario (`network_security_config.xml`).
+- **Privacidad absoluta:** Modo 100% autoalojado donde el audio y el texto nunca abandonan la red del cliente.
 - **Instalador de Confianza en Windows (1 Clic · Candado Verde):** Ejecuta **`instalar-certificado-confianza.bat`** (o el botón verde en el Panel de Control) para añadir `ca.crt` al almacén de Entidades de Certificación Raíz de Confianza de Windows. Esto elimina permanentemente el aviso `NET::ERR_CERT_AUTHORITY_INVALID` en Google Chrome, Microsoft Edge y Brave.
 - **Cabeceras de protección:**
   - `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload` (HSTS).
