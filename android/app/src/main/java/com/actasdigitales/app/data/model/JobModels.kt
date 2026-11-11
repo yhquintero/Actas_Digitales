@@ -32,7 +32,10 @@ data class JobStats(
     @SerializedName("removed_fillers") val removedFillers: Int = 0,
     @SerializedName("orthographic_corrections") val orthographicCorrections: Int = 0,
     @SerializedName("processing_time_sec") val processingTimeSec: Float = 0f,
-    @SerializedName("audio_duration_sec") val audioDurationSec: Float = 0f
+    @SerializedName("audio_duration_sec") val audioDurationSec: Float = 0f,
+    @SerializedName("words_per_minute") val wordsPerMinute: Float = 0f,
+    @SerializedName("duration_coverage_percent") val durationCoveragePercent: Float = 100f,
+    @SerializedName("audio_sha256") val audioSha256: String? = null
 )
 
 data class JobResponse(

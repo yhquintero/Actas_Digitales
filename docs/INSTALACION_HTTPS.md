@@ -27,8 +27,8 @@ python3 tools/generar_certificados_https.py
 ```
 
 Archivos generados en `certs/`:
-- `ca.key` y `ca.crt`: Clave y certificado raíz de la Autoridad Certificadora.
-- `server.key` y `server.crt`: Clave privada (RSA-2048/4096) y certificado del servidor.
+- `ca.key` y `ca.crt`: Clave y certificado raíz de la Autoridad Certificadora (RSA-4096 bits).
+- `server.key` y `server.crt`: Clave privada y certificado de servidor blindados con módulo RSA-4096 bits.
 - `fullchain.pem`: Cadena completa de certificados para NGINX, Caddy o Uvicorn.
 
 ---

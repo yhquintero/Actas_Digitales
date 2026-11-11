@@ -39,5 +39,16 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "microphone=(self), camera=(), geolocation=()"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data:; "
+            "media-src 'self' blob:; "
+            "connect-src 'self' https: wss:; "
+            "font-src 'self' data:; "
+            "frame-ancestors 'none';"
+        )
+        response.headers["Server"] = "ActasDigitales/1.2 (TLS 1.3 RSA-4096)"
 
         return response
