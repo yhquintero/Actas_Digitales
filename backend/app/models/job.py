@@ -37,6 +37,7 @@ class JobStats(BaseModel):
     words_per_minute: float = 0.0
     duration_coverage_percent: float = 100.0
     acoustic_verification_status: str = "VERIFICADO_COINCIDENTE"
+    audio_sha256: Optional[str] = None
 
 class JobResponse(BaseModel):
     job_id: str

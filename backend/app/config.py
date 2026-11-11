@@ -11,7 +11,8 @@ class Settings(BaseSettings):
     UPLOAD_DIR: Path = Path(__file__).resolve().parent.parent / "uploads"
     MAX_FILE_SIZE_MB: int = 1024  # Límite ampliado a 1 GB (1024 MB)
     ALLOWED_EXTENSIONS: set[str] = {
-        ".mp3", ".wav", ".m4a", ".ogg", ".webm", ".aac", ".flac"
+        ".mp3", ".wav", ".m4a", ".ogg", ".webm", ".aac", ".flac",
+        ".opus", ".wma", ".mp4", ".oga", ".amr", ".3gp", ".m4p", ".caf"
     }
     
     # Language

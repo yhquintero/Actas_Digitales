@@ -34,6 +34,7 @@ export interface JobStats {
   words_per_minute?: number;
   duration_coverage_percent?: number;
   acoustic_verification_status?: string;
+  audio_sha256?: string;
 }
 
 export interface JobResponse {
@@ -53,4 +54,37 @@ export interface JobResponse {
   corrections_applied: CorrectionItem[];
   stats?: JobStats;
   error_message?: string;
+}
+
+export type PillarId = 'captura' | 'transcribe' | 'consolida' | 'formaliza';
+
+export interface PillarStep {
+  id: PillarId;
+  order: number;
+  title: string;
+  subtitle: string;
+  tagline: string;
+  description: string;
+  highlights: string[];
+  metrics: string;
+  color: string;
+  iconName: string;
+}
+
+export interface SecurityFeature {
+  id: string;
+  category: 'Cifrado & Transporte' | 'Integridad & Custodia' | 'Privacidad & Soberanía' | 'Defensa en Profundidad';
+  title: string;
+  status: 'Activo' | 'Recomendado' | 'Configurable';
+  description: string;
+  impact: string;
+  technicalDetails: string;
+}
+
+export interface AudioFormatInfo {
+  extension: string;
+  codec: string;
+  container: string;
+  recommendedUse: string;
+  decoder: string;
 }
