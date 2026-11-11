@@ -60,3 +60,4 @@ app/build/
 .idea/
 local.properties
 .DS_Store
+*.mp3
