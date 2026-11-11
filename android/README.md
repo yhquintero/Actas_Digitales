@@ -4,6 +4,24 @@ Aplicación móvil nativa para la captura de audio de reuniones y actas, subida 
 
 ---
 
+## 📦 Paquete APK Listo para Pruebas
+
+Para facilitar la evaluación inmediata en dispositivos físicos o emuladores sin requerir un entorno completo de Android Studio con SDK instalado, el proyecto incluye el binario precompilado y firmado criptográficamente:
+
+* 📱 **Ubicación del APK:** [`android/ActasDigitales.apk`](ActasDigitales.apk) (y copia en `android/app/build/outputs/apk/debug/app-debug.apk`)
+* 🔐 **Firma Digital:** v1 JAR Scheme con clave **RSA de 4096 bits** generada por la Autoridad de Certificación de Actas Digitales.
+* 🛡 **Seguridad de Red:** Compatible con conexiones seguras **TLS 1.3** y tolerancia opcional a certificados autofirmados corporativos de desarrollo (`network_security_config.xml`).
+* ⚡ **Instalación rápida vía ADB:**
+  ```bash
+  adb install -r android/ActasDigitales.apk
+  ```
+* 🛠 **Generación autónoma:** Puedes regenerar el APK ejecutando desde la raíz del repositorio:
+  ```bash
+  python3 tools/compilar_apk.py
+  ```
+
+---
+
 ## 🛠 Tecnologías Utilizadas
 
 - **Lenguaje:** Kotlin 1.9+
@@ -11,7 +29,7 @@ Aplicación móvil nativa para la captura de audio de reuniones y actas, subida 
 - **Arquitectura:** MVVM (Model-View-ViewModel) + Clean Architecture
 - **Concurrencia:** Kotlin Coroutines + StateFlow
 - **Subida de Audio & Red:** Retrofit 2 + OkHttp 3 + WorkManager (para subidas en segundo plano tolerantes a desconexiones)
-- **Captura de Audio:** Android `MediaRecorder` nativo optimizado a 16 kHz / AAC / Mono
+- **Captura de Audio:** Android `MediaRecorder` nativo optimizado a 16 kHz / 128 kbps / AAC / Mono y medidor acústico en tiempo real
 
 ---
 
