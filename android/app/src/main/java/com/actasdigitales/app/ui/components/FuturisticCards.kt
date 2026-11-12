@@ -5,6 +5,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.core.content.FileProvider
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.fadeIn
@@ -251,7 +252,8 @@ fun FuturisticProcessingCard(
 fun FuturisticSuccessCard(
     job: JobResponse,
     onReset: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isOffline: Boolean = false
 ) {
     val context = LocalContext.current
     var selectedTab by remember { mutableStateOf(0) }
@@ -277,14 +279,15 @@ fun FuturisticSuccessCard(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Acta Procesada Exitosamente",
+                        text = if (isOffline) "Acta Guardada en el Dispositivo" else "Acta Procesada Exitosamente",
                         fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
+                        fontSize = 15.sp
                     )
                 }
 
                 Row {
-                    // Exportar PDF
+                    // Exportar PDF y abrir el diálogo del sistema para guardarlo/compartirlo
                     IconButton(onClick = {
                         val pdfFile = PdfExportManager.createActaPdf(
                             context = context,
@@ -297,7 +300,7 @@ fun FuturisticSuccessCard(
                             orthographicCorrections = job.stats?.orthographicCorrections ?: 0
                         )
                         if (pdfFile != null) {
-                            Toast.makeText(context, "PDF Exportado: ${pdfFile.name}", Toast.LENGTH_LONG).show()
+                            sharePdf(context, pdfFile)
                         } else {
                             Toast.makeText(context, "Error al generar el PDF", Toast.LENGTH_SHORT).show()
                         }
@@ -477,5 +480,28 @@ private fun StatMetricItem(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Medium
         )
+    }
+}
+
+/**
+ * Abre el diálogo del sistema para compartir o guardar el PDF del acta.
+ * Usa FileProvider: la caché privada de la app nunca se expone directamente.
+ */
+private fun sharePdf(context: Context, pdfFile: java.io.File) {
+    try {
+        val uri = FileProvider.getUriForFile(
+            context,
+            "com.actasdigitales.app.fileprovider",
+            pdfFile
+        )
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "application/pdf"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            putExtra(Intent.EXTRA_SUBJECT, "Acta Digital")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(Intent.createChooser(intent, "Guardar o compartir el acta"))
+    } catch (e: Exception) {
+        Toast.makeText(context, "No se pudo abrir el PDF: ${e.message}", Toast.LENGTH_LONG).show()
     }
 }

@@ -4,21 +4,31 @@ Aplicación móvil nativa para la captura de audio de reuniones y actas, subida 
 
 ---
 
-## 📦 Paquete APK Listo para Pruebas
+## 📦 Compilación del APK
 
-Para facilitar la evaluación inmediata en dispositivos físicos o emuladores sin requerir un entorno completo de Android Studio con SDK instalado, el proyecto incluye el binario precompilado y firmado criptográficamente:
+El APK no se versiona en el repositorio: se genera con Gradle a partir de este código fuente, de modo que el binario instalado siempre corresponde a la versión actual.
 
-* 📱 **Ubicación del APK:** [`android/ActasDigitales.apk`](ActasDigitales.apk) (y copia en `android/app/build/outputs/apk/debug/app-debug.apk`)
-* 🔐 **Firma Digital:** v1 JAR Scheme con clave **RSA de 4096 bits** generada por la Autoridad de Certificación de Actas Digitales.
-* 🛡 **Seguridad de Red:** Compatible con conexiones seguras **TLS 1.3** y tolerancia opcional a certificados autofirmados corporativos de desarrollo (`network_security_config.xml`).
-* ⚡ **Instalación rápida vía ADB:**
-  ```bash
-  adb install -r android/ActasDigitales.apk
-  ```
-* 🛠 **Generación autónoma:** Puedes regenerar el APK ejecutando desde la raíz del repositorio:
-  ```bash
-  python3 tools/compilar_apk.py
-  ```
+```bash
+cd android
+./gradlew assembleDebug
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+* 🔧 **Requisitos:** JDK 17+ y Android SDK 35 (configura `local.properties` con `sdk.dir` o la variable `ANDROID_HOME`).
+* 🔐 **Firma:** el APK de depuración usa la clave de depuración estándar. Para distribución, añade tu `signingConfig` de release.
+* 🛡 **Seguridad de Red:** HTTPS obligatorio por defecto con CAs del sistema o corporativas (`network_security_config.xml`); solo `10.0.2.2`, `localhost` y `actasdigitales.local` admiten HTTP para desarrollo.
+* ℹ️ **`tools/compilar_apk.py`** genera un paquete **de verificación** de firma y recursos para CI (sin la interfaz Compose ni Room). No es un APK instalable y su salida queda en `tools/verificacion/`.
+
+## 🧱 Cadena de compilación
+
+| Componente | Versión | Nota |
+|---|---|---|
+| AGP | 9.5.1 | Incluye Kotlin integrado (no se aplica `org.jetbrains.kotlin.android`) |
+| Gradle | 9.6.0 | Requerido por AGP 9.5 |
+| KSP | 2.3.10 | Genera `AppDatabase_Impl` y `ActaDao_Impl` de Room |
+| Room | 2.7.2 | Persistencia del historial de actas |
+| Compose BOM | 2025.06.01 | Compose UI 1.8.2 + Material 3 1.3.2 |
+| compileSdk / targetSdk / minSdk | 35 / 34 / 26 | Android 8.0 o superior |
 
 ---
 

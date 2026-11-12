@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -43,6 +44,11 @@ android {
     }
 }
 
+// Room genera sus implementaciones en Kotlin mediante KSP.
+ksp {
+    arg("room.generateKotlin", "true")
+}
+
 dependencies {
     // Core Android & Lifecycle
     implementation(libs.androidx.core.ktx)
@@ -66,9 +72,11 @@ dependencies {
     // Room Database (Persistencia Local de Actas Digitales)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    annotationProcessor(libs.androidx.room.compiler)
+    // KSP en lugar de annotationProcessor: es la vía correcta para proyectos Kotlin.
+    // Sin esto Room no genera AppDatabase_Impl y la app se cierra al arrancar.
+    ksp(libs.androidx.room.compiler)
 
-    // Networking (Retrofit + OkHttp + Moshi/Gson)
+    // Networking (Retrofit + OkHttp + Gson)
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp.core)

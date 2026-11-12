@@ -52,5 +52,7 @@ data class JobResponse(
     @SerializedName("segments") val segments: List<AudioSegment> = emptyList(),
     @SerializedName("corrections_applied") val correctionsApplied: List<CorrectionItem> = emptyList(),
     @SerializedName("stats") val stats: JobStats? = null,
-    @SerializedName("error_message") val errorMessage: String? = null
+    @SerializedName("error_message") val errorMessage: String? = null,
+    /** `true` cuando el acta se generó localmente porque el servidor no estaba accesible. */
+    val isOffline: Boolean = false
 )

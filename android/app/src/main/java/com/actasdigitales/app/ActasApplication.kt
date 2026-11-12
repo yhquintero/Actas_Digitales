@@ -5,6 +5,7 @@ import android.app.Application
 class ActasApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        // Inicialización de componentes globales si es necesario
+        // Espacio reservado para inicializaciones globales (por ejemplo, sincronización
+        // en segundo plano). Room se inicializa de forma perezosa desde AppDatabase.
     }
 }

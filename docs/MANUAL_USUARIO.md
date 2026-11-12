@@ -118,9 +118,11 @@ Para convertir el texto en un documento legal formal:
 ## 4. Guía de la Aplicación Android
 
 ### 4.1. Instalación y permisos
-1. Instala el paquete precompilado disponible en [`android/ActasDigitales.apk`](../android/ActasDigitales.apk) en tu dispositivo móvil mediante transferencia de archivo o ejecutando:
+1. Genera e instala la aplicación desde el código fuente (JDK 17+ y Android SDK 35):
    ```bash
-   adb install -r android/ActasDigitales.apk
+   cd android
+   ./gradlew assembleDebug
+   adb install -r app/build/outputs/apk/debug/app-debug.apk
    ```
 2. Al abrir la aplicación por primera vez, pulsa el botón del micrófono: Android solicitará el permiso `android.permission.RECORD_AUDIO`. Pulsa **Permitir**.
 

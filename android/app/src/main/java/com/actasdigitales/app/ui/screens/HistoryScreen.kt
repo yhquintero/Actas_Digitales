@@ -5,9 +5,6 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,8 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.core.content.FileProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.actasdigitales.app.data.local.ActaEntity
@@ -154,6 +151,7 @@ fun ActaHistoryItemCard(
 ) {
     val context = LocalContext.current
     var isExpanded by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
     val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()) }
     val dateStr = remember(acta.timestamp) { dateFormat.format(Date(acta.timestamp)) }
 
@@ -197,7 +195,7 @@ fun ActaHistoryItemCard(
                             orthographicCorrections = acta.orthographicCorrections
                         )
                         if (pdfFile != null) {
-                            Toast.makeText(context, "PDF Generado: ${pdfFile.name}", Toast.LENGTH_LONG).show()
+                            shareActaPdf(context, pdfFile)
                         } else {
                             Toast.makeText(context, "Error al generar PDF", Toast.LENGTH_SHORT).show()
                         }
@@ -223,8 +221,8 @@ fun ActaHistoryItemCard(
                         )
                     }
 
-                    // Eliminar
-                    IconButton(onClick = onDelete) {
+                    // Eliminar (con confirmación para evitar borrados accidentales en móvil)
+                    IconButton(onClick = { showDeleteDialog = true }) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Eliminar",
@@ -265,5 +263,50 @@ fun ActaHistoryItemCard(
                 }
             }
         }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Eliminar acta") },
+            text = { Text("¿Eliminar «${acta.filename}» del historial del dispositivo? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        onDelete()
+                    }
+                ) {
+                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+}
+
+/**
+ * Abre el diálogo del sistema para guardar o compartir el PDF del acta.
+ */
+private fun shareActaPdf(context: Context, pdfFile: java.io.File) {
+    try {
+        val uri = FileProvider.getUriForFile(
+            context,
+            "com.actasdigitales.app.fileprovider",
+            pdfFile
+        )
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "application/pdf"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            putExtra(Intent.EXTRA_SUBJECT, "Acta Digital")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(Intent.createChooser(intent, "Guardar o compartir el acta"))
+    } catch (e: Exception) {
+        Toast.makeText(context, "No se pudo abrir el PDF: ${e.message}", Toast.LENGTH_LONG).show()
     }
 }

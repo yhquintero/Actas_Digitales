@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icono de la aplicación: insignia redondeada índigo con micrófono en blanco.
+     Sustituye al icono genérico del sistema (ic_btn_speak_now) que mostraba Android. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Fondo redondeado -->
+    <path
+        android:fillColor="#4F46E5"
+        android:pathData="M24,4h60a20,20 0 0 1 20,20v60a20,20 0 0 1 -20,20h-60a20,20 0 0 1 -20,-20v-60a20,20 0 0 1 20,-20z" />
+
+    <!-- Cuerpo del micrófono -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,26a11,11 0 0 1 11,11v18a11,11 0 0 1 -22,0v-18a11,11 0 0 1 11,-11z" />
+
+    <!-- Arco del micrófono -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M38,53h5v2a11,11 0 0 0 22,0v-2h5v2a16,16 0 0 1 -13,15.7v7.3h9v5h-23v-5h9v-7.3a16,16 0 0 1 -13,-15.7z" />
+</vector>

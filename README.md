@@ -19,7 +19,7 @@
 [![Versión](https://img.shields.io/badge/versi%C3%B3n-1.2.0-4f46e5?style=flat-square)](CHANGELOG.md)
 [![Plataformas](https://img.shields.io/badge/plataformas-Web%C2%B7Android%C2%B7Servidor-1e1b4b?style=flat-square)](#-ecosistema)
 [![Seguridad](https://img.shields.io/badge/Seguridad-TLS%201.3%20%7C%20RSA--4096-059669?style=flat-square)](#-seguridad-https-y-certificados)
-[![APK Android](https://img.shields.io/badge/APK-Android%20v1.2.0-10b981?style=flat-square&logo=android&logoColor=white)](android/ActasDigitales.apk)
+[![Android](https://img.shields.io/badge/Android-Kotlin%20·%20Compose%203DDC84?style=flat-square&logo=android&logoColor=white)](android/)
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)](#-requisitos)
 [![Kotlin](https://img.shields.io/badge/Kotlin-Jetpack%20Compose-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](android/)
 [![Licencia](https://img.shields.io/badge/licencia-propietaria-475569?style=flat-square)](LICENSE)
@@ -57,7 +57,7 @@ La interfaz Web se instala como app (PWA) y ofrece preescucha y comparativa visu
 | **Cómo está hecho** | Python 3.11 (FastAPI + Pydantic + Uvicorn) · React 18 + TypeScript + Vite + Tailwind (Web) · Kotlin + Jetpack Compose + WorkManager (Android) · Cryptography (TLS 1.3 con certificados X.509 v3 y SAN) |
 | **Dónde corre** | Servidor propio (Linux, Windows, macOS, Docker) en red local o nube privada. Sin dependencia obligatoria de terceros |
 | **Cómo se usa** | Navegador web instalable (PC o móvil), app Android nativa con subida resiliente en segundo plano, o API REST |
-| **Estado** | Versión **1.2.0** estable · integración continua en verde · blindaje RSA-4096 y APK disponible |
+| **Estado** | Versión **1.2.0** estable · integración continua en verde · blindaje RSA-4096 · app Android compilable con Gradle |
 | **Modelo** | Software propietario con derechos reservados © 2026 yhquintero |
 
 ---
@@ -263,20 +263,24 @@ En la barra de herramientas de exportación de la Web encontrarás los selectore
 
 <p align="center">
   <img src="docs/assets/actas-digitales-movil.png" width="100%" alt="Actas Digitales en el móvil: Web PWA instalable y Android nativo con Jetpack Compose" />
-  <br /><sub>Actas Digitales en movilidad: Web PWA instalable y app Android nativa con APK directo (<a href="android/ActasDigitales.apk">android/ActasDigitales.apk</a>).</sub>
+  <br /><sub>Actas Digitales en movilidad: Web PWA instalable y aplicación Android nativa en Kotlin + Jetpack Compose.</sub>
 </p>
 
-### 📱 Paquete de Instalación Móvil Android (APK)
+### 📱 Aplicación Android: compilación e instalación
 
-Para pruebas inmediatas en dispositivos Android físicos o emuladores sin necesidad de compilar el código fuente en Android Studio, el repositorio incluye el paquete compilado y firmado:
+El código fuente completo de la app móvil (Kotlin + Jetpack Compose + Room + WorkManager) está en [`android/`](android/). El APK se genera con Gradle, de modo que lo que instalas corresponde siempre al código de esta versión:
 
-* 📦 **Ruta del APK:** [`android/ActasDigitales.apk`](android/ActasDigitales.apk) (y copia en `android/app/build/outputs/apk/debug/app-debug.apk`)
-* 🔑 **Firma Criptográfica:** v1 JAR Scheme con clave **RSA de 4096 bits** emitida por la Autoridad de Certificación de Actas Digitales.
-* 📲 **Instalación rápida vía ADB:**
-  ```bash
-  adb install -r android/ActasDigitales.apk
-  ```
-* 🛠 **Herramienta de compilación autónoma:** Puedes regenerar el APK en cualquier momento ejecutando `python3 tools/compilar_apk.py`.
+```bash
+cd android
+./gradlew assembleDebug        # genera app/build/outputs/apk/debug/app-debug.apk
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+* 🔧 **Requisitos:** JDK 17 o superior y Android SDK 35 (`local.properties` con `sdk.dir` o variable `ANDROID_HOME`).
+* 🧱 **Arquitectura:** AGP 9 con Kotlin integrado, KSP para Room, Compose BOM 2025.06.01 y Room 2.7.2.
+* 🔑 **Firma:** el APK de depuración se firma con la clave de depuración estándar. Para distribución, configura un `signingConfig` de release propio.
+* ℹ️ **Sobre `tools/compilar_apk.py`:** genera únicamente un paquete de verificación de firma y recursos para CI (no contiene la interfaz Compose ni Room y no abre como aplicación); su salida vive en `tools/verificacion/` para no confundirse con el APK real.
+* 📡 **Conexión con el servidor:** por defecto `https://10.0.2.2:8443/` (emulador). En un móvil físico, ajusta `RetrofitClient.baseUrl` a la IP de tu equipo, por ejemplo `http://192.168.1.100:8000/`.
 
 ▶️ **Vídeo:** [presentación oficial de 3 min (1080p60, narración en español y subtítulos)](docs/PROPUESTA_VIDEO_PROMOCIONAL.md) · [reproductor interactivo en la app Web](web/) · [manual imprimible de usuario](docs/MANUAL_USUARIO.html)
 

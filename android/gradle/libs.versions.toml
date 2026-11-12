@@ -1,16 +1,17 @@
 [versions]
 agp = "9.5.1"
 kotlin = "2.2.10"
+ksp = "2.3.10"
 coreKtx = "1.15.0"
 lifecycle = "2.8.7"
 activityCompose = "1.9.3"
-composeBom = "2024.10.01"
+composeBom = "2025.06.01"
 navigationCompose = "2.8.5"
 workManager = "2.9.1"
 retrofit = "2.11.0"
 okhttp = "4.12.0"
 coroutines = "1.8.1"
-room = "2.6.1"
+room = "2.7.2"
 biometric = "1.1.0"
 foojay = "1.0.0"
 
@@ -36,7 +37,7 @@ androidx-navigation-compose = { group = "androidx.navigation", name = "navigatio
 # WorkManager
 androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workManager" }
 
-# Room Database
+# Room Database (implementaciones generadas con KSP)
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
@@ -56,6 +57,8 @@ androidx-compose-ui-testmanifest = { group = "androidx.compose.ui", name = "ui-t
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+# El plugin kotlin-android ya no se usa: AGP 9 compila Kotlin de forma nativa (built-in Kotlin).
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+# KSP genera las implementaciones de Room (AppDatabase_Impl, ActaDao_Impl).
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 foojay-resolver = { id = "org.gradle.toolchains.foojay-resolver-convention", version.ref = "foojay" }

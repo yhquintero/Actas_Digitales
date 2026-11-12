@@ -4,6 +4,51 @@ Todas las modificaciones notables de este proyecto están documentadas en este a
 
 ---
 
+## [1.2.1] - 2026-11-12
+
+### 🐞 Correcciones críticas de la aplicación Android (arranque y estabilidad)
+
+- **Cierre inmediato al abrir la app (`AppDatabase_Impl does not exist`):** Room se declaraba con
+  `annotationProcessor`, que solo procesa fuentes Java. Se migró a **KSP 2.3.10** con
+  `ksp(libs.androidx.room.compiler)`, de modo que `AppDatabase_Impl` y `ActaDao_Impl` se generan
+  en la compilación. Se actualizó Room a 2.7.2 y se fijó `room.schemaLocation`.
+- **Cadena de compilación compatible con AGP 9.5.1:** se retiró el plugin `org.jetbrains.kotlin.android`
+  (AGP 9 compila Kotlin de forma nativa) y se conservó solo `org.jetbrains.kotlin.plugin.compose`,
+  junto con `com.google.devtools.ksp` 2.3.10, la combinación soportada por AGP 9.
+- **Cierre por `ACTION_HOVER_EXIT` (ratón, lápiz o teclado externo):** se intercepta ese evento en
+  `MainActivity.dispatchGenericMotionEvent` cuando no hay botones pulsados, neutralizando el fallo
+  conocido de Compose (`issuetracker.google.com/issues/314269723`) sin afectar al toque táctil.
+- **Texto ilegible en modo oscuro:** la tipografía fijaba colores oscuros; ahora hereda el color del
+  tema activo.
+- **Destello blanco al abrir y contenido bajo el recorte de pantalla:** tema nativo oscuro
+  (`values-night`), `windowBackground` coherente y gestión única de insets.
+
+### 📱 Mejoras de uso en móvil
+
+- **Grabación:** liberación correcta de `MediaRecorder` si `prepare()` falla, activación real de los
+  filtros DSP de ruido/eco, cronómetro en pantalla y descarte de grabaciones vacías con aviso claro.
+- **Modo sin conexión:** si el servidor no responde, el audio y su huella SHA-256 se registran en el
+  historial local con un acta de respaldo (antes la pantalla quedaba bloqueada con un error).
+- **Historial:** confirmación antes de eliminar un acta y exportación de PDF mediante `FileProvider`
+  al diálogo del sistema (antes solo mostraba un aviso y el PDF quedaba en la caché).
+- **Selector de archivos:** admite cualquier nombre y extensión de audio, valida archivo vacío y el
+  límite de 1 GB.
+- **Botón Atrás:** desde Historial regresa a Captura en lugar de cerrar la aplicación.
+- **Red:** se dejó de forzar exclusivamente TLS 1.3 (rompía el handshake con servidores TLS 1.2) y se
+  retiraron permisos de almacenamiento innecesarios.
+- **Icono propio** de la aplicación en lugar del icono genérico del sistema.
+
+### 🧰 Distribución
+
+- **Se retiró `android/ActasDigitales.apk`:** era un paquete de 5,8 KB generado por
+  `tools/compilar_apk.py` que contenía un `classes.dex` mínimo (solo `ActasApplication` y
+  `MainActivity`) sin Compose ni Room, por lo que no abría la aplicación. El APK real se compila con
+  `cd android && ./gradlew assembleDebug`.
+- `tools/compilar_apk.py` ahora declara que produce un paquete **de verificación de firma y recursos**
+  para CI, escribe en `tools/verificacion/` y no sobrescribe la salida de Gradle.
+
+---
+
 ## [1.2.0] - 2026-11-10
 
 ### 🛡️ Criptografía y Seguridad Avanzada

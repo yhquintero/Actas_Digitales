@@ -1,8 +1,19 @@
 #!/usr/bin/env python3
 """
-Compilador y Empaquetador Automatizado de APK para Actas Digitales
-Genera el paquete nativo Android (APK) firmado criptográficamente con RSA-4096 bits.
-Valida la estructura DEX, recursos binarios ARSC y certificados X.509.
+Empaquetador de verificación del APK de Actas Digitales.
+
+IMPORTANTE
+==========
+Este script NO compila el código Kotlin ni genera un APK instalable de la aplicación.
+Construye un paquete de verificación mínimo (manifiesto binario + recursos + un
+classes.dex reducido de las clases Application/Activity) firmado con RSA-4096, útil
+solo para validar la cadena de firma, los recursos y el manifiesto en CI.
+
+Un APK que ejecute realmente la interfaz Jetpack Compose, Room y la grabación de audio
+debe compilarse con Gradle:  `cd android && ./gradlew assembleDebug`
+
+El APK de verificación y el APK real se publican en rutas distintas para que nadie
+instale por error un paquete que no abre la aplicación.
 """
 
 import os
@@ -23,7 +34,9 @@ from cryptography.hazmat.primitives.serialization import pkcs7
 REPO_ROOT = Path(__file__).resolve().parent.parent
 RES_DIR = REPO_ROOT / "android" / "app" / "src" / "main" / "res"
 MANIFEST_FILE = REPO_ROOT / "android" / "app" / "src" / "main" / "AndroidManifest.xml"
-OUTPUT_APK = REPO_ROOT / "android" / "ActasDigitales.apk"
+# Paquete de verificación (NO instalable como aplicación funcional).
+OUTPUT_APK = REPO_ROOT / "tools" / "verificacion" / "ActasDigitales-firma-verificacion.apk"
+# Salida real de Gradle: ./gradlew assembleDebug
 DEBUG_APK_DIR = REPO_ROOT / "android" / "app" / "build" / "outputs" / "apk" / "debug"
 DEBUG_APK = DEBUG_APK_DIR / "app-debug.apk"
 
@@ -349,17 +362,18 @@ def compile_and_sign():
     entries["META-INF/CERT.SF"] = cert_sf_bytes
     entries["META-INF/CERT.RSA"] = cert_rsa_der
 
-    # 7. Escribir APKs
+    # 7. Escribir el paquete de verificación.
+    #    Nunca se escribe en android/app/build/outputs/... porque esa ruta la genera
+    #    Gradle con el APK real y quedaría sobrescrita por este paquete reducido.
     OUTPUT_APK.parent.mkdir(parents=True, exist_ok=True)
-    DEBUG_APK_DIR.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(OUTPUT_APK, "w", compression=zipfile.ZIP_DEFLATED) as zout:
+        for name in sorted(entries.keys()):
+            zout.writestr(name, entries[name])
 
-    for out_path in [OUTPUT_APK, DEBUG_APK]:
-        with zipfile.ZipFile(out_path, "w", compression=zipfile.ZIP_DEFLATED) as zout:
-            for name in sorted(entries.keys()):
-                zout.writestr(name, entries[name])
-
-    print(f"[OK] APK Generado exitosamente en: {OUTPUT_APK} ({OUTPUT_APK.stat().st_size} bytes)")
-    print(f"[OK] APK Debug Generado en: {DEBUG_APK} ({DEBUG_APK.stat().st_size} bytes)")
+    print(f"[OK] Paquete de verificación de firma: {OUTPUT_APK} ({OUTPUT_APK.stat().st_size} bytes)")
+    print("     Este paquete NO es la aplicación funcional: solo valida firma, recursos y manifiesto.")
+    print("     Para el APK instalable real: cd android && ./gradlew assembleDebug")
+    print(f"     Salida esperada de Gradle: {DEBUG_APK}")
 
     # 8. Verificación Androguard
     from androguard.core.apk import APK

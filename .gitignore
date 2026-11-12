@@ -61,3 +61,9 @@ app/build/
 local.properties
 .DS_Store
 *.mp3
+
+# APK de la aplicación: artefacto de compilación (cd android && ./gradlew assembleDebug).
+# No se versiona para no distribuir paquetes que no correspondan al código fuente.
+android/ActasDigitales.apk
+android/app/build/
+tools/verificacion/

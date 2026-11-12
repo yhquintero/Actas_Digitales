@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- Configuración para conexiones seguras HTTPS TLS 1.3 con soporte para CAs del sistema y de usuario -->
+    <!-- Producción: solo conexiones cifradas y ancladas a CAs del sistema o a la CA
+         corporativa instalada por el usuario (RSA-4096 de Actas Digitales). -->
     <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
             <certificates src="system" />
@@ -8,7 +9,8 @@
         </trust-anchors>
     </base-config>
 
-    <!-- Permitir dominios locales de desarrollo y pruebas en LAN / Emulador -->
+    <!-- Excepciones admitidas únicamente para servidores de desarrollo en LAN / emulador.
+         Cualquier otro dominio sigue exigiendo HTTPS. -->
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">10.0.2.2</domain>
         <domain includeSubdomains="true">127.0.0.1</domain>
