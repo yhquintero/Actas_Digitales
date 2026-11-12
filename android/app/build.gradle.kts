@@ -96,6 +96,11 @@ android {
     }
 }
 
+// Room genera sus implementaciones en Kotlin mediante KSP.
+ksp {
+    arg("room.generateKotlin", "true")
+}
+
 dependencies {
     // Core Android & Lifecycle
     implementation(libs.androidx.core.ktx)
@@ -119,9 +124,10 @@ dependencies {
     // Room Database (Persistencia Local de Actas Digitales)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    // KSP (no annotationProcessor): Room genera AppDatabase_Impl / ActaDao_Impl.
     ksp(libs.androidx.room.compiler)
 
-    // Networking (Retrofit + OkHttp + Moshi/Gson)
+    // Networking (Retrofit + OkHttp + Gson)
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp.core)

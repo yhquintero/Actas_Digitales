@@ -83,6 +83,42 @@ Todas las modificaciones notables de este proyecto están documentadas en este a
 - Manual de usuario HTML (`/docs/MANUAL_USUARIO.html`) incluido en la Web
   (antes 404).
 
+### 📱 Android: arranque, puntero y uso en dispositivo (PR #22 integrado)
+- **Arranque sin cierre**: Room migrado de `annotationProcessor` a **KSP**
+  (`ksp(libs.androidx.room.compiler)` + `ksp { arg("room.generateKotlin", "true") }`);
+  generación de `AppDatabase_Impl`/`ActaDao_Impl` garantizada. Toolchain final:
+  AGP 9.5.1 · Kotlin 2.1.0 · KSP 2.1.0-1.0.29 · Room 2.8.5 (Room se mantiene en
+  2.8.5, no se baja a 2.7.2 como proponía el PR). `org.jetbrains.kotlin.android`
+  sigue retirado (AGP 9 compila Kotlin de forma nativa).
+- **Hover del puntero**: `MainActivity.dispatchGenericMotionEvent` descarta
+  `ACTION_HOVER_EXIT` sin botones pulsados (fallo conocido de Compose,
+  issuetracker.google.com/issues/314269723); el toque táctil no se ve afectado.
+- **Atrás en el móvil**: desde Historial regresa a Captura (`BackHandler`) en
+  lugar de cerrar la app.
+- **Modo oscuro**: la tipografía hereda el color del tema activo (antes texto
+  ilegible); tema nativo oscuro `values-night` y `windowBackground` coherente.
+- **Grabación**: liberación de `MediaRecorder` si `prepare()` falla, filtros
+  DSP reales, cronómetro en pantalla, descarte de grabaciones vacías con aviso.
+- **Sin conexión**: si el servidor no responde, el audio + su SHA-256 se
+  registran en el historial local como acta de respaldo (nunca más pantalla
+  bloqueada con error); antes la transcripción offline usaría igualmente
+  `OfflineAiEngine` cuando el DSP está disponible.
+- **Historial**: confirmación antes de eliminar un acta; exportación de PDF con
+  `FileProvider` + `xml/file_paths.xml` al diálogo del sistema (antes quedaba
+  solo en la caché).
+- **Red**: TLS negociado por el sistema (1.3 → 1.2, ya no se fuerza 1.3),
+  `retryOnConnectionFailure`, pinning opcional intacto, logger BASIC solo en
+  debug (nunca BODY, que filtraba la API Key en logcat).
+- **Permisos**: eliminados permisos de almacenamiento; el selector usa Storage
+  Access Framework y valida extensión/tamaño/archivo vacío.
+- **Icono propio** de la app (`drawable/ic_launcher`) en lugar del icono
+  genérico del sistema.
+- **Seguridad mantenida**: se integró el commit de PR #22 sin aceptar su
+  `TrustManager` universal ni su `hostnameVerifier { _, _ -> true }` (se
+  mantuvieron la validación TLS del sistema y el certificate pinning opt-in).
+- Verificación: CI `android-build-check.yml` (assembleRelease + bundleRelease)
+  sobre la rama; **no verificado en dispositivo físico en el sandbox**.
+
 ---
 
 ## [1.4.0] - 2026-11-13
@@ -133,6 +169,53 @@ Todas las modificaciones notables de este proyecto están documentadas en este a
 - **404 JSON para rutas API desconocidas:** `/api/*` sin coincidencia ya no devuelve HTML 200.
 - **Caché inmutable (1 año) para `/assets` con hash de Vite;** cabeceras `Cache-Control` largas para iconos; nginx del frontend con gzip, CSP y `proxy_buffering off`.
 - **`client_max_body_size` 1024M** en el nginx de despliegue, alineado con el límite de 1 GB del backend y la Web.
+
+## [1.2.1] - 2026-11-12
+
+### 🐞 Correcciones críticas de la aplicación Android (arranque y estabilidad)
+
+- **Cierre inmediato al abrir la app (`AppDatabase_Impl does not exist`):** Room se declaraba con
+  `annotationProcessor`, que solo procesa fuentes Java. Se migró a **KSP** con
+  `ksp(libs.androidx.room.compiler)`, de modo que `AppDatabase_Impl` y `ActaDao_Impl` se generan
+  en la compilación (`ksp { arg("room.generateKotlin", "true") }`).
+- **Cadena de compilación compatible con AGP 9.5.1:** se retiró el plugin `org.jetbrains.kotlin.android`
+  (AGP 9 compila Kotlin de forma nativa) y se conservó solo `org.jetbrains.kotlin.plugin.compose`,
+  junto con `com.google.devtools.ksp`, la combinación soportada por AGP 9.
+- **Cierre por `ACTION_HOVER_EXIT` (ratón, lápiz o teclado externo):** se intercepta ese evento en
+  `MainActivity.dispatchGenericMotionEvent` cuando no hay botones pulsados, neutralizando el fallo
+  conocido de Compose (`issuetracker.google.com/issues/314269723`) sin afectar al toque táctil.
+- **Texto ilegible en modo oscuro:** la tipografía fijaba colores oscuros; ahora hereda el color del
+  tema activo.
+- **Destello blanco al abrir y contenido bajo el recorte de pantalla:** tema nativo oscuro
+  (`values-night`), `windowBackground` coherente y gestión única de insets.
+
+### 📱 Mejoras de uso en móvil
+
+- **Grabación:** liberación correcta de `MediaRecorder` si `prepare()` falla, activación real de los
+  filtros DSP de ruido/eco, cronómetro en pantalla y descarte de grabaciones vacías con aviso claro.
+- **Modo sin conexión:** si el servidor no responde, el audio y su huella SHA-256 se registran en el
+  historial local con un acta de respaldo (antes la pantalla quedaba bloqueada con un error).
+- **Historial:** confirmación antes de eliminar un acta y exportación de PDF mediante `FileProvider`
+  al diálogo del sistema (antes solo mostraba un aviso y el PDF quedaba en la caché).
+- **Selector de archivos:** admite cualquier nombre y extensión de audio, valida archivo vacío y el
+  límite de 1 GB.
+- **Botón Atrás:** desde Historial regresa a Captura en lugar de cerrar la aplicación.
+- **Red:** se dejó de forzar exclusivamente TLS 1.3 (rompía el handshake con servidores TLS 1.2) y se
+  retiraron permisos de almacenamiento innecesarios.
+- **Icono propio** de la aplicación en lugar del icono genérico del sistema.
+
+### 🧰 Distribución
+
+- **Se retiró `android/ActasDigitales.apk`:** era un paquete de 5,8 KB generado por
+  `tools/compilar_apk.py` que contenía un `classes.dex` mínimo (solo `ActasApplication` y
+  `MainActivity`) sin Compose ni Room, por lo que no abría la aplicación. El APK real se compila con
+  `cd android && ./gradlew assembleDebug`.
+- `tools/compilar_apk.py` ahora declara que produce un paquete **de verificación de firma y recursos**
+  para CI, escribe en `tools/verificacion/` y no sobrescribe la salida de Gradle.
+
+> **Nota (integración en 1.5.0):** la sección 1.2.1 documenta el fix de PR #22
+> (cerrado sin merge). Versiones finales integradas en main: AGP 9.5.1 · Kotlin 2.1.0 ·
+> KSP 2.1.0-1.0.29 · Room 2.8.5 (no las cifras originales del PR).
 
 ---
 

@@ -57,7 +57,7 @@ La interfaz Web se instala como app (PWA) y ofrece preescucha y comparativa visu
 | **Cómo está hecho** | Python 3.11 (FastAPI + Pydantic + Uvicorn) · React 18 + TypeScript + Vite + Tailwind (Web) · Kotlin + Jetpack Compose + WorkManager (Android) · Cryptography (TLS 1.3 con certificados X.509 v3 y SAN) |
 | **Dónde corre** | Servidor propio (Linux, Windows, macOS, Docker) en red local o nube privada. Sin dependencia obligatoria de terceros |
 | **Cómo se usa** | Navegador web instalable (PC o móvil), app Android nativa con subida resiliente en segundo plano, o API REST |
-| **Estado** | Versión **1.2.0** estable · integración continua en verde · blindaje RSA-4096 y APK disponible |
+| **Estado** | Versión **1.2.0** estable · integración continua en verde · blindaje RSA-4096 · app Android compilable con Gradle |
 | **Modelo** | Software propietario con derechos reservados © 2026 yhquintero |
 
 ---
@@ -263,10 +263,10 @@ En la barra de herramientas de exportación de la Web encontrarás los selectore
 
 <p align="center">
   <img src="docs/assets/actas-digitales-movil.png" width="100%" alt="Actas Digitales en el móvil: Web PWA instalable y Android nativo con Jetpack Compose" />
-  <br /><sub>Actas Digitales en movilidad: Web PWA instalable y app Android nativa con APK directo (<a href="android/app/release/app-release.apk">android/app/release/app-release.apk</a>).</sub>
+  <br /><sub>Actas Digitales en movilidad: Web PWA instalable y aplicación Android nativa en Kotlin + Jetpack Compose (<a href="android/app/release/app-release.apk">APK release oficial</a>).</sub>
 </p>
 
-### 📱 Paquete de Instalación Móvil Android (APK)
+### 📱 Aplicación Android: compilación e instalación
 
 #### 🌐 Descarga desde la propia Web (recomendado)
 
@@ -284,7 +284,7 @@ El artefacto oficial de distribución es el **release nativo completo** (Kotlin 
 
 * 📱 **Artefacto oficial:** [`android/app/release/app-release.apk`](android/app/release/app-release.apk) (~13 MB, `com.actasdigitales.app`, v1.0.0/code 1, minSdk 26, target 34) — firmado con **APK Signature Scheme v2/v3**. Se sirve tanto por la Web como copiado en [`web/public/ActasDigitales.apk`](web/public/ActasDigitales.apk) para hosting estático (GitHub Pages/nginx): `python3 tools/sync_apk.py` re-sincroniza la copia y `python3 tools/sync_apk.py --check` la verifica en CI.
 * 🔑 **Firma del release:** El `build.gradle.kts` declara una `signingConfig` que lee la clave permanente desde `android/signing/actas-mobile.keystore` o de las variables `ACTAS_KEYSTORE_PATH` / `ACTAS_KEYSTORE_PASSWORD` / `ACTAS_KEY_ALIAS` / `ACTAS_KEY_PASSWORD` (la clave **nunca** va a Git; `android/signing/` está ignorado). Generación: `keytool -genkey -v -keystore signing/actas-mobile.keystore -alias actas-mobile -keyalg RSA -keysize 4096 -validity 3650`. La próxima build declara `versionName 1.3.0` / `versionCode 2`.
-* 🧪 **APK mínimo autónomo (legado):** [`android/ActasDigitales.apk`](android/ActasDigitales.apk) (~6 KB) es un stub de instalación generado por `python3 tools/compilar_apk.py` (AAPT2 + DEX sintético, firma v1 RSA-4096). Desde la 1.3.0 la Web **sirve por defecto el release nativo**; el stub solo actúa como respaldo si falta el release. `compilar_apk.py` ahora reutiliza una **clave persistente** en `android/signing/` (antes regeneraba la clave en cada ejecución, rompiendo las actualizaciones in-situ).
+* 🧪 **Paquete de verificación (no instalable):** `python3 tools/compilar_apk.py` genera únicamente un paquete de verificación de firma y recursos para CI en `tools/verificacion/` (no contiene la interfaz Compose ni Room y **no abre como aplicación**). El antiguo stub `android/ActasDigitales.apk` se retiró en 1.5.0.
 * 📲 **Instalación rápida vía ADB:**
   ```bash
   adb install -r app-release.apk
@@ -294,6 +294,24 @@ El artefacto oficial de distribución es el **release nativo completo** (Kotlin 
 * 📊 **Observabilidad:** `GET /api/metrics` (contadores en memoria por proceso: peticiones HTTP, info del APK, descargas, bytes, actas sincronizadas) y logs estructurados JSON Lines en cada descarga. Ideal para instalaciones auto-alojadas con Prometheus delante.
 * 🔄 **Móvil ⇄ Web comparten actas:** la app sube sus actas locales (Room) a `POST /api/acts/sync` (idempotente por SHA-256 del audio); la Web las lista en el historial («Actas del móvil (Room → servidor)») vía `GET /api/acts`.
 * 🛡 **CORS estricto y TLS seguro:** orígenes explícitos por `ACTAS_CORS_ORIGINS` (defecto localhost); el móvil valida CAs del sistema con **certificate pinning opcional** (`ACTAS_CERT_PIN_PRIMARY/BACKUP`, SPKI SHA-256) y sin bypass de certificados.
+
+#### 🔨 Compilar desde el código fuente (Android Studio / Gradle)
+
+El código fuente completo de la app móvil (Kotlin + Jetpack Compose + Room + WorkManager) está en [`android/`](android/). El APK se genera con Gradle, de modo que lo compilado corresponde siempre al código de esta versión:
+
+```bash
+cd android
+./gradlew assembleDebug        # genera app/build/outputs/apk/debug/app-debug.apk
+./gradlew assembleRelease      # release (minificado con R8)
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+* 🔧 **Requisitos:** JDK 17 o superior y Android SDK 35 (`local.properties` con `sdk.dir` o variable `ANDROID_HOME`).
+* 🧱 **Arquitectura:** AGP 9.5.1 con Kotlin integrado (sin plugin `kotlin-android`), KSP para Room, Compose BOM 2025.06.01 y **Room 2.8.5**.
+* 🛠 **Room vía KSP:** `ksp(libs.androidx.room.compiler)` genera `AppDatabase_Impl`/`ActaDao_Impl` (la app ya no se cierra al arrancar por falta de esas clases).
+* 🔑 **Firma:** el APK de depuración se firma con la clave de depuración estándar; para distribución, el `signingConfig` de release lee `android/signing/actas-mobile.keystore` o las variables `ACTAS_KEYSTORE_*` (ver arriba).
+* ℹ️ **Sobre `tools/compilar_apk.py`:** genera únicamente un paquete de verificación de firma y recursos para CI (no contiene la interfaz Compose ni Room y no abre como aplicación); su salida vive en `tools/verificacion/` para no confundirse con el APK real.
+* 📡 **Conexión con el servidor:** por defecto `https://10.0.2.2:8443/` (emulador). En un móvil físico, ajusta `RetrofitClient.baseUrl` a la IP de tu equipo, por ejemplo `http://192.168.1.100:8000/` (o `https://…:8443/` con la CA del proyecto instalada como CA de usuario). TLS 1.2 y 1.3 están soportados; el pinning es opcional (`ACTAS_CERT_PIN_*`).
 
 ▶️ **Vídeo:** [presentación oficial de 3 min (1080p60, narración en español y subtítulos)](docs/PROPUESTA_VIDEO_PROMOCIONAL.md) · [reproductor interactivo en la app Web](web/) · [manual imprimible de usuario](docs/MANUAL_USUARIO.html)
 

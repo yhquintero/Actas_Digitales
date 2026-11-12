@@ -1,6 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.ActasDigitales" parent="android:Theme.Material.Light.NoActionBar">
+    <!-- Tema base de la actividad. La interfaz se dibuja con Jetpack Compose, pero el
+         fondo de la ventana debe coincidir con el tema activo para evitar el destello
+         blanco al abrir la app en modo oscuro. -->
+    <style name="Theme.ActasDigitales" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/background</item>
         <item name="android:statusBarColor">@color/primary</item>
         <item name="android:navigationBarColor">@color/background</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <!-- Variante para modo oscuro (Android 10+). -->
+    <style name="Theme.ActasDigitales.Dark" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/background_dark</item>
+        <item name="android:statusBarColor">@color/primary</item>
+        <item name="android:navigationBarColor">@color/background_dark</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 </resources>

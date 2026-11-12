@@ -25,13 +25,42 @@ El artefacto oficial de distribución es el **release nativo completo** (Kotlin 
   ```bash
   adb install -r app-release.apk
   ```
-* 🧪 **APK mínimo (legado):** [`ActasDigitales.apk`](ActasDigitales.apk) (~6 KB) es un stub de instalación autónomo generado por `python3 tools/compilar_apk.py` (AAPT2 + DEX sintético, firma v1 RSA-4096). Desde la 1.3.0 la Web sirve por defecto el release; el stub queda como respaldo. `compilar_apk.py` reutiliza una **clave persistente** en `android/signing/` (antes regeneraba la clave en cada build, invalidando las actualizaciones in-situ).
+* 🧪 **Paquete de verificación (no instalable):** `python3 tools/compilar_apk.py` genera únicamente un paquete de verificación de firma y recursos para CI en `tools/verificacion/` (sin la interfaz Compose ni Room; no abre como aplicación). El antiguo stub legado `android/ActasDigitales.apk` se retiró en 1.5.0.
+
+---
+
+## 📦 Compilación del APK
+
+```bash
+cd android
+./gradlew assembleDebug        # genera app/build/outputs/apk/debug/app-debug.apk
+./gradlew assembleRelease      # release (R8 + splits ABI), signingConfig opcional
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+* 🔧 **Requisitos:** JDK 17 o superior y Android SDK 35 (`local.properties` con `sdk.dir` o variable `ANDROID_HOME`).
+* 🛡 **Seguridad de Red:** validación TLS estricta con CAs del sistema o corporativas + **certificate pinning opcional** + TLS 1.2/1.3 soportados; solo `10.0.2.2`, `localhost` y `actasdigitales.local` (LAN de desarrollo) admiten HTTP en `network_security_config.xml`.
+* ℹ️ **`tools/compilar_apk.py`** genera un paquete **de verificación** de firma y recursos para CI (sin la interfaz Compose ni Room). No es un APK instalable y su salida queda en `tools/verificacion/`.
+
+## 🧱 Cadena de compilación
+
+| Componente | Versión | Nota |
+|---|---|---|
+| AGP | 9.5.1 | Incluye Kotlin integrado (no se aplica `org.jetbrains.kotlin.android`) |
+| KSP | 2.1.0-1.0.29 | Genera `AppDatabase_Impl` y `ActaDao_Impl` de Room |
+| Room | 2.8.5 | Persistencia del historial de actas |
+| Kotlin | 2.1.0 | Con Compose plugin |
+| Compose BOM | 2025.06.01 | Compose UI + Material 3 |
+| compileSdk / targetSdk / minSdk | 35 / 34 / 26 | Android 8.0 o superior |
+
+---
+
 
 ---
 
 ## 🛠 Tecnologías Utilizadas
 
-- **Lenguaje:** Kotlin 1.9+
+- **Lenguaje:** Kotlin 2.1.0
 - **Interfaz:** Jetpack Compose + Material Design 3
 - **Arquitectura:** MVVM (Model-View-ViewModel) + Clean Architecture
 - **Concurrencia:** Kotlin Coroutines + StateFlow
