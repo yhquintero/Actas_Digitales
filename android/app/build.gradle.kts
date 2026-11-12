@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.biometric)
 
     // Jetpack Compose & Material 3
     implementation(platform(libs.androidx.compose.bom))
@@ -65,6 +66,11 @@ dependencies {
 
     // WorkManager (para subidas resilientes en segundo plano)
     implementation(libs.androidx.work.runtime.ktx)
+
+    // Room Database (Persistencia Local de Actas Digitales)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    annotationProcessor(libs.androidx.room.compiler)
 
     // Networking (Retrofit + OkHttp + Moshi/Gson)
     implementation(libs.retrofit.core)

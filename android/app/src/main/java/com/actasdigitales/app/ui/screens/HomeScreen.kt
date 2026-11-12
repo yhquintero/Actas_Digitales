@@ -20,11 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.actasdigitales.app.ui.components.AudioRecordingPulse
-import com.actasdigitales.app.ui.components.CyberPipelineBannerCard
-import com.actasdigitales.app.ui.components.FuturisticProcessingCard
-import com.actasdigitales.app.ui.components.FuturisticSuccessCard
-import com.actasdigitales.app.ui.components.ThemeToggleChip
+import com.actasdigitales.app.ui.components.*
 import com.actasdigitales.app.ui.theme.ThemeMode
 import com.actasdigitales.app.ui.viewmodel.AudioUiState
 import com.actasdigitales.app.ui.viewmodel.AudioViewModel
@@ -39,6 +35,7 @@ fun HomeScreen(
     onThemeModeChange: (ThemeMode) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val currentAmplitude by viewModel.amplitudeFlow.collectAsState()
     val context = LocalContext.current
     var hasMicPermission by remember { mutableStateOf(false) }
 
@@ -159,6 +156,15 @@ fun HomeScreen(
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onSurface
                     )
+
+                    // Ecualizador de ondas neón animadas en tiempo real muestreado asíncronamente
+                    if (isRecording) {
+                        Spacer(modifier = Modifier.height(14.dp))
+                        AudioWaveformVisualizer(
+                            isRecording = true,
+                            maxAmplitude = currentAmplitude
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)

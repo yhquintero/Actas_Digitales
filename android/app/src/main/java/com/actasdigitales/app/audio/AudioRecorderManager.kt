@@ -103,12 +103,14 @@ class AudioRecorderManager(private val context: Context) {
             mediaRecorder = null
             isRecording = false
             isPaused = false
+            AudioNoiseFilter.release()
             currentOutputFile
         } catch (e: Exception) {
             mediaRecorder?.release()
             mediaRecorder = null
             isRecording = false
             isPaused = false
+            AudioNoiseFilter.release()
             null
         }
     }
@@ -123,6 +125,7 @@ class AudioRecorderManager(private val context: Context) {
         mediaRecorder = null
         isRecording = false
         isPaused = false
+        AudioNoiseFilter.release()
     }
 
     companion object {

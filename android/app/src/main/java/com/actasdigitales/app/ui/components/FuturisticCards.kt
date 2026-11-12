@@ -7,7 +7,6 @@ import android.content.Intent
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.with
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -30,8 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.actasdigitales.app.data.model.JobResponse
-import com.actasdigitales.app.ui.theme.CyberEmeraldAccent
-import com.actasdigitales.app.ui.theme.CyberNeonGlow
+import com.actasdigitales.app.export.PdfExportManager
 import com.actasdigitales.app.ui.theme.ThemeMode
 
 /**
@@ -247,7 +245,7 @@ fun FuturisticProcessingCard(
 }
 
 /**
- * Tarjeta futurista de resultado exitoso con sello de custodia criptográfica SHA-256.
+ * Tarjeta futurista de resultado exitoso con sello de custodia criptográfica SHA-256 y exportación a PDF.
  */
 @Composable
 fun FuturisticSuccessCard(
@@ -286,6 +284,32 @@ fun FuturisticSuccessCard(
                 }
 
                 Row {
+                    // Exportar PDF
+                    IconButton(onClick = {
+                        val pdfFile = PdfExportManager.createActaPdf(
+                            context = context,
+                            filename = job.filename,
+                            jobId = job.jobId,
+                            correctedText = job.finalCorrectedText ?: "",
+                            sha256 = job.stats?.audioSha256 ?: "SHA256-UNVERIFIED",
+                            finalWords = job.stats?.finalWords ?: 0,
+                            removedFillers = job.stats?.removedFillers ?: 0,
+                            orthographicCorrections = job.stats?.orthographicCorrections ?: 0
+                        )
+                        if (pdfFile != null) {
+                            Toast.makeText(context, "PDF Exportado: ${pdfFile.name}", Toast.LENGTH_LONG).show()
+                        } else {
+                            Toast.makeText(context, "Error al generar el PDF", Toast.LENGTH_SHORT).show()
+                        }
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.PictureAsPdf,
+                            contentDescription = "Exportar PDF",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+
+                    // Copiar al Portapapeles
                     IconButton(onClick = {
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         val clip = ClipData.newPlainText("Acta Corregida", job.finalCorrectedText ?: "")
@@ -299,6 +323,7 @@ fun FuturisticSuccessCard(
                         )
                     }
 
+                    // Compartir
                     IconButton(onClick = {
                         val sendIntent = Intent().apply {
                             action = Intent.ACTION_SEND
