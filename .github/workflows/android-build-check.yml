@@ -30,11 +30,15 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Configurar Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Instalar plataforma y build-tools
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Instalar plataforma y build-tools (SDK preinstalado en ubuntu-latest)
+        run: |
+          set -e
+          SDKMANAGER="${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then SDKMANAGER="$(command -v sdkmanager || true)"; fi
+          if [ -z "$SDKMANAGER" ]; then echo "::error::sdkmanager no encontrado"; exit 1; fi
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Generar firma efímera PKCS12 (solo para validar el build)
         run: |

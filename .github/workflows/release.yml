@@ -47,13 +47,15 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Configurar Android SDK
+      - name: Instalar plataformas y build-tools (SDK preinstalado en ubuntu-latest)
         if: steps.secrets.outputs.has_keystore == 'true'
-        uses: android-actions/setup-android@v3
-
-      - name: Instalar plataformas y build-tools
-        if: steps.secrets.outputs.has_keystore == 'true'
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+        run: |
+          set -e
+          SDKMANAGER="${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then SDKMANAGER="$(command -v sdkmanager || true)"; fi
+          if [ -z "$SDKMANAGER" ]; then echo "::error::sdkmanager no encontrado"; exit 1; fi
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Descifrar keystore desde secret (base64)
         if: steps.secrets.outputs.has_keystore == 'true'
