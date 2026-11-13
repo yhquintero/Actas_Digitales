@@ -80,11 +80,11 @@ export const PillarsWorkflow: React.FC<PillarsWorkflowProps> = ({
                 className={`relative text-left p-4 rounded-xl border transition-all duration-200 ${
                   isSelected
                     ? 'bg-white border-indigo-500 shadow-md ring-2 ring-indigo-500/20'
-                    : 'bg-white/80 border-slate-200 hover:border-slate-300 hover:bg-white shadow-2xs'
+                    : 'bg-white/80 border-slate-200 hover:border-slate-300 hover:bg-white shadow-sm'
                 }`}
               >
                 {isCurrentInExecution && (
-                  <span className="absolute -top-2 right-2 bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs animate-pulse">
+                  <span className="absolute -top-2 right-2 bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-pulse">
                     En Proceso
                   </span>
                 )}
@@ -93,7 +93,7 @@ export const PillarsWorkflow: React.FC<PillarsWorkflowProps> = ({
                   <div
                     className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
                       isSelected
-                        ? 'bg-indigo-600 text-white shadow-xs'
+                        ? 'bg-indigo-600 text-white shadow-sm'
                         : 'bg-slate-100 text-slate-600'
                     }`}
                   >
@@ -154,7 +154,7 @@ export const PillarsWorkflow: React.FC<PillarsWorkflowProps> = ({
           </div>
 
           {/* Quick Technical Specs Card */}
-          <div className="lg:w-80 bg-slate-900 text-white rounded-xl p-4.5 border border-slate-800 shadow-sm flex flex-col justify-between space-y-3">
+          <div className="lg:w-80 bg-slate-900 text-white rounded-xl p-5 border border-slate-800 shadow-sm flex flex-col justify-between space-y-3">
             <div>
               <div className="flex items-center justify-between text-xs text-slate-400 border-b border-slate-800 pb-2 mb-3">
                 <span className="font-mono uppercase">Seguridad & Rendimiento</span>

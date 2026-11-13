@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse, Response
 
 from .config import settings
 from .routers.audio_router import router as audio_router
+from .routers.app_router import router as app_router
 from .middlewares.security_middleware import SecurityMiddleware
 from .services.job_manager import job_manager
 
@@ -36,8 +37,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# API Router
+# API Routers
 app.include_router(audio_router, prefix=settings.API_PREFIX)
+app.include_router(app_router, prefix=settings.API_PREFIX)
 
 @app.get("/api/health")
 async def health_check():
@@ -129,17 +131,33 @@ if static_dist_path.exists():
 
     @app.api_route("/{full_path:path}", methods=["GET", "HEAD"])
     async def serve_spa(full_path: str):
-        # Servir index.html para soportar rutas del cliente (SPA)
-        file_path = static_dist_path / full_path
-        if file_path.is_file():
-            return FileResponse(file_path)
+        # Rutas API no registradas deben responder 404 JSON, nunca el HTML del SPA
+        if full_path.startswith("api/") or full_path == "api":
+            from fastapi import HTTPException
+            raise HTTPException(status_code=404, detail="Endpoint de API no encontrado")
+        # Resolver y confinar dentro de web/dist (anti path-traversal)
+        try:
+            resolved = (static_dist_path / full_path).resolve(strict=False)
+        except (OSError, ValueError):
+            resolved = static_dist_path
+        dist_root = static_dist_path.resolve()
+        if resolved.is_file() and resolved.is_relative_to(dist_root):
+            # Los assets de Vite llevan hash en el nombre: inmutables y cacheables
+            if resolved.parent == dist_root / "assets":
+                return FileResponse(
+                    resolved,
+                    headers={"Cache-Control": "public, max-age=31536000, immutable"},
+                )
+            return FileResponse(resolved)
         return FileResponse(
             static_dist_path / "index.html",
             headers={
+                # index.html siempre fresco; NO se envía Clear-Site-Data aquí
+                # (eso borraba localStorage — la API Key — en cada refresco).
+                # La purga explícita vive en /limpiar-cache y /api/purge-cache.
                 "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
                 "Pragma": "no-cache",
                 "Expires": "0",
-                "Clear-Site-Data": '"cache", "storage"'
             }
         )
 

@@ -176,7 +176,7 @@ _____________________________             _____________________________
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden animate-in fade-in select-text">
+    <div className="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden animate-fade-in select-text">
       {/* Top Header Card */}
       <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 px-6 sm:px-8 py-6 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-indigo-900/50">
         <div>
@@ -256,13 +256,13 @@ _____________________________             _____________________________
 
         <div className="flex flex-wrap items-center gap-3">
           {/* Selector de Contenido */}
-          <div className="flex items-center space-x-1.5 bg-white border border-slate-200 rounded-xl p-1 shadow-xs">
+          <div className="flex items-center space-x-1.5 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
             <span className="text-[11px] text-slate-500 font-semibold px-2">Contenido:</span>
             <button
               onClick={() => setExportContent('full_text')}
               className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
                 exportContent === 'full_text'
-                  ? 'bg-indigo-600 text-white shadow-xs'
+                  ? 'bg-indigo-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -272,7 +272,7 @@ _____________________________             _____________________________
               onClick={() => setExportContent('official_acta')}
               className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
                 exportContent === 'official_acta'
-                  ? 'bg-indigo-600 text-white shadow-xs'
+                  ? 'bg-indigo-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -281,13 +281,13 @@ _____________________________             _____________________________
           </div>
 
           {/* Selector de Tipo de Hoja para ser imprimible en la mano */}
-          <div className="flex items-center space-x-1.5 bg-white border border-slate-200 rounded-xl p-1 shadow-xs">
+          <div className="flex items-center space-x-1.5 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
             <span className="text-[11px] text-slate-500 font-semibold px-2">Tipo de Hoja:</span>
             <button
               onClick={() => setPaperSize('a4')}
               className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
                 paperSize === 'a4'
-                  ? 'bg-emerald-600 text-white shadow-xs'
+                  ? 'bg-emerald-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
               title="A4 (210 x 297 mm) - Estándar Internacional"
@@ -298,7 +298,7 @@ _____________________________             _____________________________
               onClick={() => setPaperSize('letter')}
               className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
                 paperSize === 'letter'
-                  ? 'bg-emerald-600 text-white shadow-xs'
+                  ? 'bg-emerald-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
               title="Carta / Letter (216 x 279 mm) - Estándar Oficina"
@@ -309,7 +309,7 @@ _____________________________             _____________________________
               onClick={() => setPaperSize('legal')}
               className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
                 paperSize === 'legal'
-                  ? 'bg-emerald-600 text-white shadow-xs'
+                  ? 'bg-emerald-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
               title="Oficio / Legal / Folio (216 x 356 mm) - Estándar Notarial/Jurídico"
@@ -319,7 +319,7 @@ _____________________________             _____________________________
           </div>
 
           {/* Selector de Márgenes */}
-          <div className="flex items-center space-x-1.5 bg-white border border-slate-200 rounded-xl p-1 shadow-xs">
+          <div className="flex items-center space-x-1.5 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
             <span className="text-[11px] text-slate-500 font-semibold px-2">Márgenes:</span>
             <button
               onClick={() => setMarginType('standard')}
@@ -678,7 +678,7 @@ _____________________________             _____________________________
             </h4>
 
             {job.corrections_applied && job.corrections_applied.length > 0 ? (
-              <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+              <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
                 {job.corrections_applied.map((corr: CorrectionItem, idx: number) => (
                   <div key={idx} className="p-4 bg-white flex items-center justify-between text-xs hover:bg-slate-50 transition">
                     <div className="flex items-center space-x-3">

@@ -29,7 +29,7 @@ export const SecurityCenterModal: React.FC<SecurityCenterModalProps> = ({
       : SECURITY_FEATURES.filter((f) => f.category === activeCategory);
 
   return (
-    <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+    <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
       <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 px-6 py-5 text-white flex items-center justify-between border-b border-indigo-950">
@@ -68,7 +68,7 @@ export const SecurityCenterModal: React.FC<SecurityCenterModalProps> = ({
               onClick={() => setActiveCategory(cat.id)}
               className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-colors ${
                 activeCategory === cat.id
-                  ? 'bg-indigo-600 text-white shadow-xs'
+                  ? 'bg-indigo-600 text-white shadow-sm'
                   : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
               }`}
             >
@@ -84,7 +84,7 @@ export const SecurityCenterModal: React.FC<SecurityCenterModalProps> = ({
             {filteredFeatures.map((feat) => (
               <div
                 key={feat.id}
-                className="p-4 rounded-xl border border-slate-200/90 bg-white hover:border-indigo-300 transition-all shadow-2xs space-y-2.5"
+                className="p-4 rounded-xl border border-slate-200/90 bg-white hover:border-indigo-300 transition-all shadow-sm space-y-2.5"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2">

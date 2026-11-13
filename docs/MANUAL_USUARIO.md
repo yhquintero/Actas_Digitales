@@ -118,7 +118,8 @@ Para convertir el texto en un documento legal formal:
 ## 4. Guía de la Aplicación Android
 
 ### 4.1. Instalación y permisos
-1. Instala el paquete precompilado disponible en [`android/ActasDigitales.apk`](../android/ActasDigitales.apk) en tu dispositivo móvil mediante transferencia de archivo o ejecutando:
+1. La forma más sencilla: con el servidor en marcha, abre la Web en tu PC o móvil y usa la sección **«Descarga la App para tu móvil»** al final de la página (o el botón verde **App** de la barra superior). Pulsa **Descargar para Android** o escanea el código QR con la cámara del teléfono. El paquete se sirve directamente desde el propio servidor (`/api/app/download`) y puedes verificar su **SHA-256 de custodia** en la misma sección o con `sha256sum ActasDigitales.apk`.
+2. Instala el paquete precompilado disponible en [`android/ActasDigitales.apk`](../android/ActasDigitales.apk) en tu dispositivo móvil mediante transferencia de archivo o ejecutando:
    ```bash
    adb install -r android/ActasDigitales.apk
    ```

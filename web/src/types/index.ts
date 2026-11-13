@@ -88,3 +88,25 @@ export interface AudioFormatInfo {
   recommendedUse: string;
   decoder: string;
 }
+
+export interface AndroidAppInfo {
+  available: boolean;
+  name: string;
+  package: string;
+  version_name: string;
+  version_code: number;
+  min_sdk: number;
+  target_sdk: number;
+  requires_android: string;
+  abi: string;
+  signature: string;
+  permissions: string[];
+  filename: string;
+  size_bytes: number;
+  size_formatted: string;
+  sha256: string;
+  signed: boolean;
+  source: string;
+  download_url: string;
+  updated_at: string;
+}

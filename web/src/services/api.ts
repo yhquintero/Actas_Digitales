@@ -1,4 +1,4 @@
-import { JobResponse } from '../types';
+import { JobResponse, AndroidAppInfo } from '../types';
 
 export class ApiService {
   private static getHeaders(apiKey?: string): Record<string, string> {
@@ -112,6 +112,15 @@ export class ApiService {
 
   static async checkHealth(): Promise<{ status: string; service: string; version: string }> {
     const res = await fetch('/api/health');
+    return await res.json();
+  }
+
+  static async getAppInfo(): Promise<AndroidAppInfo> {
+    const res = await fetch('/api/app/info');
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'La App no está disponible en el servidor' }));
+      throw new Error(err.detail || 'La App no está disponible en el servidor');
+    }
     return await res.json();
   }
 }

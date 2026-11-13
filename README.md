@@ -268,6 +268,18 @@ En la barra de herramientas de exportación de la Web encontrarás los selectore
 
 ### 📱 Paquete de Instalación Móvil Android (APK)
 
+#### 🌐 Descarga desde la propia Web (recomendado)
+
+Con el servidor en marcha, abre la Web en tu PC o móvil y usa la sección **«Descarga la App para tu móvil»** (al final de la página) o el botón verde **App** de la barra superior. Desde allí puedes:
+
+* ⬇️ **Descargar el APK directamente** con un clic (`GET /api/app/download`) — sin tiendas externas ni dependencia de GitHub.
+* 📷 **Escanear el código QR** con la cámara de tu Android para abrir la descarga al instante.
+* 🔢 **Verificar la custodia SHA-256** del paquete desde la Web o con `sha256sum ActasDigitales.apk`.
+* 📋 **Consultar los metadatos del APK** vía API: `GET /api/app/info` (versión, paquete `com.actasdigitales.app`, tamaño, firma RSA-4096, requisito Android 7.0+/API 24).
+* 🐳 En **Docker Compose** la descarga funciona igual: `./android` se monta como solo lectura dentro del backend (`APK_DOWNLOAD_PATH=/android/ActasDigitales.apk`).
+
+#### 📦 Distribución manual del APK
+
 Para pruebas inmediatas en dispositivos Android físicos o emuladores sin necesidad de compilar el código fuente en Android Studio, el repositorio incluye el paquete compilado y firmado:
 
 * 📦 **Ruta del APK:** [`android/ActasDigitales.apk`](android/ActasDigitales.apk) (y copia en `android/app/build/outputs/apk/debug/app-debug.apk`)

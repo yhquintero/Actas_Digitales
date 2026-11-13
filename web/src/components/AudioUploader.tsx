@@ -120,7 +120,7 @@ export const AudioUploader: React.FC<AudioUploaderProps> = ({
           onChange={handleFileChange}
         />
 
-        <div className="w-14 h-14 bg-gradient-to-tr from-indigo-100 to-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xs">
+        <div className="w-14 h-14 bg-gradient-to-tr from-indigo-100 to-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
           <UploadCloud className="w-7 h-7" />
         </div>
 

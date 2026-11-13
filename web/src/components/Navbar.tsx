@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mic, Key, Film, ShieldCheck, Cpu, Shield } from 'lucide-react';
+import { Mic, Key, Film, ShieldCheck, Cpu, Shield, Smartphone } from 'lucide-react';
 
 interface NavbarProps {
   apiKey: string;
@@ -58,6 +58,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
+          {/* Download Android App Button */}
+          <a
+            href="#descarga-app"
+            className="flex items-center space-x-1.5 text-xs text-emerald-100 bg-emerald-600/80 hover:bg-emerald-500/80 px-3 py-1.5 rounded-xl transition-all border border-emerald-400/50 font-bold shadow-[0_0_15px_rgba(16,185,129,0.35)] hover:shadow-[0_0_20px_rgba(16,185,129,0.55)]"
+            title="Descargar la App para Android (APK firmado) directamente desde este servidor"
+            aria-label="Descargar la App Android de Actas Digitales"
+          >
+            <Smartphone className="w-3.5 h-3.5 text-emerald-200" />
+            <span className="hidden sm:inline">App</span>
+          </a>
+
           {/* Futuristic Control Panel Trigger Button */}
           <button
             onClick={onOpenControlPanel}
@@ -95,7 +106,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Settings Modal */}
       {showSettings && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-fade-zoom-in">
             <div className="flex items-center space-x-2 mb-3">
               <Key className="w-5 h-5 text-indigo-600" />
               <h3 className="font-semibold text-slate-900 text-lg">Configuración de Proveedor IA</h3>

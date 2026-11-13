@@ -7,3 +7,48 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Animaciones reales (antes se usaban clases de tailwindcss-animate que no estaban instaladas) */
+@keyframes actas-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes actas-fade-slide-up {
+  from { opacity: 0; transform: translateY(-0.75rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes actas-fade-zoom-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: actas-fade-in 0.25s ease-out both;
+  }
+
+  .animate-fade-slide-up {
+    animation: actas-fade-slide-up 0.3s ease-out both;
+  }
+
+  .animate-fade-zoom-in {
+    animation: actas-fade-zoom-in 0.3s ease-out both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-fade-in,
+  .animate-fade-slide-up,
+  .animate-fade-zoom-in {
+    animation: none;
+  }
+}

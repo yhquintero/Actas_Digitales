@@ -228,7 +228,7 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in select-none">
+    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in select-none">
       <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl flex flex-col">
         {/* Elemento de Audio Nativo */}
         <audio ref={audioRef} src="/audio/promocional_actas_digitales.mp3" preload="auto" />
@@ -279,7 +279,7 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
           {/* Dynamic Scene Content Graphic */}
           <div className="w-full max-w-2xl my-auto flex flex-col items-center justify-center text-center">
             {currentScene.visualType === 'problem' && (
-              <div className="space-y-4 animate-in zoom-in-95 duration-500">
+              <div className="space-y-4 animate-fade-zoom-in">
                 <div className="w-20 h-20 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mx-auto text-rose-400">
                   <span className="text-4xl">⏱️</span>
                 </div>
@@ -292,7 +292,7 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
             )}
 
             {currentScene.visualType === 'ecosystem' && (
-              <div className="space-y-4 animate-in zoom-in-95 duration-500">
+              <div className="space-y-4 animate-fade-zoom-in">
                 <div className="flex items-center justify-center space-x-6 text-white mb-2">
                   <div className="flex flex-col items-center bg-slate-800/80 p-3 rounded-xl border border-indigo-500/40">
                     <Globe className="w-8 h-8 text-indigo-400 mb-1" />
@@ -315,7 +315,7 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
             )}
 
             {currentScene.visualType === 'pipeline' && (
-              <div className="space-y-4 animate-in zoom-in-95 duration-500 w-full">
+              <div className="space-y-4 animate-fade-zoom-in w-full">
                 <div className="flex items-center justify-center space-x-2 my-2">
                   {[40, 70, 25, 90, 60, 100, 45, 80, 30, 95, 50].map((h, i) => (
                     <div
@@ -341,7 +341,7 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
             )}
 
             {currentScene.visualType === 'correction' && (
-              <div className="space-y-4 animate-in zoom-in-95 duration-500 max-w-lg">
+              <div className="space-y-4 animate-fade-zoom-in max-w-lg">
                 <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
                   <Sparkles className="w-7 h-7" />
                 </div>
@@ -360,7 +360,7 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
             )}
 
             {currentScene.visualType === 'security' && (
-              <div className="space-y-4 animate-in zoom-in-95 duration-500">
+              <div className="space-y-4 animate-fade-zoom-in">
                 <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400">
                   <Lock className="w-8 h-8" />
                 </div>
@@ -380,7 +380,7 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
             )}
 
             {currentScene.visualType === 'outro' && (
-              <div className="space-y-4 animate-in zoom-in-95 duration-500">
+              <div className="space-y-4 animate-fade-zoom-in">
                 <div className="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center mx-auto text-indigo-400">
                   <span className="text-3xl">📑</span>
                 </div>

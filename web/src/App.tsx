@@ -10,10 +10,11 @@ import { ResultViewer } from './components/ResultViewer';
 import { RecentJobs } from './components/RecentJobs';
 import { PromoVideoModal } from './components/PromoVideoModal';
 import { FuturisticControlPanel } from './components/FuturisticControlPanel';
+import { DownloadApp } from './components/DownloadApp';
 import { useAudioJob } from './hooks/useAudioJob';
 import { ApiService } from './services/api';
 import { JobResponse, PillarId } from './types';
-import { UploadCloud, Mic, Sparkles, Shield, ArrowRight, AlertCircle } from 'lucide-react';
+import { UploadCloud, Mic, Sparkles, Shield, ArrowRight, AlertCircle, Smartphone } from 'lucide-react';
 
 export const App: React.FC = () => {
   const {
@@ -143,14 +144,14 @@ export const App: React.FC = () => {
         )}
 
         {currentJob && currentJob.status !== 'COMPLETED' && (
-          <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="mb-8 animate-fade-slide-up">
             <JobProgress job={currentJob} />
           </div>
         )}
 
         {/* Completed Job Result Viewer */}
         {currentJob && currentJob.status === 'COMPLETED' && (
-          <div className="mb-8 animate-in fade-in zoom-in-95 duration-300">
+          <div className="mb-8 animate-fade-zoom-in">
             <ResultViewer job={currentJob} />
           </div>
         )}
@@ -249,6 +250,34 @@ export const App: React.FC = () => {
               selectedJobId={currentJob?.job_id}
             />
 
+            {/* Download Android App Banner Card */}
+            <div className="bg-gradient-to-br from-emerald-950 via-slate-900 to-emerald-950 text-white rounded-2xl p-6 shadow-md border border-emerald-900/60 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-400 font-bold flex items-center gap-1.5">
+                  <Smartphone className="w-3.5 h-3.5" /> App Móvil
+                </span>
+                <span className="text-[10px] font-mono text-emerald-300">APK · Android 7+</span>
+              </div>
+
+              <h4 className="font-extrabold text-base text-white">
+                Descarga Actas Digitales para Android
+              </h4>
+
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Instala el APK firmado directamente desde este servidor. Subida en segundo plano, reanudación automática y custodia SHA-256.
+              </p>
+
+              <div className="pt-2 border-t border-emerald-900/60 flex items-center justify-between">
+                <a
+                  href="#descarga-app"
+                  className="text-xs text-emerald-300 hover:text-white font-medium flex items-center gap-1 transition"
+                >
+                  <span>Descargar o escanear QR</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            </div>
+
             {/* Security Banner Card */}
             <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-6 shadow-md border border-indigo-950 space-y-4">
               <div className="flex items-center justify-between">
@@ -278,6 +307,9 @@ export const App: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Descarga de la App Android directamente desde la Web */}
+        <DownloadApp />
       </main>
 
       {/* Formal Footer */}

@@ -11,7 +11,18 @@ interface RecentJobsProps {
 export const RecentJobs: React.FC<RecentJobsProps> = ({ jobs, onSelectJob, selectedJobId }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
-  if (jobs.length === 0) return null;
+  if (jobs.length === 0) {
+    // Estado vacío útil en lugar de ocultar el panel por completo
+    return (
+      <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-6 shadow-sm text-center">
+        <History className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+        <h3 className="font-semibold text-slate-700 text-sm">Historial de Actas</h3>
+        <p className="text-xs text-slate-400 mt-1">
+          Aún no has procesado ninguna acta. Sube tu primer audio y aparecerá aquí.
+        </p>
+      </div>
+    );
+  }
 
   const filteredJobs = jobs.filter((j) =>
     j.filename.toLowerCase().includes(searchTerm.toLowerCase())

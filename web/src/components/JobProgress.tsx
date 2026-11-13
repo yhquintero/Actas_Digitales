@@ -27,7 +27,7 @@ export const JobProgress: React.FC<JobProgressProps> = ({ job }) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-6 animate-in fade-in">
+    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
         <div>
           <span className="text-xs font-semibold uppercase text-indigo-600 tracking-wider">

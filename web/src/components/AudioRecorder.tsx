@@ -180,6 +180,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioRecorded, i
   const resetRecording = () => {
     setIsRecording(false);
     setRecordDuration(0);
+    if (audioUrl) URL.revokeObjectURL(audioUrl); // liberar el object URL
     setAudioUrl(null);
     setAudioBlob(null);
     setLiveTranscript('');

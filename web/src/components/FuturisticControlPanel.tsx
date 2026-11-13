@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, ShieldCheck, Terminal, Cpu, HardDrive, RefreshCw, Trash2, Play, Flame, CheckCircle, Activity, Lock, Layers, Download } from 'lucide-react';
+import { X, ShieldCheck, Terminal, Cpu, HardDrive, RefreshCw, Trash2, Play, Flame, CheckCircle, Activity, Lock, Layers, Download, Smartphone } from 'lucide-react';
 
 interface FuturisticControlPanelProps {
   isOpen: boolean;
@@ -133,7 +133,7 @@ export const FuturisticControlPanel: React.FC<FuturisticControlPanelProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-xl flex items-center justify-center p-4 z-50 animate-in fade-in select-none">
+    <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-xl flex items-center justify-center p-4 z-50 animate-fade-in select-none">
       <div className="bg-slate-950 border-2 border-indigo-500/40 rounded-3xl max-w-5xl w-full p-6 sm:p-8 shadow-[0_0_50px_rgba(79,70,229,0.35)] flex flex-col space-y-6 relative overflow-hidden">
         {/* Futuristic Glowing Scanline Overlay */}
         <div className="absolute inset-0 pointer-events-none opacity-10 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,6px_100%]"></div>
@@ -223,24 +223,26 @@ export const FuturisticControlPanel: React.FC<FuturisticControlPanelProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {/* Botón Certificado de Confianza Raíz */}
-            <button
-              onClick={handleInstallRootCert}
-              disabled={loadingAction === 'cert_install'}
-              className="group relative p-4 rounded-2xl bg-gradient-to-br from-cyan-950 via-slate-900 to-indigo-950 border border-cyan-500/50 hover:border-cyan-400 text-left transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.25)] hover:shadow-[0_0_25px_rgba(6,182,212,0.45)] disabled:opacity-50"
+            <div
+              className="group relative p-4 rounded-2xl bg-gradient-to-br from-cyan-950 via-slate-900 to-indigo-950 border border-cyan-500/50 hover:border-cyan-400 transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.25)] hover:shadow-[0_0_25px_rgba(6,182,212,0.45)]"
             >
               <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-2.5">
+                <button
+                  onClick={handleInstallRootCert}
+                  disabled={loadingAction === 'cert_install'}
+                  className="flex items-center space-x-2.5 text-left rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400/60 disabled:opacity-60"
+                  title="Instalar certificado raíz en el almacén de Windows"
+                >
                   <div className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center border border-cyan-400/40">
                     <ShieldCheck className={`w-4 h-4 ${loadingAction === 'cert_install' ? 'animate-pulse' : ''}`} />
                   </div>
                   <span className="text-xs font-bold text-white font-mono group-hover:text-cyan-300">
                     {loadingAction === 'cert_install' ? 'INSTALANDO...' : 'CERTIFICADO CONFIANZA'}
                   </span>
-                </div>
+                </button>
                 <a
                   href="/api/audio/system/download-ca"
                   download="ActasDigitales_CA_Raiz.crt"
-                  onClick={(e) => e.stopPropagation()}
                   className="p-1 rounded bg-slate-800 hover:bg-cyan-900 text-slate-300 hover:text-cyan-200 text-[10px] font-mono border border-slate-700 flex items-center gap-1"
                   title="Descargar archivo ca.crt para importar manualmente"
                 >
@@ -251,7 +253,7 @@ export const FuturisticControlPanel: React.FC<FuturisticControlPanelProps> = ({
               <p className="text-[11px] text-slate-400 leading-snug">
                 Registra ca.crt en el almacén de Windows (CurrentUser\Root) para candado verde seguro en Chrome y Edge.
               </p>
-            </button>
+            </div>
 
             {/* Renovar TLS / SAN */}
             <button
@@ -350,6 +352,30 @@ export const FuturisticControlPanel: React.FC<FuturisticControlPanelProps> = ({
                 Documentación completa de arquitectura, endpoints y despliegue.
               </p>
             </a>
+
+            {/* Descarga de la App Android (APK firmado) — ancho completo */}
+            <a
+              href="/api/app/download"
+              download="ActasDigitales.apk"
+              className="group relative p-4 rounded-2xl sm:col-span-3 bg-gradient-to-r from-emerald-950 via-emerald-900/60 to-teal-950 border border-emerald-500/50 hover:border-emerald-400 text-left transition-all duration-300 shadow-[0_0_15px_rgba(16,185,129,0.25)] hover:shadow-[0_0_28px_rgba(16,185,129,0.45)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-400/40">
+                  <Smartphone className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-white font-mono group-hover:text-emerald-300 block">
+                    DESCARGAR APP MÓVIL (APK)
+                  </span>
+                  <span className="text-[11px] text-slate-400 leading-snug">
+                    App oficial Android v1.2.0 · Firmada RSA-4096 · Se sirve desde este servidor (Android 7+)
+                  </span>
+                </div>
+              </div>
+              <span className="inline-flex items-center gap-2 text-[11px] font-mono font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-500/40 rounded-xl px-4 py-2 group-hover:bg-emerald-500/20 transition flex-shrink-0">
+                <Download className="w-4 h-4" /> /api/app/download
+              </span>
+            </a>
           </div>
         </div>
 
@@ -366,7 +392,7 @@ export const FuturisticControlPanel: React.FC<FuturisticControlPanelProps> = ({
             </span>
           </div>
 
-          <div className="h-28 overflow-y-auto space-y-1 text-slate-300 font-mono text-[11px] scrollbar-thin scrollbar-thumb-indigo-600">
+          <div className="h-28 overflow-y-auto space-y-1 text-slate-300 font-mono text-[11px] ">
             {logs.map((log, i) => (
               <div key={i} className="flex items-start space-x-2">
                 <span className="text-cyan-400 select-none">&gt;</span>
