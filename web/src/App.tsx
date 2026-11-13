@@ -10,6 +10,7 @@ import { ResultViewer } from './components/ResultViewer';
 import { RecentJobs } from './components/RecentJobs';
 import { PromoVideoModal } from './components/PromoVideoModal';
 import { FuturisticControlPanel } from './components/FuturisticControlPanel';
+import { BackToTop } from './components/BackToTop';
 import { DownloadApp } from './components/DownloadApp';
 import { useAudioJob } from './hooks/useAudioJob';
 import { ApiService } from './services/api';
@@ -317,6 +318,9 @@ export const App: React.FC = () => {
         onOpenSecurity={() => setIsSecurityOpen(true)}
         onOpenControlPanel={() => setIsControlPanelOpen(true)}
       />
+
+      {/* Botón flotante: única flecha ↑, acompaña el scroll en ambos sentidos */}
+      <BackToTop />
     </div>
   );
 };

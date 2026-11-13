@@ -117,7 +117,7 @@ Actas Digitales está compuesto por **tres componentes que trabajan de forma sin
 - 📑 **Estructuración en Acta Oficial RAE** — Convierte el texto corregido en un documento formal con título, asistentes, orden del día, acuerdos numerados (`ACUERDO-01`, etc.) y pie de firmas para Presidente y Secretario.
 - 💾 **Exportación multipropósito** — Copiado instantáneo al portapapeles, descarga en `.txt` UTF-8, archivo `.md` (Markdown) o impresión/guardado en PDF vectorial.
 
-<p align="right"><a href="#readme-top">Volver arriba ⬆</a></p>
+<p align="right"><a href="#readme-top"><img src="brand/volver-arriba.svg" height="44" alt="Volver arriba" /></a></p>
 
 ---
 
@@ -234,7 +234,7 @@ En la barra de herramientas de exportación de la Web encontrarás los selectore
 * **Botón `PDF / Imprimir`:** Abre el diálogo de impresión del navegador preconfigurado mediante reglas `@media print` para imprimir directamente o guardar en **PDF vectorial**.
 * **Botones `MD` y `TXT`:** Descarga en texto plano o Markdown para archivo digital.
 
-<p align="right"><a href="#readme-top">Volver arriba ⬆</a></p>
+<p align="right"><a href="#readme-top"><img src="brand/volver-arriba.svg" height="44" alt="Volver arriba" /></a></p>
 
 ---
 
@@ -315,7 +315,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ▶️ **Vídeo:** [presentación oficial de 3 min (1080p60, narración en español y subtítulos)](docs/PROPUESTA_VIDEO_PROMOCIONAL.md) · [reproductor interactivo en la app Web](web/) · [manual imprimible de usuario](docs/MANUAL_USUARIO.html)
 
-<p align="right"><a href="#readme-top">Volver arriba ⬆</a></p>
+<p align="right"><a href="#readme-top"><img src="brand/volver-arriba.svg" height="44" alt="Volver arriba" /></a></p>
 
 ---
 
@@ -348,7 +348,7 @@ La confidencialidad de las deliberaciones de reuniones es primordial. Actas Digi
 
 Guía completa de despliegue y certificados: [docs/INSTALACION_HTTPS.md](docs/INSTALACION_HTTPS.md). Política de reporte: [SECURITY.md](SECURITY.md).
 
-<p align="right"><a href="#readme-top">Volver arriba ⬆</a></p>
+<p align="right"><a href="#readme-top"><img src="brand/volver-arriba.svg" height="44" alt="Volver arriba" /></a></p>
 
 ---
 
@@ -434,7 +434,7 @@ npm run dev
 docker-compose up --build -d
 ```
 
-<p align="right"><a href="#readme-top">Volver arriba ⬆</a></p>
+<p align="right"><a href="#readme-top"><img src="brand/volver-arriba.svg" height="44" alt="Volver arriba" /></a></p>
 
 ---
 
@@ -458,7 +458,7 @@ python3 tools/test_pruebas_de_fuego.py
 cd web && npm run build && cd ..
 ```
 
-<p align="right"><a href="#readme-top">Volver arriba ⬆</a></p>
+<p align="right"><a href="#readme-top"><img src="brand/volver-arriba.svg" height="44" alt="Volver arriba" /></a></p>
 
 ---
 
@@ -611,7 +611,7 @@ Sí. Por defecto el sistema funciona con el motor autónomo integrado. Si deseas
 
 </details>
 
-<p align="right"><a href="#readme-top">Volver arriba ⬆</a></p>
+<p align="right"><a href="#readme-top"><img src="brand/volver-arriba.svg" height="44" alt="Volver arriba" /></a></p>
 
 ---
 
@@ -621,12 +621,12 @@ Sí. Por defecto el sistema funciona con el motor autónomo integrado. Si deseas
 
 Ver el código fuente en GitHub no concede ningún derecho de uso, copia, modificación o distribución comercial ni privada. Instalar Actas Digitales en una organización, comité o negocio requiere una licencia de uso autorizada por el titular. Condiciones completas en [LICENSE](LICENSE).
 
-<p align="right"><a href="#readme-top">Volver arriba ⬆</a></p>
+<p align="right"><a href="#readme-top"><img src="brand/volver-arriba.svg" height="44" alt="Volver arriba" /></a></p>
 
 ---
 
 <div align="center">
 
-<sub><b>Actas Digitales</b> · Captura. Transcribe. Consolida. Formaliza. · © 2026 yhquintero · <a href="#readme-top">Volver arriba ⬆</a></sub>
+<sub><b>Actas Digitales</b> · Captura. Transcribe. Consolida. Formaliza. · © 2026 yhquintero · <a href="#readme-top"><img src="brand/volver-arriba.svg" height="16" alt="Volver arriba" valign="middle" /></a></sub>
 
 </div>
