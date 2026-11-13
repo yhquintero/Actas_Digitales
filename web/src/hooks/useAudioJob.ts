@@ -89,8 +89,14 @@ export function useAudioJob() {
 
   const submitMultipleAudios = async (files: File[]) => {
     if (files.length === 0) return;
+    // Procesar en serie, pero tolerar fallos individuales sin abortar el lote
     for (const f of files) {
-      await submitAudioFile(f);
+      try {
+        await submitAudioFile(f);
+      } catch (err) {
+        console.error(`[useAudioJob] Fallo al enviar ${f.name}:`, err);
+        // Continuar con el resto del lote; el error queda reflejado en uploadError
+      }
     }
   };
 

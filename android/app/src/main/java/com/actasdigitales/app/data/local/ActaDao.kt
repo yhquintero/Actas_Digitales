@@ -23,4 +23,8 @@ interface ActaDao {
 
     @Query("DELETE FROM actas_digitales")
     suspend fun clearAll()
+
+    // Lectura única (no reactiva) para el worker de sincronización con la Web
+    @Query("SELECT * FROM actas_digitales ORDER BY timestamp DESC LIMIT :limit")
+    suspend fun getActasSnapshot(limit: Int = 100): List<ActaEntity>
 }

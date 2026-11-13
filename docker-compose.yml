@@ -13,8 +13,14 @@ services:
       - DEFAULT_LANGUAGE=es
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - APK_DOWNLOAD_PATH=/android/app/release/app-release.apk
+      # Orígenes CORS permitidos (coma-separados). Defecto: solo localhost.
+      # - ACTAS_CORS_ORIGINS=https://tu-dominio.example,https://www.tu-dominio.example
+      # URL canónica de releases mostrada en la Web (defecto: GitHub Releases del repo)
+      # - ACTAS_RELEASE_URL=https://github.com/yhquintero/Actas_Digitales/releases
     volumes:
       - ./backend/uploads:/app/uploads
+      - ./android:/android:ro
     restart: unless-stopped
 
   web:

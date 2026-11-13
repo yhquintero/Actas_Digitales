@@ -10,10 +10,11 @@ import { ResultViewer } from './components/ResultViewer';
 import { RecentJobs } from './components/RecentJobs';
 import { PromoVideoModal } from './components/PromoVideoModal';
 import { FuturisticControlPanel } from './components/FuturisticControlPanel';
+import { DownloadApp } from './components/DownloadApp';
 import { useAudioJob } from './hooks/useAudioJob';
 import { ApiService } from './services/api';
 import { JobResponse, PillarId } from './types';
-import { UploadCloud, Mic, Sparkles, Shield, ArrowRight, AlertCircle } from 'lucide-react';
+import { UploadCloud, Mic, Sparkles, Shield, ArrowRight, AlertCircle, Smartphone } from 'lucide-react';
 
 export const App: React.FC = () => {
   const {
@@ -101,7 +102,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/70 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-slate-50/70 dark:bg-slate-950/70 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
       {/* Top Navbar with Security Pill & Telemetry */}
       <Navbar
         apiKey={apiKey}
@@ -136,21 +137,21 @@ export const App: React.FC = () => {
 
         {/* Current Job Progress Banner */}
         {uploadError && (
-          <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-center space-x-3 text-rose-700 text-sm">
+          <div className="mb-6 p-4 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 rounded-2xl flex items-center space-x-3 text-rose-700 dark:text-rose-300 text-sm">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
             <span>{uploadError}</span>
           </div>
         )}
 
         {currentJob && currentJob.status !== 'COMPLETED' && (
-          <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="mb-8 animate-fade-slide-up">
             <JobProgress job={currentJob} />
           </div>
         )}
 
         {/* Completed Job Result Viewer */}
         {currentJob && currentJob.status === 'COMPLETED' && (
-          <div className="mb-8 animate-in fade-in zoom-in-95 duration-300">
+          <div className="mb-8 animate-fade-zoom-in">
             <ResultViewer job={currentJob} />
           </div>
         )}
@@ -160,13 +161,13 @@ export const App: React.FC = () => {
           {/* Main Work Area */}
           <div className="lg:col-span-2 space-y-6">
             {/* Input Mode Selector (Upload vs Live Record) */}
-            <div className="flex bg-slate-200/80 p-1.5 rounded-2xl shadow-inner border border-slate-300/50">
+            <div className="flex bg-slate-200/80 dark:bg-slate-700/80 p-1.5 rounded-2xl shadow-inner border border-slate-300/50 dark:border-slate-600/50">
               <button
                 onClick={() => setActiveInputTab('upload')}
                 className={`flex-1 py-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center space-x-2 transition-all duration-150 ${
                   activeInputTab === 'upload'
-                    ? 'bg-white text-indigo-700 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:dark:text-slate-100'
                 }`}
               >
                 <UploadCloud className="w-4 h-4" />
@@ -177,8 +178,8 @@ export const App: React.FC = () => {
                 onClick={() => setActiveInputTab('record')}
                 className={`flex-1 py-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center space-x-2 transition-all duration-150 ${
                   activeInputTab === 'record'
-                    ? 'bg-white text-indigo-700 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:dark:text-slate-100'
                 }`}
               >
                 <Mic className="w-4 h-4" />
@@ -201,31 +202,31 @@ export const App: React.FC = () => {
             )}
 
             {/* Quick Text Pipeline Tester */}
-            <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-sm">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-700/90 p-6 shadow-sm">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center space-x-2">
-                  <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                  <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                     <Sparkles className="w-4 h-4" />
                   </div>
-                  <h3 className="text-sm font-bold text-slate-800">
+                  <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
                     Consola de Verificación Lingüística Inmediata
                   </h3>
                 </div>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-semibold">
                   Ortotipografía RAE
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mb-3">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
                 Comprueba al instante cómo el motor suprime vacilaciones orales, tartamudeos e inyecta signos ¿ y ¡ reglamentarios sin requerir archivo de audio:
               </p>
               <textarea
                 value={testText}
                 onChange={(e) => setTestText(e.target.value)}
                 rows={3}
-                className="w-full text-xs font-mono p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:outline-none mb-3 transition"
+                className="w-full text-xs font-mono p-3 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:dark:bg-slate-900 focus:outline-none mb-3 transition"
               />
               <div className="flex items-center justify-between">
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-slate-400 dark:text-slate-500">
                   {testText.length} caracteres
                 </span>
                 <button
@@ -248,6 +249,34 @@ export const App: React.FC = () => {
               onSelectJob={(j) => setCurrentJob(j)}
               selectedJobId={currentJob?.job_id}
             />
+
+            {/* Download Android App Banner Card */}
+            <div className="bg-gradient-to-br from-emerald-950 via-slate-900 to-emerald-950 text-white rounded-2xl p-6 shadow-md border border-emerald-900/60 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-400 font-bold flex items-center gap-1.5">
+                  <Smartphone className="w-3.5 h-3.5" /> App Móvil
+                </span>
+                <span className="text-[10px] font-mono text-emerald-300">APK firmado · Compose</span>
+              </div>
+
+              <h4 className="font-extrabold text-base text-white">
+                Descarga Actas Digitales para Android
+              </h4>
+
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Instala el APK firmado directamente desde este servidor. Subida en segundo plano, reanudación automática y custodia SHA-256.
+              </p>
+
+              <div className="pt-2 border-t border-emerald-900/60 flex items-center justify-between">
+                <a
+                  href="#descarga-app"
+                  className="text-xs text-emerald-300 hover:text-white font-medium flex items-center gap-1 transition"
+                >
+                  <span>Descargar o escanear QR</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            </div>
 
             {/* Security Banner Card */}
             <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-6 shadow-md border border-indigo-950 space-y-4">
@@ -278,6 +307,9 @@ export const App: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Descarga de la App Android directamente desde la Web */}
+        <DownloadApp />
       </main>
 
       {/* Formal Footer */}

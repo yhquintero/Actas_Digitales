@@ -88,3 +88,50 @@ export interface AudioFormatInfo {
   recommendedUse: string;
   decoder: string;
 }
+
+export interface AndroidAppInfo {
+  available: boolean;
+  name: string;
+  package: string;
+  version_name: string;
+  version_code: number;
+  min_sdk: number;
+  target_sdk: number;
+  requires_android: string;
+  abi: string;
+  signature: string;
+  signature_schemes: string[];
+  installable: boolean;
+  artifact_kind: string;
+  description: string;
+  permissions: string[];
+  filename: string;
+  size_bytes: number;
+  size_formatted: string;
+  sha256: string;
+  signed: boolean;
+  source: string;
+  download_url: string;
+  release_url?: string;
+  updated_at: string;
+}
+
+/** Acta generada en la app móvil (Room) y sincronizada con el servidor. */
+export interface SyncedActa {
+  audio_sha256: string;
+  job_id: string | null;
+  filename: string;
+  final_text: string;
+  raw_text: string | null;
+  words_count: number;
+  removed_fillers: number;
+  orthographic_corrections: number;
+  timestamp: number;
+  synced_at?: string;
+  source?: string;
+}
+
+export interface SyncedActasResponse {
+  total: number;
+  acts: SyncedActa[];
+}

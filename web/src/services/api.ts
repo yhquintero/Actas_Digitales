@@ -1,4 +1,4 @@
-import { JobResponse } from '../types';
+import { JobResponse, AndroidAppInfo, SyncedActasResponse } from '../types';
 
 export class ApiService {
   private static getHeaders(apiKey?: string): Record<string, string> {
@@ -37,6 +37,19 @@ export class ApiService {
     }
 
     return await res.json();
+  }
+
+  static async listSyncedActas(limit: number = 10): Promise<SyncedActasResponse> {
+    try {
+      const res = await fetch(`/api/acts?limit=${limit}`);
+      if (res.ok) {
+        return (await res.json()) as SyncedActasResponse;
+      }
+      return { total: 0, acts: [] };
+    } catch (err) {
+      console.error('[ApiService] Error al listar actas sincronizadas:', err);
+      return { total: 0, acts: [] };
+    }
   }
 
   static async listRecentJobs(limit: number = 25): Promise<JobResponse[]> {
@@ -112,6 +125,15 @@ export class ApiService {
 
   static async checkHealth(): Promise<{ status: string; service: string; version: string }> {
     const res = await fetch('/api/health');
+    return await res.json();
+  }
+
+  static async getAppInfo(): Promise<AndroidAppInfo> {
+    const res = await fetch('/api/app/info');
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'La App no está disponible en el servidor' }));
+      throw new Error(err.detail || 'La App no está disponible en el servidor');
+    }
     return await res.json();
   }
 }

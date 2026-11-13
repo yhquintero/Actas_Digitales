@@ -228,7 +228,7 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in select-none">
+    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in select-none">
       <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl flex flex-col">
         {/* Elemento de Audio Nativo */}
         <audio ref={audioRef} src="/audio/promocional_actas_digitales.mp3" preload="auto" />
@@ -251,7 +251,7 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
               }
               onClose();
             }}
-            className="text-slate-400 hover:text-white p-1 rounded-lg transition hover:bg-slate-800"
+            className="text-slate-400 dark:text-slate-500 hover:text-white p-1 rounded-lg transition hover:bg-slate-800"
           >
             <X className="w-5 h-5" />
           </button>
@@ -270,7 +270,7 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
                 <Mic className="w-3.5 h-3.5 animate-pulse" />
                 <span>Audio Femenino Activo</span>
               </span>
-              <span className="text-xs font-mono font-bold text-slate-400">
+              <span className="text-xs font-mono font-bold text-slate-400 dark:text-slate-500">
                 {formatTime(currentTime)} / 3:00
               </span>
             </div>
@@ -279,20 +279,20 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
           {/* Dynamic Scene Content Graphic */}
           <div className="w-full max-w-2xl my-auto flex flex-col items-center justify-center text-center">
             {currentScene.visualType === 'problem' && (
-              <div className="space-y-4 animate-in zoom-in-95 duration-500">
+              <div className="space-y-4 animate-fade-zoom-in">
                 <div className="w-20 h-20 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mx-auto text-rose-400">
                   <span className="text-4xl">⏱️</span>
                 </div>
                 <h4 className="text-2xl font-extrabold text-white">¿Horas perdidas transcribiendo actas a mano?</h4>
                 <div className="bg-slate-800/80 p-4 rounded-xl border border-slate-700 text-slate-300 text-xs font-mono max-w-lg mx-auto">
                   <span className="text-rose-400 line-through">"ehhh... bueno pues yo-yo creo que el acta..."</span>
-                  <p className="mt-2 text-slate-400 italic">Notas desordenadas, vacilaciones orales y faltas de ortografía que retrasan los acuerdos.</p>
+                  <p className="mt-2 text-slate-400 dark:text-slate-500 italic">Notas desordenadas, vacilaciones orales y faltas de ortografía que retrasan los acuerdos.</p>
                 </div>
               </div>
             )}
 
             {currentScene.visualType === 'ecosystem' && (
-              <div className="space-y-4 animate-in zoom-in-95 duration-500">
+              <div className="space-y-4 animate-fade-zoom-in">
                 <div className="flex items-center justify-center space-x-6 text-white mb-2">
                   <div className="flex flex-col items-center bg-slate-800/80 p-3 rounded-xl border border-indigo-500/40">
                     <Globe className="w-8 h-8 text-indigo-400 mb-1" />
@@ -315,7 +315,7 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
             )}
 
             {currentScene.visualType === 'pipeline' && (
-              <div className="space-y-4 animate-in zoom-in-95 duration-500 w-full">
+              <div className="space-y-4 animate-fade-zoom-in w-full">
                 <div className="flex items-center justify-center space-x-2 my-2">
                   {[40, 70, 25, 90, 60, 100, 45, 80, 30, 95, 50].map((h, i) => (
                     <div
@@ -341,18 +341,18 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
             )}
 
             {currentScene.visualType === 'correction' && (
-              <div className="space-y-4 animate-in zoom-in-95 duration-500 max-w-lg">
+              <div className="space-y-4 animate-fade-zoom-in max-w-lg">
                 <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
                   <Sparkles className="w-7 h-7" />
                 </div>
                 <h4 className="text-2xl font-extrabold text-white">Consolidación y Corrección RAE</h4>
                 <div className="grid grid-cols-2 gap-2 text-left text-xs font-mono">
                   <div className="bg-slate-900/90 p-3 rounded-xl border border-rose-500/30 text-rose-300">
-                    <span className="text-[10px] text-slate-500 block">ANTES (CRUDO)</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">ANTES (CRUDO)</span>
                     "la sesion de oy se aprueva..."
                   </div>
                   <div className="bg-slate-900/90 p-3 rounded-xl border border-emerald-500/30 text-emerald-300">
-                    <span className="text-[10px] text-slate-500 block">DESPUÉS (OFICIAL)</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">DESPUÉS (OFICIAL)</span>
                     "¿La sesión de hoy se aprueba?"
                   </div>
                 </div>
@@ -360,7 +360,7 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
             )}
 
             {currentScene.visualType === 'security' && (
-              <div className="space-y-4 animate-in zoom-in-95 duration-500">
+              <div className="space-y-4 animate-fade-zoom-in">
                 <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400">
                   <Lock className="w-8 h-8" />
                 </div>
@@ -380,7 +380,7 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
             )}
 
             {currentScene.visualType === 'outro' && (
-              <div className="space-y-4 animate-in zoom-in-95 duration-500">
+              <div className="space-y-4 animate-fade-zoom-in">
                 <div className="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center mx-auto text-indigo-400">
                   <span className="text-3xl">📑</span>
                 </div>
@@ -415,7 +415,7 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
               onChange={(e) => handleSeek(Number(e.target.value))}
               className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
             />
-            <div className="flex justify-between text-[11px] font-mono text-slate-500">
+            <div className="flex justify-between text-[11px] font-mono text-slate-500 dark:text-slate-400">
               <span>{formatTime(currentTime)}</span>
               <span>180 segundos (3 minutos) · Audio en Español</span>
               <span>{formatTime(totalDuration)}</span>
@@ -438,7 +438,7 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
                   setIsPlaying(true);
                   lastSpokenSceneRef.current = null;
                 }}
-                className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
+                className="p-2 text-slate-400 dark:text-slate-500 hover:text-white rounded-lg hover:bg-slate-800 transition"
                 title="Reiniciar"
               >
                 <RotateCcw className="w-5 h-5" />
@@ -447,7 +447,7 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
               <button
                 onClick={() => setIsMuted(!isMuted)}
                 className={`p-2 rounded-lg transition ${
-                  isMuted ? 'text-rose-400 hover:bg-rose-950/50' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  isMuted ? 'text-rose-400 hover:bg-rose-950/50' : 'text-slate-400 dark:text-slate-500 hover:text-white hover:bg-slate-800'
                 }`}
                 title={isMuted ? "Activar audio" : "Silenciar audio"}
               >
@@ -464,7 +464,7 @@ export const PromoVideoModal: React.FC<PromoVideoModalProps> = ({ isOpen, onClos
                   className={`text-[10px] px-2.5 py-1 rounded-lg border font-medium transition ${
                     currentScene.id === scene.id
                       ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm'
-                      : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200'
+                      : 'bg-slate-800 border-slate-700 text-slate-400 dark:text-slate-500 hover:text-slate-200'
                   }`}
                 >
                   {scene.title.split('.')[1]}

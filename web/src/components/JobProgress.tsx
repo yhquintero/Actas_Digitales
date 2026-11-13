@@ -27,24 +27,24 @@ export const JobProgress: React.FC<JobProgressProps> = ({ job }) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-6 animate-in fade-in">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm mb-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
         <div>
-          <span className="text-xs font-semibold uppercase text-indigo-600 tracking-wider">
+          <span className="text-xs font-semibold uppercase text-indigo-600 dark:text-indigo-400 tracking-wider">
             Pipeline de Procesamiento en Curso
           </span>
-          <h3 className="text-base font-bold text-slate-800">
+          <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
             {job.filename} ({(job.file_size_bytes / 1024).toFixed(1)} KB)
           </h3>
         </div>
         <div className="text-right">
-          <span className="text-2xl font-bold font-mono text-indigo-600">{job.progress_percent}%</span>
-          <p className="text-xs text-slate-500">ID: {job.job_id.slice(0, 8)}...</p>
+          <span className="text-2xl font-bold font-mono text-indigo-600 dark:text-indigo-400">{job.progress_percent}%</span>
+          <p className="text-xs text-slate-500 dark:text-slate-400">ID: {job.job_id.slice(0, 8)}...</p>
         </div>
       </div>
 
       {/* Progress Bar */}
-      <div className="w-full bg-slate-100 rounded-full h-2.5 mb-6 overflow-hidden">
+      <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 mb-6 overflow-hidden">
         <div
           className={`h-2.5 rounded-full transition-all duration-500 ease-out ${
             job.status === 'FAILED' ? 'bg-rose-500' : 'bg-indigo-600'
@@ -62,19 +62,19 @@ export const JobProgress: React.FC<JobProgressProps> = ({ job }) => {
               key={s.key}
               className={`p-3 rounded-xl border transition-all ${
                 status === 'completed'
-                  ? 'bg-emerald-50/60 border-emerald-200 text-emerald-800'
+                  ? 'bg-emerald-50/60 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
                   : status === 'current'
-                  ? 'bg-indigo-50/80 border-indigo-300 text-indigo-900 shadow-sm'
+                  ? 'bg-indigo-50/80 dark:bg-indigo-950/70 border-indigo-300 dark:border-indigo-700 text-indigo-900 shadow-sm'
                   : status === 'error'
-                  ? 'bg-rose-50 border-rose-200 text-rose-800'
-                  : 'bg-slate-50/50 border-slate-200 text-slate-400'
+                  ? 'bg-rose-50 dark:bg-rose-950/50 border-rose-200 dark:border-rose-800 text-rose-800'
+                  : 'bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500'
               }`}
             >
               <div className="flex items-center space-x-2 mb-1">
                 {status === 'completed' ? (
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
                 ) : status === 'current' ? (
-                  <Loader2 className="w-4 h-4 text-indigo-600 animate-spin flex-shrink-0" />
+                  <Loader2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400 animate-spin flex-shrink-0" />
                 ) : status === 'error' ? (
                   <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
                 ) : (
@@ -88,7 +88,7 @@ export const JobProgress: React.FC<JobProgressProps> = ({ job }) => {
         })}
       </div>
 
-      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
+      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
         <span className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
           <span>{job.current_step}</span>

@@ -29,8 +29,8 @@ export const SecurityCenterModal: React.FC<SecurityCenterModalProps> = ({
       : SECURITY_FEATURES.filter((f) => f.category === activeCategory);
 
   return (
-    <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+    <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 px-6 py-5 text-white flex items-center justify-between border-b border-indigo-950">
           <div className="flex items-center space-x-3">
@@ -54,22 +54,22 @@ export const SecurityCenterModal: React.FC<SecurityCenterModalProps> = ({
 
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-colors"
+            className="text-slate-400 dark:text-slate-500 hover:text-white p-2 rounded-lg hover:bg-white/10 hover:dark:bg-slate-900/10 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Category Filters */}
-        <div className="px-6 py-3 bg-slate-50 border-b border-slate-200 flex items-center gap-2 overflow-x-auto text-xs">
+        <div className="px-6 py-3 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2 overflow-x-auto text-xs">
           {categories.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
               className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-colors ${
                 activeCategory === cat.id
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:dark:text-slate-100 border border-slate-200 dark:border-slate-700'
               }`}
             >
               {cat.label}
@@ -78,31 +78,31 @@ export const SecurityCenterModal: React.FC<SecurityCenterModalProps> = ({
         </div>
 
         {/* Content Body */}
-        <div className="p-6 overflow-y-auto space-y-6 flex-1 text-slate-800">
+        <div className="p-6 overflow-y-auto space-y-6 flex-1 text-slate-800 dark:text-slate-200">
           {/* Active Features Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredFeatures.map((feat) => (
               <div
                 key={feat.id}
-                className="p-4 rounded-xl border border-slate-200/90 bg-white hover:border-indigo-300 transition-all shadow-2xs space-y-2.5"
+                className="p-4 rounded-xl border border-slate-200/90 dark:border-slate-700/90 bg-white dark:bg-slate-900 hover:border-indigo-300 hover:dark:border-indigo-700 transition-all shadow-sm space-y-2.5"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    <h4 className="font-bold text-sm text-slate-900">{feat.title}</h4>
+                    <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">{feat.title}</h4>
                   </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-semibold">
                     {feat.status}
                   </span>
                 </div>
 
-                <p className="text-xs text-slate-600 leading-relaxed">{feat.description}</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{feat.description}</p>
 
-                <div className="pt-2 border-t border-slate-100 flex flex-col gap-1 text-[11px]">
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-1 text-[11px]">
                   <p className="text-indigo-900 font-medium flex items-center gap-1">
-                    <span className="text-indigo-600 font-bold">Impacto:</span> {feat.impact}
+                    <span className="text-indigo-600 dark:text-indigo-400 font-bold">Impacto:</span> {feat.impact}
                   </p>
-                  <p className="text-slate-500 font-mono text-[10px] bg-slate-50 p-1.5 rounded border border-slate-200/60">
+                  <p className="text-slate-500 dark:text-slate-400 font-mono text-[10px] bg-slate-50 dark:bg-slate-950 p-1.5 rounded border border-slate-200/60 dark:border-slate-700/60">
                     {feat.technicalDetails}
                   </p>
                 </div>
@@ -137,7 +137,7 @@ export const SecurityCenterModal: React.FC<SecurityCenterModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+        <div className="px-6 py-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
           <p className="flex items-center gap-1.5 font-mono">
             <Server className="w-3.5 h-3.5 text-emerald-600" />
             Certificados TLS 1.3 SAN: localhost, 127.0.0.1, actasdigitales.local

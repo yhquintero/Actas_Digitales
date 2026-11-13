@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Actas Digitales - Audio to Text Pipeline"
-    VERSION: str = "1.0.0"
+    VERSION: str = "1.5.0"
     API_PREFIX: str = "/api"
     
     # Uploads

@@ -176,7 +176,7 @@ _____________________________             _____________________________
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden animate-in fade-in select-text">
+    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden animate-fade-in select-text">
       {/* Top Header Card */}
       <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 px-6 sm:px-8 py-6 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-indigo-900/50">
         <div>
@@ -192,7 +192,7 @@ _____________________________             _____________________________
           <h2 className="text-2xl font-black text-white tracking-tight mt-1">
             {job.filename}
           </h2>
-          <p className="text-xs text-slate-400 font-mono mt-0.5">
+          <p className="text-xs text-slate-400 dark:text-slate-500 font-mono mt-0.5">
             Duración: {job.stats?.audio_duration_sec || 0}s · {job.stats?.final_words || 0} palabras consolidadas
           </p>
         </div>
@@ -250,20 +250,20 @@ _____________________________             _____________________________
       {/* Advanced Paper Format & Content Configuration Toolbar */}
       <div className="bg-indigo-950/20 border-b border-indigo-100 px-6 sm:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4 text-xs font-medium">
         <div className="flex items-center space-x-2 text-indigo-900 font-bold">
-          <Sliders className="w-4 h-4 text-indigo-600" />
+          <Sliders className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
           <span>Configuración de Exportación e Impresión:</span>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           {/* Selector de Contenido */}
-          <div className="flex items-center space-x-1.5 bg-white border border-slate-200 rounded-xl p-1 shadow-xs">
-            <span className="text-[11px] text-slate-500 font-semibold px-2">Contenido:</span>
+          <div className="flex items-center space-x-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-1 shadow-sm">
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold px-2">Contenido:</span>
             <button
               onClick={() => setExportContent('full_text')}
               className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
                 exportContent === 'full_text'
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:dark:text-slate-100'
               }`}
             >
               📝 Solo Traducción Completa
@@ -272,8 +272,8 @@ _____________________________             _____________________________
               onClick={() => setExportContent('official_acta')}
               className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
                 exportContent === 'official_acta'
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:dark:text-slate-100'
               }`}
             >
               📑 Acta Oficial con Firmas
@@ -281,14 +281,14 @@ _____________________________             _____________________________
           </div>
 
           {/* Selector de Tipo de Hoja para ser imprimible en la mano */}
-          <div className="flex items-center space-x-1.5 bg-white border border-slate-200 rounded-xl p-1 shadow-xs">
-            <span className="text-[11px] text-slate-500 font-semibold px-2">Tipo de Hoja:</span>
+          <div className="flex items-center space-x-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-1 shadow-sm">
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold px-2">Tipo de Hoja:</span>
             <button
               onClick={() => setPaperSize('a4')}
               className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
                 paperSize === 'a4'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:dark:text-slate-100'
               }`}
               title="A4 (210 x 297 mm) - Estándar Internacional"
             >
@@ -298,8 +298,8 @@ _____________________________             _____________________________
               onClick={() => setPaperSize('letter')}
               className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
                 paperSize === 'letter'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:dark:text-slate-100'
               }`}
               title="Carta / Letter (216 x 279 mm) - Estándar Oficina"
             >
@@ -309,8 +309,8 @@ _____________________________             _____________________________
               onClick={() => setPaperSize('legal')}
               className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
                 paperSize === 'legal'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:dark:text-slate-100'
               }`}
               title="Oficio / Legal / Folio (216 x 356 mm) - Estándar Notarial/Jurídico"
             >
@@ -319,12 +319,12 @@ _____________________________             _____________________________
           </div>
 
           {/* Selector de Márgenes */}
-          <div className="flex items-center space-x-1.5 bg-white border border-slate-200 rounded-xl p-1 shadow-xs">
-            <span className="text-[11px] text-slate-500 font-semibold px-2">Márgenes:</span>
+          <div className="flex items-center space-x-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-1 shadow-sm">
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold px-2">Márgenes:</span>
             <button
               onClick={() => setMarginType('standard')}
               className={`px-2 py-1 rounded-lg text-[11px] font-bold ${
-                marginType === 'standard' ? 'bg-slate-800 text-white' : 'text-slate-600'
+                marginType === 'standard' ? 'bg-slate-800 text-white' : 'text-slate-600 dark:text-slate-400'
               }`}
             >
               Estándar
@@ -332,7 +332,7 @@ _____________________________             _____________________________
             <button
               onClick={() => setMarginType('narrow')}
               className={`px-2 py-1 rounded-lg text-[11px] font-bold ${
-                marginType === 'narrow' ? 'bg-slate-800 text-white' : 'text-slate-600'
+                marginType === 'narrow' ? 'bg-slate-800 text-white' : 'text-slate-600 dark:text-slate-400'
               }`}
             >
               Estrecho
@@ -340,7 +340,7 @@ _____________________________             _____________________________
             <button
               onClick={() => setMarginType('binding')}
               className={`px-2 py-1 rounded-lg text-[11px] font-bold ${
-                marginType === 'binding' ? 'bg-slate-800 text-white' : 'text-slate-600'
+                marginType === 'binding' ? 'bg-slate-800 text-white' : 'text-slate-600 dark:text-slate-400'
               }`}
               title="Margen izquierdo amplio para grapado, sellos y encuadernación notarial"
             >
@@ -351,14 +351,14 @@ _____________________________             _____________________________
       </div>
 
       {/* Modern Tab Bar */}
-      <div className="bg-slate-50 border-b border-slate-200 px-6 sm:px-8 py-3 flex items-center justify-between flex-wrap gap-2">
+      <div className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-700 px-6 sm:px-8 py-3 flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center space-x-1 sm:space-x-2">
           <button
             onClick={() => setActiveTab('official')}
             className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 ${
               activeTab === 'official'
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:dark:text-slate-100 hover:bg-slate-200/60 hover:dark:bg-slate-700/60'
             }`}
           >
             <FileCheck className="w-4 h-4" />
@@ -370,7 +370,7 @@ _____________________________             _____________________________
             className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 ${
               activeTab === 'corrected'
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:dark:text-slate-100 hover:bg-slate-200/60 hover:dark:bg-slate-700/60'
             }`}
           >
             <Sparkles className="w-4 h-4" />
@@ -382,7 +382,7 @@ _____________________________             _____________________________
             className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 ${
               activeTab === 'comparison'
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:dark:text-slate-100 hover:bg-slate-200/60 hover:dark:bg-slate-700/60'
             }`}
           >
             <SplitSquareVertical className="w-4 h-4" />
@@ -394,7 +394,7 @@ _____________________________             _____________________________
             className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 ${
               activeTab === 'timeline'
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:dark:text-slate-100 hover:bg-slate-200/60 hover:dark:bg-slate-700/60'
             }`}
           >
             <Clock className="w-4 h-4" />
@@ -406,7 +406,7 @@ _____________________________             _____________________________
             className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 ${
               activeTab === 'corrections'
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:dark:text-slate-100 hover:bg-slate-200/60 hover:dark:bg-slate-700/60'
             }`}
           >
             <Award className="w-4 h-4" />
@@ -418,7 +418,7 @@ _____________________________             _____________________________
             className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 ${
               activeTab === 'raw'
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:dark:text-slate-100 hover:bg-slate-200/60 hover:dark:bg-slate-700/60'
             }`}
           >
             <FileText className="w-4 h-4" />
@@ -430,7 +430,7 @@ _____________________________             _____________________________
           <button
             onClick={() => setIsEditing(!isEditing)}
             className={`text-xs px-3 py-1.5 rounded-xl border flex items-center space-x-1 transition font-medium ${
-              isEditing ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'
+              isEditing ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-300 text-emerald-700 dark:text-emerald-300' : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 hover:dark:bg-slate-800'
             }`}
           >
             {isEditing ? <Save className="w-3.5 h-3.5 text-emerald-600" /> : <Edit3 className="w-3.5 h-3.5" />}
@@ -454,32 +454,32 @@ _____________________________             _____________________________
                   <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Cobertura 100%
                 </span>
               </div>
-              <p className="text-slate-400 text-[11px] mt-0.5">
+              <p className="text-slate-400 dark:text-slate-500 text-[11px] mt-0.5">
                 Comparativa directa entre la duración del archivo y el texto transcripto para validar su correspondencia exacta.
               </p>
             </div>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 w-full md:w-auto text-center shrink-0">
             <div className="bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
-              <span className="text-[10px] text-slate-400 block">DURACIÓN AUDIO</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 block">DURACIÓN AUDIO</span>
               <span className="text-emerald-400 font-bold text-sm">
                 {job.stats?.audio_duration_formatted || `${job.stats?.audio_duration_sec}s`}
               </span>
             </div>
             <div className="bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
-              <span className="text-[10px] text-slate-400 block">TIEMPO LECTURA</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 block">TIEMPO LECTURA</span>
               <span className="text-indigo-300 font-bold text-sm">
                 {job.stats?.reading_duration_formatted || '00:00'}
               </span>
             </div>
             <div className="bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
-              <span className="text-[10px] text-slate-400 block">RITMO DE HABLA</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 block">RITMO DE HABLA</span>
               <span className="text-amber-300 font-bold text-sm">
                 {job.stats?.words_per_minute || 0} WPM
               </span>
             </div>
             <div className="bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
-              <span className="text-[10px] text-slate-400 block">FIDELIDAD</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 block">FIDELIDAD</span>
               <span className="text-cyan-300 font-bold text-sm">COINCIDENTE</span>
             </div>
           </div>
@@ -489,71 +489,71 @@ _____________________________             _____________________________
         {activeTab === 'official' && (
           <div className="space-y-6">
             {/* Metadatos Personalizables */}
-            <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 p-4 rounded-2xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
               <div>
-                <label className="text-slate-500 font-medium block mb-1">Título de la Sesión</label>
+                <label className="text-slate-500 dark:text-slate-400 font-medium block mb-1">Título de la Sesión</label>
                 <input
                   type="text"
                   value={actaTitle}
                   onChange={(e) => setActaTitle(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-800 font-medium focus:ring-1 focus:ring-indigo-500"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200 font-medium focus:ring-1 focus:ring-indigo-500"
                 />
               </div>
 
               <div>
-                <label className="text-slate-500 font-medium block mb-1">Fecha de la Reunión</label>
+                <label className="text-slate-500 dark:text-slate-400 font-medium block mb-1">Fecha de la Reunión</label>
                 <input
                   type="text"
                   value={actaDate}
                   onChange={(e) => setActaDate(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-800 font-medium focus:ring-1 focus:ring-indigo-500"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200 font-medium focus:ring-1 focus:ring-indigo-500"
                 />
               </div>
 
               <div>
-                <label className="text-slate-500 font-medium block mb-1">Lugar de Celebración</label>
+                <label className="text-slate-500 dark:text-slate-400 font-medium block mb-1">Lugar de Celebración</label>
                 <input
                   type="text"
                   value={actaPlace}
                   onChange={(e) => setActaPlace(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-800 font-medium focus:ring-1 focus:ring-indigo-500"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200 font-medium focus:ring-1 focus:ring-indigo-500"
                 />
               </div>
 
               <div>
-                <label className="text-slate-500 font-medium block mb-1">Asistentes y Convocados</label>
+                <label className="text-slate-500 dark:text-slate-400 font-medium block mb-1">Asistentes y Convocados</label>
                 <input
                   type="text"
                   value={actaAttendees}
                   onChange={(e) => setActaAttendees(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-800 font-medium focus:ring-1 focus:ring-indigo-500"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200 font-medium focus:ring-1 focus:ring-indigo-500"
                 />
               </div>
 
               <div>
-                <label className="text-slate-500 font-medium block mb-1">Presidente (Firma)</label>
+                <label className="text-slate-500 dark:text-slate-400 font-medium block mb-1">Presidente (Firma)</label>
                 <input
                   type="text"
                   value={presidentName}
                   onChange={(e) => setPresidentName(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-800 font-medium focus:ring-1 focus:ring-indigo-500"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200 font-medium focus:ring-1 focus:ring-indigo-500"
                 />
               </div>
 
               <div>
-                <label className="text-slate-500 font-medium block mb-1">Secretario (Firma)</label>
+                <label className="text-slate-500 dark:text-slate-400 font-medium block mb-1">Secretario (Firma)</label>
                 <input
                   type="text"
                   value={secretaryName}
                   onChange={(e) => setSecretaryName(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-800 font-medium focus:ring-1 focus:ring-indigo-500"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200 font-medium focus:ring-1 focus:ring-indigo-500"
                 />
               </div>
             </div>
 
             {/* Documento Renderizado Estilo Papel Oficial */}
-            <div className="bg-white border-2 border-slate-200 rounded-2xl p-8 sm:p-12 shadow-sm font-serif text-slate-800 leading-relaxed whitespace-pre-wrap selection:bg-indigo-100 max-w-4xl mx-auto">
-              <div className="border-b-2 border-indigo-900/40 pb-4 mb-6 flex justify-between items-center text-xs font-sans text-slate-500">
+            <div className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-2xl p-8 sm:p-12 shadow-sm font-serif text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap selection:bg-indigo-100 max-w-4xl mx-auto">
+              <div className="border-b-2 border-indigo-900/40 pb-4 mb-6 flex justify-between items-center text-xs font-sans text-slate-500 dark:text-slate-400">
                 <span className="font-bold text-indigo-950 uppercase tracking-widest font-mono">
                   ACTAS DIGITALES · PROTOCOLO OFICIAL [{paperSize.toUpperCase()}]
                 </span>
@@ -562,10 +562,10 @@ _____________________________             _____________________________
 
               {exportContent === 'full_text' ? (
                 <div>
-                  <h3 className="text-xl font-bold font-sans text-slate-900 mb-4 pb-2 border-b border-slate-200">
+                  <h3 className="text-xl font-bold font-sans text-slate-900 dark:text-slate-100 mb-4 pb-2 border-b border-slate-200 dark:border-slate-700">
                     Traducción y Transcripción Completa en Español
                   </h3>
-                  <div className="font-sans text-base leading-relaxed text-slate-800 whitespace-pre-wrap">
+                  <div className="font-sans text-base leading-relaxed text-slate-800 dark:text-slate-200 whitespace-pre-wrap">
                     {editedText}
                   </div>
                 </div>
@@ -581,18 +581,18 @@ _____________________________             _____________________________
           <div className="space-y-4">
             {isEditing ? (
               <div>
-                <label className="text-xs text-slate-500 font-medium block mb-2">
+                <label className="text-xs text-slate-500 dark:text-slate-400 font-medium block mb-2">
                   Editor en vivo del acta consolidada:
                 </label>
                 <textarea
                   value={editedText}
                   onChange={(e) => setEditedText(e.target.value)}
                   rows={14}
-                  className="w-full p-4 border border-indigo-300 rounded-2xl font-sans text-base leading-relaxed text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none shadow-inner"
+                  className="w-full p-4 border border-indigo-300 dark:border-indigo-700 rounded-2xl font-sans text-base leading-relaxed text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none shadow-inner"
                 />
               </div>
             ) : (
-              <div className="bg-slate-50/80 p-8 rounded-2xl border border-slate-200 text-slate-800 leading-relaxed font-sans text-lg whitespace-pre-wrap selection:bg-indigo-100 shadow-sm">
+              <div className="bg-slate-50/80 dark:bg-slate-950/80 p-8 rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 leading-relaxed font-sans text-lg whitespace-pre-wrap selection:bg-indigo-100 shadow-sm">
                 {editedText}
               </div>
             )}
@@ -602,22 +602,22 @@ _____________________________             _____________________________
         {/* Tab 3: Comparativa Antes / Después */}
         {activeTab === 'comparison' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-rose-50/50 border border-rose-200 rounded-2xl p-6">
+            <div className="bg-rose-50/50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 rounded-2xl p-6">
               <div className="flex items-center space-x-2 text-rose-800 font-bold text-xs uppercase tracking-wider mb-3">
                 <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
                 <span>Transcripción Fonética Cruda (Con defectos orales)</span>
               </div>
-              <p className="text-sm font-mono text-slate-700 leading-relaxed whitespace-pre-wrap">
+              <p className="text-sm font-mono text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
                 {job.raw_transcription || 'Sin datos de transcripción cruda.'}
               </p>
             </div>
 
-            <div className="bg-emerald-50/50 border border-emerald-200 rounded-2xl p-6">
-              <div className="flex items-center space-x-2 text-emerald-800 font-bold text-xs uppercase tracking-wider mb-3">
+            <div className="bg-emerald-50/50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-6">
+              <div className="flex items-center space-x-2 text-emerald-800 dark:text-emerald-300 font-bold text-xs uppercase tracking-wider mb-3">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
                 <span>Acta Consolidada (Muletillas suprimidas y RAE)</span>
               </div>
-              <p className="text-sm font-sans text-slate-800 leading-relaxed whitespace-pre-wrap font-medium">
+              <p className="text-sm font-sans text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap font-medium">
                 {editedText}
               </p>
             </div>
@@ -627,7 +627,7 @@ _____________________________             _____________________________
         {/* Tab: Timeline y Marcas de Tiempo Auditadas */}
         {activeTab === 'timeline' && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-200 text-xs font-mono text-slate-600">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-700 text-xs font-mono text-slate-600 dark:text-slate-400">
               <span className="font-bold uppercase">Línea Temporal de Intervenciones ({job.segments?.length || 0} segmentos)</span>
               <span>Rango Auditado: 00:00 - {job.stats?.audio_duration_formatted || `${job.stats?.audio_duration_sec}s`}</span>
             </div>
@@ -645,17 +645,17 @@ _____________________________             _____________________________
                   return (
                     <div
                       key={idx}
-                      className="bg-slate-50 hover:bg-indigo-50/40 border border-slate-200 hover:border-indigo-300 rounded-xl p-3.5 transition flex flex-col sm:flex-row sm:items-start justify-between gap-3 text-xs"
+                      className="bg-slate-50 dark:bg-slate-950 hover:bg-indigo-50/40 hover:dark:bg-indigo-950/70 border border-slate-200 dark:border-slate-700 hover:border-indigo-300 hover:dark:border-indigo-700 rounded-xl p-3.5 transition flex flex-col sm:flex-row sm:items-start justify-between gap-3 text-xs"
                     >
                       <div className="flex items-center space-x-2 shrink-0">
-                        <span className="bg-indigo-100 text-indigo-800 font-mono font-bold px-2 py-0.5 rounded text-[11px] border border-indigo-200">
+                        <span className="bg-indigo-100 text-indigo-800 dark:text-indigo-300 font-mono font-bold px-2 py-0.5 rounded text-[11px] border border-indigo-200 dark:border-indigo-800">
                           {formatSec(seg.start_time)} - {formatSec(seg.end_time)}
                         </span>
-                        <span className="text-slate-400 text-[10px] font-mono">
+                        <span className="text-slate-400 dark:text-slate-500 text-[10px] font-mono">
                           ({(seg.end_time - seg.start_time).toFixed(1)}s)
                         </span>
                       </div>
-                      <p className="font-sans text-slate-800 leading-relaxed text-sm flex-1">
+                      <p className="font-sans text-slate-800 dark:text-slate-200 leading-relaxed text-sm flex-1">
                         {seg.text}
                       </p>
                     </div>
@@ -663,7 +663,7 @@ _____________________________             _____________________________
                 })}
               </div>
             ) : (
-              <p className="text-xs text-slate-500 italic p-4 bg-slate-50 rounded-xl">
+              <p className="text-xs text-slate-500 dark:text-slate-400 italic p-4 bg-slate-50 dark:bg-slate-950 rounded-xl">
                 No hay segmentos temporales disponibles para este archivo.
               </p>
             )}
@@ -673,34 +673,34 @@ _____________________________             _____________________________
         {/* Tab 4: Auditoría de Cambios */}
         {activeTab === 'corrections' && (
           <div className="space-y-4">
-            <h4 className="text-xs font-mono font-bold uppercase text-slate-500 tracking-wider">
+            <h4 className="text-xs font-mono font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">
               Desglose de Modificaciones y Reglas Lingüísticas Aplicadas
             </h4>
 
             {job.corrections_applied && job.corrections_applied.length > 0 ? (
-              <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+              <div className="divide-y divide-slate-100 dark:divide-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm">
                 {job.corrections_applied.map((corr: CorrectionItem, idx: number) => (
-                  <div key={idx} className="p-4 bg-white flex items-center justify-between text-xs hover:bg-slate-50 transition">
+                  <div key={idx} className="p-4 bg-white dark:bg-slate-900 flex items-center justify-between text-xs hover:bg-slate-50 hover:dark:bg-slate-950 transition">
                     <div className="flex items-center space-x-3">
-                      <span className="px-2.5 py-1 rounded-full font-mono text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                      <span className="px-2.5 py-1 rounded-full font-mono text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
                         {corr.type || 'REGLA-RAE'}
                       </span>
                       <span className="text-rose-600 line-through font-mono font-medium">
                         "{corr.original}"
                       </span>
-                      <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
-                      <span className="text-emerald-700 font-bold font-mono">
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                      <span className="text-emerald-700 dark:text-emerald-300 font-bold font-mono">
                         "{corr.corrected}"
                       </span>
                     </div>
-                    <span className="text-slate-400 italic text-[11px] hidden sm:inline">
+                    <span className="text-slate-400 dark:text-slate-500 italic text-[11px] hidden sm:inline">
                       {corr.explanation || 'Corrección ortotipográfica'}
                     </span>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-slate-500 italic p-4 bg-slate-50 rounded-xl">
+              <p className="text-xs text-slate-500 dark:text-slate-400 italic p-4 bg-slate-50 dark:bg-slate-950 rounded-xl">
                 No se registraron defectos orales en esta muestra; el texto se encontraba limpio.
               </p>
             )}
