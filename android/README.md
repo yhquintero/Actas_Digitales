@@ -15,7 +15,11 @@ El artefacto oficial de distribución es el **release nativo completo** (Kotlin 
     -alias actas-mobile -keyalg RSA -keysize 4096 -validity 3650
   ```
   La próxima build declara `versionName 1.3.0` / `versionCode 2` (la `app-release.apk` comprometida es 1.0.0/1).
-* 🛡 **Seguridad de Red:** Compatible con conexiones seguras **TLS 1.3** y tolerancia opcional a certificados autofirmados corporativos de desarrollo (`network_security_config.xml`).
+* 🛡 **Seguridad de Red:** Validación TLS estricta con CAs del sistema y **certificate pinning opcional** (`ACTAS_CERT_PIN_PRIMARY` / `ACTAS_CERT_PIN_BACKUP`, pines SPKI SHA-256 en base64 vía `BuildConfig`, también aplicado a la sincronización con la Web). Las CAs de usuario solo se confían en dominios de desarrollo (LAN/emulador); **no existe bypass de certificados** (la versión que aceptaba cualquier certificado fue eliminada). Generación del pin:
+  ```bash
+  openssl x509 -in server.crt -pubkey -noout | openssl pkey -pubin -outform der \
+    | openssl dgst -sha256 -binary | openssl base64
+  ```
 * 🌐 **Distribución desde la Web:** el servidor sirve este APK en `/api/app/download` con hash SHA-256 verificable (`/api/app/info`), y `web/public/ActasDigitales.apk` es su copia estática para hosting sin backend. Sincronízalas tras cada build con `python3 tools/sync_apk.py` (verificación en CI: `--check`).
 * ⚡ **Instalación rápida vía ADB:**
   ```bash
@@ -32,6 +36,7 @@ El artefacto oficial de distribución es el **release nativo completo** (Kotlin 
 - **Arquitectura:** MVVM (Model-View-ViewModel) + Clean Architecture
 - **Concurrencia:** Kotlin Coroutines + StateFlow
 - **Subida de Audio & Red:** Retrofit 2 + OkHttp 3 + WorkManager (para subidas en segundo plano tolerantes a desconexiones)
+- **Persistencia compartida:** Room (base local `actas_digitales`); `CloudSyncWorker` sube las actas al servidor (`POST /api/acts/sync`, deduplicación por SHA-256) y la Web las muestra en el historial
 - **Captura de Audio:** Android `MediaRecorder` nativo optimizado a 16 kHz / 128 kbps / AAC / Mono y medidor acústico en tiempo real
 
 ---
@@ -80,3 +85,27 @@ android/app/src/main/java/com/actasdigitales/app/
 └── workers/
     └── AudioUploadWorker.kt       # Tarea en segundo plano con WorkManager
 ```
+
+---
+
+## 🚀 Publicar una Release (APK/AAB firmados)
+
+El workflow [.github/workflows/release.yml](../.github/workflows/release.yml) compila, firma y publica los artefactos al hacer push de un tag `v*`:
+
+```bash
+# 1. Genera el keystore (una vez) — ¡NUNCA lo commitees!
+mkdir -p signing
+keytool -genkey -v -keystore signing/actas-mobile.keystore \
+  -alias actas-mobile -keyalg RSA -keysize 4096 -validity 3650
+
+# 2. Carga los secrets en GitHub (Settings → Secrets and variables → Actions)
+base64 -w0 signing/actas-mobile.keystore   # -> ACTAS_KEYSTORE_BASE64
+#    ACTAS_KEYSTORE_PASSWORD, ACTAS_KEY_ALIAS, ACTAS_KEY_PASSWORD
+#    ACTAS_CERT_PIN_PRIMARY / ACTAS_CERT_PIN_BACKUP (opcional, SPKI SHA-256)
+
+# 3. Etiqueta y publica
+git tag v1.5.0 && git push origin v1.5.0
+# 4. El workflow crea la GitHub Release con APK universal + por ABI + AAB + SHA256SUMS.txt
+```
+
+La versión del APK deriva del tag (`ACTAS_VERSION_NAME`) y `versionCode` del número de ejecución de CI. Para Play Store usa el **AAB** generado (`bundleRelease`); para distribución directa usa el **APK universal** (lo que sirve la Web y GitHub Releases).

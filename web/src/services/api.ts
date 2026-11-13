@@ -1,4 +1,4 @@
-import { JobResponse, AndroidAppInfo } from '../types';
+import { JobResponse, AndroidAppInfo, SyncedActasResponse } from '../types';
 
 export class ApiService {
   private static getHeaders(apiKey?: string): Record<string, string> {
@@ -37,6 +37,19 @@ export class ApiService {
     }
 
     return await res.json();
+  }
+
+  static async listSyncedActas(limit: number = 10): Promise<SyncedActasResponse> {
+    try {
+      const res = await fetch(`/api/acts?limit=${limit}`);
+      if (res.ok) {
+        return (await res.json()) as SyncedActasResponse;
+      }
+      return { total: 0, acts: [] };
+    } catch (err) {
+      console.error('[ApiService] Error al listar actas sincronizadas:', err);
+      return { total: 0, acts: [] };
+    }
   }
 
   static async listRecentJobs(limit: number = 25): Promise<JobResponse[]> {

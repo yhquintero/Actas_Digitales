@@ -12,14 +12,19 @@ android {
         applicationId = "com.actasdigitales.app"
         minSdk = 26
         targetSdk = 34
-        // versionName/Code de la próxima build real (la app-release.apk comprometida es 1.0.0/1)
-        versionCode = 2
-        versionName = "1.3.0"
+        // Versionado: por defecto 1.3.0/2 (la app-release.apk comprometida es 1.0.0/1).
+        // El workflow de release inyecta la versión del tag (ACTAS_VERSION_NAME sin la "v")
+        // y el número de ejecución de CI como versionCode.
+        versionCode = (System.getenv("ACTAS_VERSION_CODE") ?: "2").toInt()
+        versionName = System.getenv("ACTAS_VERSION_NAME") ?: "1.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
+        // Certificate pinning opcional (opt-in, ver RetrofitClient): vacío por defecto
+        buildConfigField("String", "ACTAS_CERT_PIN_PRIMARY", "\"${System.getenv("ACTAS_CERT_PIN_PRIMARY") ?: ""}\"")
+        buildConfigField("String", "ACTAS_CERT_PIN_BACKUP", "\"${System.getenv("ACTAS_CERT_PIN_BACKUP") ?: ""}\"")
     }
 
     signingConfigs {
@@ -43,7 +48,10 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8: reduce el tamaño del APK (13 MB -> ~6-8 MB) y elimina código muerto.
+            // Las reglas en proguard-rules.pro conservan Retrofit/Gson/Room/modelos.
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -60,6 +68,17 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true // Requerido para las BuildConfig fields (pins TLS)
+    }
+    // Splits por ABI: paquetes más pequeños por arquitectura. isUniversalApk mantiene
+    // un APK universal (el que distribuye la Web/GitHub Releases) con todas las ABIs.
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a", "x86_64")
+            isUniversalApk = true
+        }
     }
     packaging {
         resources {

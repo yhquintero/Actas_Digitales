@@ -1,6 +1,7 @@
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, Response
@@ -8,8 +9,10 @@ from fastapi.responses import FileResponse, Response
 from .config import settings
 from .routers.audio_router import router as audio_router
 from .routers.app_router import router as app_router
+from .routers.acts_router import router as acts_router
 from .middlewares.security_middleware import SecurityMiddleware
 from .services.job_manager import job_manager
+from .services.metrics import metrics
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -28,18 +31,40 @@ app = FastAPI(
 # Middleware de Seguridad y Cabeceras HTTPS
 app.add_middleware(SecurityMiddleware, max_requests_per_minute=180)
 
-# CORS
+# CORS estricto: orígenes explícitos y NUNCA '*' con credenciales (combinación inválida).
+# Same-origin (Web servida por este mismo proceso) no necesita CORS. Por defecto
+# solo se permiten orígenes locales de desarrollo; en producción define
+# ACTAS_CORS_ORIGINS="https://tu-dominio.example,https://www.tu-dominio.example".
+_cors_env = os.getenv("ACTAS_CORS_ORIGINS", "").strip()
+if _cors_env:
+    CORS_ORIGINS = [origin.strip() for origin in _cors_env.split(",") if origin.strip()]
+else:
+    CORS_ORIGINS = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:4173",
+        "http://127.0.0.1:4173",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ]
+_cors_allow_all = CORS_ORIGINS == ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=not _cors_allow_all,  # '*' exige credenciales desactivadas
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "X-API-Key"],
 )
+
+@app.middleware("http")
+async def count_http_requests(request: Request, call_next):
+    metrics.inc("http_requests_total")
+    return await call_next(request)
 
 # API Routers
 app.include_router(audio_router, prefix=settings.API_PREFIX)
 app.include_router(app_router, prefix=settings.API_PREFIX)
+app.include_router(acts_router, prefix=settings.API_PREFIX)
 
 @app.get("/api/health")
 async def health_check():
@@ -49,6 +74,15 @@ async def health_check():
         "version": settings.VERSION,
         "language": settings.DEFAULT_LANGUAGE
     }
+
+@app.get("/api/metrics")
+async def metrics_endpoint():
+    """
+    Métricas ligeras en memoria (contadores por proceso): peticiones HTTP,
+    descargas del APK, actas sincronizadas desde la app móvil y trabajos en
+    memoria. Sin dependencias externas; reinicia con el proceso.
+    """
+    return metrics.snapshot(version=settings.VERSION, jobs_total=len(job_manager._jobs))
 
 # Neutralizador de Service Worker residual de Inventario / NovaGest u otras apps locales
 KILLER_SW_JS = """// Actas Digitales - Neutralizador de Service Worker de Inventario / NovaGest

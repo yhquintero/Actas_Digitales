@@ -63,3 +63,13 @@ test.describe('Actas Digitales — Distribución de la App Android', () => {
     expect(body.detail).toBeTruthy();
   });
 });
+
+test('/api/metrics expone contadores de descarga en JSON', async ({ request }) => {
+  const res = await request.get('/api/metrics');
+  expect(res.ok()).toBeTruthy();
+  expect(res.headers()['content-type']).toContain('application/json');
+  const body = await res.json();
+  expect(body.counters).toBeTruthy();
+  expect(typeof body.counters.app_downloads_total).toBe('number');
+  expect(typeof body.counters.http_requests_total).toBe('number');
+});

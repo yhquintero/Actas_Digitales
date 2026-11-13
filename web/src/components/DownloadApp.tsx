@@ -241,6 +241,21 @@ export const DownloadApp: React.FC = () => {
               )}
             </div>
 
+            {/* Enlace canónico a GitHub Releases (si el servidor lo anuncia) */}
+            {info?.release_url && (
+              <p className="text-[10px] font-mono text-slate-500">
+                ¿Prefieres GitHub?{' '}
+                <a
+                  href={info.release_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-cyan-400 hover:text-cyan-200 underline underline-offset-2 transition-colors"
+                >
+                  Releases oficiales con checksum SHA256SUMS
+                </a>
+              </p>
+            )}
+
             {/* Metadatos del paquete */}
             <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[11px] font-mono text-slate-400">
               <span>Paquete: <span className="text-slate-200">{info?.package || 'com.actasdigitales.app'}</span></span>
@@ -276,7 +291,7 @@ export const DownloadApp: React.FC = () => {
             )}
 
             {/* Verificador de integridad tras la descarga */}
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/40">
+            <div id="verificador-apk" className="rounded-2xl border border-slate-800 bg-slate-900/40 scroll-mt-24">
               <button
                 onClick={() => setShowVerify((v) => !v)}
                 className="w-full flex items-center justify-between px-3.5 py-2.5 text-[11px] font-mono uppercase tracking-widest text-slate-300 hover:text-white transition"

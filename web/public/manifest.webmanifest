@@ -1,4 +1,5 @@
 {
+  "id": "/",
   "name": "Actas Digitales — Audio a Texto Oficial",
   "short_name": "Actas Digitales",
   "description": "Plataforma integral de procesamiento de voz a texto en español: captura, transcripción, consolidación y formalización de actas oficiales con custodia criptográfica.",
@@ -10,7 +11,11 @@
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "scope": "/",
-  "categories": ["productivity", "business", "utilities"],
+  "categories": [
+    "productivity",
+    "business",
+    "utilities"
+  ],
   "icons": [
     {
       "src": "/icon-192.png",
@@ -31,7 +36,24 @@
       "short_name": "App Android",
       "description": "Descarga directa del APK oficial servido por este servidor",
       "url": "/#descarga-app",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Verificar APK descargado",
+      "short_name": "Verificar APK",
+      "description": "Comprueba el SHA-256 del APK que descargaste con la custodia del servidor",
+      "url": "/#verificador-apk",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }

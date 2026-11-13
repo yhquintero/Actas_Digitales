@@ -112,5 +112,26 @@ export interface AndroidAppInfo {
   signed: boolean;
   source: string;
   download_url: string;
+  release_url?: string;
   updated_at: string;
+}
+
+/** Acta generada en la app móvil (Room) y sincronizada con el servidor. */
+export interface SyncedActa {
+  audio_sha256: string;
+  job_id: string | null;
+  filename: string;
+  final_text: string;
+  raw_text: string | null;
+  words_count: number;
+  removed_fillers: number;
+  orthographic_corrections: number;
+  timestamp: number;
+  synced_at?: string;
+  source?: string;
+}
+
+export interface SyncedActasResponse {
+  total: number;
+  acts: SyncedActa[];
 }

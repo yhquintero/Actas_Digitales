@@ -1,0 +1,102 @@
+name: Release — APK/AAB firmados y publicación en GitHub Releases
+
+# Disparo: al hacer push de un tag v* (p. ej. `git tag v1.5.0 && git push origin v1.5.0`).
+# Requiere estos secrets del repositorio (Settings → Secrets and variables → Actions):
+#   ACTAS_KEYSTORE_BASE64     keystore en base64  (base64 -w0 actas-mobile.keystore)
+#   ACTAS_KEYSTORE_PASSWORD   contraseña del almacén
+#   ACTAS_KEY_ALIAS           alias de la clave (p. ej. actas-mobile)
+#   ACTAS_KEY_PASSWORD        contraseña de la clave (o la del almacén si es la misma)
+#   ACTAS_CERT_PIN_PRIMARY    pin SPKI del certificado TLS de producción (sha256/…) — opcional
+#   ACTAS_CERT_PIN_BACKUP     pin SPKI de respaldo (clave distinta) — opcional
+# Generación local del keystore: android/README.md (sección "Publicar una Release")
+#
+# Honestidad: sin ACTAS_KEYSTORE_BASE64, el workflow NO publica nada (nunca builds
+# sin firmar) y termina en verde con un aviso explicativo.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-sign-release:
+    name: Compilar, firmar y publicar APK + AAB
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Comprobar secrets de firma
+        id: secrets
+        env:
+          ACTAS_KEYSTORE_BASE64: ${{ secrets.ACTAS_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$ACTAS_KEYSTORE_BASE64" ]; then
+            echo "::warning::ACTAS_KEYSTORE_BASE64 no está configurado: se omite el build firmado y la publicación automática. Añade los secrets y vuelve a intentar el tag (o ejecuta el workflow manualmente)."
+            echo "has_keystore=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_keystore=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configurar JDK 17
+        if: steps.secrets.outputs.has_keystore == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Configurar Android SDK
+        if: steps.secrets.outputs.has_keystore == 'true'
+        uses: android-actions/setup-android@v3
+
+      - name: Instalar plataformas y build-tools
+        if: steps.secrets.outputs.has_keystore == 'true'
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Descifrar keystore desde secret (base64)
+        if: steps.secrets.outputs.has_keystore == 'true'
+        env:
+          ACTAS_KEYSTORE_BASE64: ${{ secrets.ACTAS_KEYSTORE_BASE64 }}
+        run: |
+          mkdir -p android/signing
+          echo "$ACTAS_KEYSTORE_BASE64" | base64 -d > android/signing/actas-mobile.keystore
+
+      - name: Compilar APK (universal + por ABI) y AAB firmados
+        if: steps.secrets.outputs.has_keystore == 'true'
+        env:
+          ACTAS_KEYSTORE_PATH: ${{ github.workspace }}/android/signing/actas-mobile.keystore
+          ACTAS_KEYSTORE_PASSWORD: ${{ secrets.ACTAS_KEYSTORE_PASSWORD }}
+          ACTAS_KEY_ALIAS: ${{ secrets.ACTAS_KEY_ALIAS }}
+          ACTAS_KEY_PASSWORD: ${{ secrets.ACTAS_KEY_PASSWORD }}
+          ACTAS_VERSION_NAME: ${{ github.ref_name }}
+          ACTAS_VERSION_CODE: ${{ github.run_number }}
+          ACTAS_CERT_PIN_PRIMARY: ${{ secrets.ACTAS_CERT_PIN_PRIMARY }}
+          ACTAS_CERT_PIN_BACKUP: ${{ secrets.ACTAS_CERT_PIN_BACKUP }}
+        run: |
+          cd android
+          chmod +x gradlew
+          export ACTAS_VERSION_NAME="${ACTAS_VERSION_NAME#v}"
+          ./gradlew :app:assembleRelease :app:bundleRelease --stacktrace
+
+      - name: Generar SHA256SUMS.txt
+        if: steps.secrets.outputs.has_keystore == 'true'
+        run: |
+          cd android/app/build/outputs
+          find . \( -name '*.apk' -o -name '*.aab' \) -type f | sort | xargs sha256sum > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Publicar GitHub Release con los artefactos
+        if: steps.secrets.outputs.has_keystore == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          cd android/app/build/outputs
+          mapfile -t FILES < <(find . \( -name '*.apk' -o -name '*.aab' \) -type f | sort)
+          gh release create "$TAG" "${FILES[@]}" SHA256SUMS.txt \
+            --title "Actas Digitales ${TAG}" \
+            --generate-notes \
+            --repo "$GITHUB_REPOSITORY" \
+          || gh release upload "$TAG" "${FILES[@]}" SHA256SUMS.txt --clobber --repo "$GITHUB_REPOSITORY"

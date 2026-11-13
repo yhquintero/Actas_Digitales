@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { History, CheckCircle2, Clock, AlertCircle, ChevronRight, Search } from 'lucide-react';
 import { JobResponse } from '../types';
+import { SyncedActas } from './SyncedActas';
 
 interface RecentJobsProps {
   jobs: JobResponse[];
@@ -20,6 +21,7 @@ export const RecentJobs: React.FC<RecentJobsProps> = ({ jobs, onSelectJob, selec
         <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
           Aún no has procesado ninguna acta. Sube tu primer audio y aparecerá aquí.
         </p>
+        <SyncedActas />
       </div>
     );
   }
@@ -102,6 +104,8 @@ export const RecentJobs: React.FC<RecentJobsProps> = ({ jobs, onSelectJob, selec
           })
         )}
       </div>
+
+      <SyncedActas />
     </div>
   );
 };

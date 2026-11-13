@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
     <!-- Configuración para conexiones seguras HTTPS TLS 1.3 con soporte para CAs del sistema y de usuario -->
+    <!-- Base: solo CAs del sistema. Las CAs de usuario SOLO se confían en los
+         dominios de desarrollo (LAN/emulador), nunca para producción. -->
     <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
             <certificates src="system" />
-            <certificates src="user" />
         </trust-anchors>
     </base-config>
 

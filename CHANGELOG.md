@@ -4,6 +4,87 @@ Todas las modificaciones notables de este proyecto están documentadas en este a
 
 ---
 
+## [1.5.0] - 2026-11-13
+
+> Iteración sobre las «Más sugerencias de mejora» propuestas tras la 1.4.0.
+> Estado verificado ítem a ítem (ver README y PR); las partes Android se compilan
+> en CI/Android Studio porque el sandbox no dispone de Android SDK.
+
+### 📦 Publicación en GitHub Releases + URL canónica
+- `/api/app/info` ahora anuncia `release_url` (env `ACTAS_RELEASE_URL`, defecto:
+  releases del repositorio) y la Web la enlaza en la sección de descarga.
+- Nuevo workflow `release.yml`: al pushear un tag `v*`, compila
+  `assembleRelease` + `bundleRelease`, **firma** con los secrets
+  `ACTAS_KEYSTORE_*`, genera `SHA256SUMS.txt` y crea/actualiza la GitHub Release
+  con APK (universal y por ABI) + AAB. La versión del APK se deriva del tag.
+- QR y CTA de la Web siguen apuntando al servidor (auto-alojado) por defecto;
+  GitHub Releases queda como distribución canónica externa con checksum.
+
+### 🔐 Firmas y claves
+- **CI firma los artefactos en cada tag**; el keystore viaja como secret
+  (`ACTAS_KEYSTORE_BASE64`) y jamás se commitea.
+- Gradle: `versionCode`/`versionName` sobrescribibles con
+  `ACTAS_VERSION_CODE`/`ACTAS_VERSION_NAME`; `signingConfig` ya lee la clave
+  de `android/signing/` o env. Minify/R8 activados (`isMinifyEnabled` +
+  `isShrinkResources`), splits por ABI (`arm64-v8a`, `armeabi-v7a`, `x86_64`)
+  con APK universal, `bundleRelease` para Play. Reglas R8 amplias en
+  `proguard-rules.pro` (Retrofit/Gson/Room/modelos). **No compilado en local**
+  (sin SDK en sandbox): la primera verificación real es CI/Studio.
+
+### 📱 Móvil ⇄ Web: actas compartidas vía Room + servidor
+- **CloudSyncWorker deja de ser una simulación**: sube las actas de Room
+  (`GET acts snapshot`, idempotente por `audio_sha256`) a `POST /api/acts/sync`.
+- Backend nuevo `acts_router`: `POST /api/acts/sync` (validación Pydantic,
+  deduplicación por hash, persistencia NDJSON en UPLOAD_DIR, métricas, log
+  estructurado) y `GET /api/acts` (lista para la Web).
+- Web: `ApiService.listSyncedActas()` y nueva sección colapsable
+  «Actas del móvil (Room → servidor)» en el historial (RecentJobs), oculta
+  cuando no hay actas sincronizadas. Verificada con smoke render (jsdom).
+- **Honestidad sobre el alcance**: la sincronización es por lotes con
+  deduplicación servidor-side; aún no hay columna `pendingSync` en Room
+  (reenvía el histórico de expedición). La Web aún no tiene edición de actas
+  del móvil; solo lectura.
+
+### 🌗 PWA
+- Manifiesto con `id: "/"` y segundo shortcut **«Verificar APK»** (ancla
+  `#verificador-apk` en la sección de descarga). Icons ya eran propios (PWA
+  instalable en Android/Desktop verificada).
+
+### 📊 Observabilidad
+- `GET /api/metrics` (JSON, sin dependencias): contadores por proceso
+  (`http_requests_total`, `app_info_requests_total`, `app_downloads_total`,
+  `app_downloads_bytes_total`, `acts_sync_requests_total`, `acts_synced_total`),
+  `uptime_seconds`, `jobs_in_memory`, `last_download`. Los contadores se
+  reinician con el proceso (documentado); para multi-instancia, exportar a
+  Prometheus.
+- Logs estructurados JSON Lines (`actas.observabilidad`) en descargas del APK
+  (`app_download`: artefacto, bytes, sha256, cliente) e información.
+- Middleware de conteo de peticiones HTTP.
+
+### 🛡 Seguridad
+- **Android: eliminado el TrustManager que aceptaba CUALQUIER certificado** y
+  el `hostnameVerifier` universal. Ahora: CAs del sistema, validación TLS
+  estricta, **certificate pinning opcional** (`ACTAS_CERT_PIN_PRIMARY`/
+  `ACTAS_CERT_PIN_BACKUP`, SPKI SHA-256 en base64, también en sync worker) y
+  CAs de usuario confinadas a dominios de desarrollo LAN en
+  `network_security_config.xml`.
+- **CORS estricto**: orígenes explícitos vía `ACTAS_CORS_ORIGINS` (defecto:
+  localhost de desarrollo); nunca `*` con credenciales; métodos y cabeceras
+  mínimos. Same-origin (Web servida por el mismo proceso) sin cambios.
+- Logging HTTP del cliente móvil: `BODY` solo en debug; `BASIC` en release.
+
+### ✅ CI
+- Nuevo job E2E incluye `/api/metrics` (JSON, contadores). El workflow de
+  release firma y publica AAB/APK por tag.
+
+### 🐛 Correcciones rápidas
+- `web/Dockerfile`: `npm install` → `npm ci` (build reproducible).
+- `config.py` VERSION 1.0.0 → **1.5.0**; `web/package.json` → 1.5.0.
+- Manual de usuario HTML (`/docs/MANUAL_USUARIO.html`) incluido en la Web
+  (antes 404).
+
+---
+
 ## [1.4.0] - 2026-11-13
 
 ### 📱 Distribución de la App: ahora se sirve la app nativa REAL

@@ -120,6 +120,8 @@ Para convertir el texto en un documento legal formal:
 ### 4.1. Instalación y permisos
 1. La forma más sencilla: con el servidor en marcha, abre la Web en tu PC o móvil y usa la sección **«Descarga la App para tu móvil»** al final de la página (o el botón verde **App** de la barra superior). Pulsa **Descargar para Android** o escanea el código QR con la cámara del teléfono. El paquete se sirve directamente desde el propio servidor (`/api/app/download`) y puedes verificar su **SHA-256 de custodia** en la misma sección o con `sha256sum ActasDigitales.apk`.
 2. Instala el paquete release oficial ([`android/app/release/app-release.apk`](../android/app/release/app-release.apk)) en tu dispositivo móvil mediante transferencia de archivo o ejecutando:
+
+> 📱 **Desde la app móvil:** las actas grabadas en el teléfono se guardan en el móvil (base Room) y se suben al servidor en segundo plano; en la Web aparecen en el historial como «Actas del móvil (Room → servidor)».
    ```bash
    adb install -r app-release.apk
    ```

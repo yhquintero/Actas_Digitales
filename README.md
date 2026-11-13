@@ -290,6 +290,10 @@ El artefacto oficial de distribución es el **release nativo completo** (Kotlin 
   adb install -r app-release.apk
   ```
 * 🛠 **Verificación del paquete desde la Web:** tras descargar, la propia sección «Descarga la App para tu móvil» incluye un **verificador SHA-256 en el navegador** (selecciona el APK descargado y lo comprueba al instante, sin instalar nada).
+* 🚀 **GitHub Releases (distribución canónica):** la Web anuncia `release_url` en `/api/app/info` y la enlaza en la sección de descarga. El tag `v1.5.0` publicó el APK comprometido con `SHA256SUMS.txt`; los próximos tags `v*` compilan, **firman** y publican APK universal + por ABI + AAB automáticamente (workflow `release.yml`, ver más abajo).
+* 📊 **Observabilidad:** `GET /api/metrics` (contadores en memoria por proceso: peticiones HTTP, info del APK, descargas, bytes, actas sincronizadas) y logs estructurados JSON Lines en cada descarga. Ideal para instalaciones auto-alojadas con Prometheus delante.
+* 🔄 **Móvil ⇄ Web comparten actas:** la app sube sus actas locales (Room) a `POST /api/acts/sync` (idempotente por SHA-256 del audio); la Web las lista en el historial («Actas del móvil (Room → servidor)») vía `GET /api/acts`.
+* 🛡 **CORS estricto y TLS seguro:** orígenes explícitos por `ACTAS_CORS_ORIGINS` (defecto localhost); el móvil valida CAs del sistema con **certificate pinning opcional** (`ACTAS_CERT_PIN_PRIMARY/BACKUP`, SPKI SHA-256) y sin bypass de certificados.
 
 ▶️ **Vídeo:** [presentación oficial de 3 min (1080p60, narración en español y subtítulos)](docs/PROPUESTA_VIDEO_PROMOCIONAL.md) · [reproductor interactivo en la app Web](web/) · [manual imprimible de usuario](docs/MANUAL_USUARIO.html)
 

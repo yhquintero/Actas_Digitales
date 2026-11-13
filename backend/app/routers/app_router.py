@@ -17,8 +17,10 @@ import time
 import zipfile
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse
+
+from ..services.metrics import metrics, log_event
 
 router = APIRouter(prefix="/app", tags=["App Android (Descarga)"])
 
@@ -32,6 +34,11 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 # La variable de entorno APK_DOWNLOAD_PATH permite sobreescribirlo
 # (p. ej. en Docker, montando ./android:/android:ro).
 _ENV_APK = os.getenv("APK_DOWNLOAD_PATH", "").strip()
+# URL canónica de las releases (env ACTAS_RELEASE_URL sobrescribible para forks/self-host)
+RELEASE_URL = os.getenv(
+    "ACTAS_RELEASE_URL",
+    "https://github.com/yhquintero/Actas_Digitales/releases",
+).strip()
 
 _RELEASE_CANDIDATE = REPO_ROOT / "android" / "app" / "release" / "app-release.apk"
 _STUB_CANDIDATE = REPO_ROOT / "android" / "ActasDigitales.apk"
@@ -208,6 +215,15 @@ async def app_info():
     installable = len(schemes) > 0
     profile = _artifact_profile(apk_path)
 
+    metrics.inc("app_info_requests_total")
+    log_event(
+        "app_info",
+        artifact_kind=profile["artifact_kind"],
+        source=apk_path.name,
+        installable=installable,
+        sha256=sha256,
+    )
+
     return {
         **APK_METADATA,
         **profile,
@@ -220,12 +236,13 @@ async def app_info():
         "installable": installable,
         "source": apk_path.name,
         "download_url": "/api/app/download",
+        "release_url": RELEASE_URL,
         "updated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(mtime)),
     }
 
 
 @router.api_route("/download", methods=["GET", "HEAD"])
-async def download_apk():
+async def download_apk(request: Request):
     """
     Descarga directa del APK firmado. Se sirve con el tipo MIME oficial de
     Android para que el dispositivo ofrezca instalarlo al abrir el archivo.
@@ -239,6 +256,17 @@ async def download_apk():
 
     sha256, size, _, schemes = _sha256_of(apk_path)
     profile = _artifact_profile(apk_path)
+
+    metrics.record_download(profile["artifact_kind"], size)
+    log_event(
+        "app_download",
+        artifact_kind=profile["artifact_kind"],
+        source=apk_path.name,
+        bytes=size,
+        sha256=sha256,
+        client=request.client.host if request.client else None,
+        method=request.method,
+    )
 
     return FileResponse(
         path=str(apk_path),
