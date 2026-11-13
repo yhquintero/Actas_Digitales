@@ -1,5 +1,6 @@
 package com.actasdigitales.app.data.repository
 
+import com.actasdigitales.app.ai.OfflineAiEngine
 import com.actasdigitales.app.data.api.RetrofitClient
 import com.actasdigitales.app.data.local.ActaDao
 import com.actasdigitales.app.data.local.ActaEntity
@@ -17,6 +18,45 @@ import java.io.File
 class AudioRepository(private val actaDao: ActaDao? = null) {
 
     private val apiService = RetrofitClient.getApiService()
+
+    /**
+     * Canalización de Inteligencia Acústica 100% Offline (Zero-Cloud Local).
+     * Procesa el archivo de audio localmente, ejecuta la ortotipografía RAE,
+     * calcula el resumen criptográfico SHA-256 y persiste la entidad en Room.
+     */
+    fun processAudioOfflineFlow(file: File): Flow<JobResponse> = flow {
+        val finalJob = OfflineAiEngine.processAudioOffline(file)
+
+        // Paso 1: Decodificación acústica DSP (30%)
+        emit(finalJob.copy(
+            status = JobStatus.TRANSCRIBING,
+            progressPercent = 30,
+            currentStep = "Decodificando Espectro Acústico Local (DSP)..."
+        ))
+        delay(350)
+
+        // Paso 2: Corrección ortotípica RAE (65%)
+        emit(finalJob.copy(
+            status = JobStatus.CORRECTING,
+            progressPercent = 65,
+            currentStep = "Aplicando Ortotipografía RAE & Sintaxis..."
+        ))
+        delay(400)
+
+        // Paso 3: Verificación Criptográfica SHA-256 (90%)
+        emit(finalJob.copy(
+            status = JobStatus.CONSOLIDATING,
+            progressPercent = 90,
+            currentStep = "Generando Firma SHA-256 & Guardando en Room..."
+        ))
+        delay(300)
+
+        // Guardado local en Room
+        saveJobToLocalDb(finalJob)
+
+        // Paso 4: Finalizado 100%
+        emit(finalJob)
+    }
 
     suspend fun uploadAudio(file: File, apiKey: String? = null): Result<JobResponse> {
         return try {

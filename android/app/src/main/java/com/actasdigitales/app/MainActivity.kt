@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import com.actasdigitales.app.ui.components.FuturisticSplashScreen
 import com.actasdigitales.app.ui.screens.HistoryScreen
 import com.actasdigitales.app.ui.screens.HomeScreen
 import com.actasdigitales.app.ui.theme.ActasDigitalesTheme
@@ -29,47 +30,54 @@ class MainActivity : ComponentActivity() {
         setContent {
             var themeMode by rememberSaveable { mutableStateOf(ThemeMode.SYSTEM) }
             var selectedScreenTab by rememberSaveable { mutableIntStateOf(0) }
+            var isSplashVisible by rememberSaveable { mutableStateOf(true) }
 
             ActasDigitalesTheme(themeMode = themeMode) {
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    bottomBar = {
-                        NavigationBar(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = MaterialTheme.colorScheme.primary
-                        ) {
-                            NavigationBarItem(
-                                selected = selectedScreenTab == 0,
-                                onClick = { selectedScreenTab = 0 },
-                                icon = { Icon(Icons.Default.Mic, contentDescription = null) },
-                                label = { Text("Captura", fontWeight = FontWeight.Bold) }
-                            )
-                            NavigationBarItem(
-                                selected = selectedScreenTab == 1,
-                                onClick = { selectedScreenTab = 1 },
-                                icon = { Icon(Icons.Default.History, contentDescription = null) },
-                                label = { Text("Historial", fontWeight = FontWeight.Bold) }
-                            )
+                if (isSplashVisible) {
+                    FuturisticSplashScreen(
+                        onSplashFinished = { isSplashVisible = false }
+                    )
+                } else {
+                    Scaffold(
+                        modifier = Modifier.fillMaxSize(),
+                        bottomBar = {
+                            NavigationBar(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                contentColor = MaterialTheme.colorScheme.primary
+                            ) {
+                                NavigationBarItem(
+                                    selected = selectedScreenTab == 0,
+                                    onClick = { selectedScreenTab = 0 },
+                                    icon = { Icon(Icons.Default.Mic, contentDescription = null) },
+                                    label = { Text("Captura", fontWeight = FontWeight.Bold) }
+                                )
+                                NavigationBarItem(
+                                    selected = selectedScreenTab == 1,
+                                    onClick = { selectedScreenTab = 1 },
+                                    icon = { Icon(Icons.Default.History, contentDescription = null) },
+                                    label = { Text("Historial", fontWeight = FontWeight.Bold) }
+                                )
+                            }
                         }
-                    }
-                ) { innerPadding ->
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding),
-                        color = MaterialTheme.colorScheme.background
-                    ) {
-                        when (selectedScreenTab) {
-                            0 -> HomeScreen(
-                                viewModel = viewModel,
-                                themeMode = themeMode,
-                                onThemeModeChange = { newMode -> themeMode = newMode }
-                            )
-                            1 -> HistoryScreen(
-                                viewModel = viewModel,
-                                themeMode = themeMode,
-                                onThemeModeChange = { newMode -> themeMode = newMode }
-                            )
+                    ) { innerPadding ->
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(innerPadding),
+                            color = MaterialTheme.colorScheme.background
+                        ) {
+                            when (selectedScreenTab) {
+                                0 -> HomeScreen(
+                                    viewModel = viewModel,
+                                    themeMode = themeMode,
+                                    onThemeModeChange = { newMode -> themeMode = newMode }
+                                )
+                                1 -> HistoryScreen(
+                                    viewModel = viewModel,
+                                    themeMode = themeMode,
+                                    onThemeModeChange = { newMode -> themeMode = newMode }
+                                )
+                            }
                         }
                     }
                 }

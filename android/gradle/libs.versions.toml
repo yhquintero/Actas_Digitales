@@ -1,6 +1,6 @@
 [versions]
 agp = "9.5.1"
-kotlin = "2.2.10"
+kotlin = "2.1.0"
 coreKtx = "1.15.0"
 lifecycle = "2.8.7"
 activityCompose = "1.9.3"
@@ -10,9 +10,10 @@ workManager = "2.9.1"
 retrofit = "2.11.0"
 okhttp = "4.12.0"
 coroutines = "1.8.1"
-room = "2.6.1"
+room = "2.8.5"
 biometric = "1.1.0"
 foojay = "1.0.0"
+ksp = "2.1.0-1.0.29"
 
 [libraries]
 # Core Android & Lifecycle
@@ -58,4 +59,5 @@ androidx-compose-ui-testmanifest = { group = "androidx.compose.ui", name = "ui-t
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 foojay-resolver = { id = "org.gradle.toolchains.foojay-resolver-convention", version.ref = "foojay" }

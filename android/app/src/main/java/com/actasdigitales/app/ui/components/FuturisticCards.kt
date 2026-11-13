@@ -68,7 +68,10 @@ fun CyberPipelineBannerCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Memory,
                             contentDescription = null,
@@ -77,13 +80,16 @@ fun CyberPipelineBannerCard(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "PIPELINE DE INTELIGENCIA ACÚSTICA",
+                            text = "INTELIGENCIA ACÚSTICA",
                             color = MaterialTheme.colorScheme.primary,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.sp
+                            letterSpacing = 1.sp,
+                            maxLines = 1
                         )
                     }
+
+                    Spacer(modifier = Modifier.width(8.dp))
 
                     Surface(
                         color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f),
@@ -91,26 +97,28 @@ fun CyberPipelineBannerCard(
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Lock,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.secondary,
-                                modifier = Modifier.size(11.dp)
+                                modifier = Modifier.size(12.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = "TLS 1.3 · RSA-4096",
                                 color = MaterialTheme.colorScheme.secondary,
                                 fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                softWrap = false
                             )
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
                     text = "Captura · Transcribe · Consolida · Formaliza",
@@ -125,6 +133,13 @@ fun CyberPipelineBannerCard(
                     text = "Decodificación universal de audio y ortotipografía oficial RAE",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Insignia Horizontal TLS 100% horizontal y profesional
+                HorizontalTlsBadge(
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
@@ -207,7 +222,7 @@ fun FuturisticProcessingCard(
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = "Procesando Audio en la Nube",
+                        text = "Procesando Audio en Dispositivo (Zero-Cloud)",
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleMedium
                     )

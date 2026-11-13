@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -41,6 +42,11 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    lint {
+        // No bloquear assembleRelease por la descarga de las herramientas de lint.
+        // Ejecuta `./gradlew lintRelease` aparte cuando quieras el análisis completo.
+        checkReleaseBuilds = false
+    }
 }
 
 dependencies {
@@ -66,7 +72,7 @@ dependencies {
     // Room Database (Persistencia Local de Actas Digitales)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    annotationProcessor(libs.androidx.room.compiler)
+    ksp(libs.androidx.room.compiler)
 
     // Networking (Retrofit + OkHttp + Moshi/Gson)
     implementation(libs.retrofit.core)
