@@ -76,8 +76,16 @@ class AudioRecorderManager(private val context: Context) {
         startedAt = SystemClock.elapsedRealtime()
 
         // Supresión de ruido / cancelación de eco por hardware (si el dispositivo lo soporta).
+        // El ID de sesión se obtiene por reflexión: los stubs del SDK no exponen el getter
+        // de MediaRecorder de forma sintética a Kotlin en todos los entornos; si no existe,
+        // la grabación funciona igualmente sin DSP.
         try {
-            recorder.audioSessionId?.let { AudioNoiseFilter.enableDspFilters(it) }
+            val sessionId = recorder.javaClass
+                .getMethod("getAudioSessionId")
+                .invoke(recorder) as? Int
+            if (sessionId != null && sessionId > 0) {
+                AudioNoiseFilter.enableDspFilters(sessionId)
+            }
         } catch (ignored: Exception) {
         }
 
