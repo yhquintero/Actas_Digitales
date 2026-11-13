@@ -113,6 +113,11 @@ Todas las modificaciones notables de este proyecto están documentadas en este a
   Access Framework y valida extensión/tamaño/archivo vacío.
 - **Icono propio** de la app (`drawable/ic_launcher`) en lugar del icono
   genérico del sistema.
+- **Detalle de compilación:** el `ID de sesión` para el DSP de ruido/eco se obtiene
+  por reflexión (`getMethod("getAudioSessionId")`) porque el getter sintético
+  `audioSessionId` no resuelve en la compilación de CI (AGP 9.5.1 / Kotlin 2.1.0 /
+  compileSdk 35). Si el getter no existe en el entorno, la grabación funciona igual
+  y simplemente no se activa el DSP.
 - **Seguridad mantenida**: se integró el commit de PR #22 sin aceptar su
   `TrustManager` universal ni su `hostnameVerifier { _, _ -> true }` (se
   mantuvieron la validación TLS del sistema y el certificate pinning opt-in).
