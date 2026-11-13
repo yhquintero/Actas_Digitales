@@ -39,6 +39,13 @@ android {
             val keyPwd = System.getenv("ACTAS_KEY_PASSWORD") ?: storePwd
             if (file(storePath).exists() && storePwd.isNotEmpty()) {
                 storeFile = file(storePath)
+                storeType = if (System.getenv("ACTAS_KEYSTORE_TYPE") ?: "") {
+                    System.getenv("ACTAS_KEYSTORE_TYPE")
+                } else if (storePath.endsWith(".p12") || storePath.endsWith(".pfx")) {
+                    "pkcs12"
+                } else {
+                    "pkcs12" // el almacén persistente del proyecto es PKCS12 (android/signing/actas-mobile.keystore)
+                }
                 storePassword = storePwd
                 keyAlias = keyAliasName
                 keyPassword = keyPwd
