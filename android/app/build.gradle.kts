@@ -50,10 +50,12 @@ android {
 
     buildTypes {
         release {
-            // R8: reduce el tamaño del APK (13 MB -> ~6-8 MB) y elimina código muerto.
-            // Las reglas en proguard-rules.pro conservan Retrofit/Gson/Room/modelos.
+            // R8: reduce el tamaño del APK y elimina código muerto (reglas en proguard-rules.pro).
+            // NOTA: isShrinkResources queda DESACTIVADO — con ABI splits + bundleRelease, AGP 9
+            // falla en ':app:buildReleasePreBundle' con "Multiple shrunk-resources files found".
+            // El ahorro principal de tamaño viene de R8 + splits por ABI (+ APK universal).
             isMinifyEnabled = true
-            isShrinkResources = true
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
