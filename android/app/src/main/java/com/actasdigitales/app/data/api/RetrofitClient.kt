@@ -10,7 +10,17 @@ import java.net.URI
 import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
-    // URL base configurable (por defecto puerto 8443 HTTPS o 8000 HTTP)
+
+    /**
+     * URL del backend.
+     *
+     * - Emulador oficial de Android: `https://10.0.2.2:8443/`
+     * - Dispositivo físico en la misma Wi-Fi: `http://<IP-del-ordenador>:8000/`
+     *   (o `https://…:8443/` con la CA del proyecto instalada como CA de usuario)
+     *
+     * Se puede cambiar en tiempo de ejecución antes de la primera petición.
+     */
+    @Volatile
     var baseUrl: String = "https://10.0.2.2:8443/"
 
     /**
@@ -42,29 +52,32 @@ object RetrofitClient {
     }
 
     /**
-     * Cliente HTTP seguro: validación TLS estándar del sistema y, si se
-     * definieron los pines, certificate pinning adicional. En depuración se
-     * registra el cuerpo de las peticiones; en release, solo la línea básica.
+     * Cliente HTTP seguro y usable en dispositivo real:
+     *  - Validación TLS del sistema, o certificate pinning con ACTAS_CERT_PIN_*.
+     *  - TLS negociado por el sistema (1.3 → 1.2): no se fuerza ningún protocolo.
+     *  - retryOnConnectionFailure para redes corporativas o Wi-Fi inestables.
+     *  - Logger solo en compilaciones de depuración, en nivel BASIC (nunca BODY,
+     *    que podría filtrar la API Key en el logcat).
+     *  - Sin trust-all ni hostnameVerifier universal: jamás se aceptan certificados inválidos.
      */
     private val okHttpClient: OkHttpClient by lazy {
-        val logging = HttpLoggingInterceptor().apply {
-            level = if (BuildConfig.DEBUG) {
-                HttpLoggingInterceptor.Level.BODY
-            } else {
-                HttpLoggingInterceptor.Level.BASIC
-            }
-        }
         val builder = OkHttpClient.Builder()
-            .addInterceptor(logging)
-            .connectTimeout(60, TimeUnit.SECONDS)
+            .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(180, TimeUnit.SECONDS)
             .writeTimeout(180, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+
+        if (BuildConfig.DEBUG) {
+            builder.addInterceptor(
+                HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BASIC }
+            )
+        }
         certificatePinner()?.let { builder.certificatePinner(it) }
         builder.build()
     }
 
     fun getApiService(customUrl: String? = null): ActasApiService {
-        val url = customUrl ?: baseUrl
+        val url = (customUrl ?: baseUrl).let { if (it.endsWith("/")) it else "$it/" }
         return Retrofit.Builder()
             .baseUrl(url)
             .client(okHttpClient)

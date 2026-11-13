@@ -121,8 +121,16 @@ object PdfExportManager {
                 .setLineSpacing(3f, 1.15f)
                 .build()
 
+            // El cuerpo se recorta al espacio disponible antes del pie de página para que
+            // el texto nunca se salga del folio A4 (un acta larga se ve truncada, no rota).
             canvas.save()
             canvas.translate(35f, 275f)
+            canvas.clipRect(
+                0f,
+                0f,
+                contentWidth.toFloat(),
+                (pageHeight - 275 - 40).toFloat()
+            )
             staticLayout.draw(canvas)
             canvas.restore()
 
@@ -130,7 +138,7 @@ object PdfExportManager {
             paint.color = Color.parseColor("#94A3B8")
             paint.textSize = 8f
             canvas.drawText(
-                "Página 1 de 1 — Generado automáticamente por Actas Digitales Android App",
+                "Generado automáticamente por Actas Digitales Android · Trazabilidad SHA-256",
                 35f,
                 (pageHeight - 25).toFloat(),
                 paint

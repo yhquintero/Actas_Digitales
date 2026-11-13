@@ -91,7 +91,7 @@ const galeriaSvg = `
     <text x="742" y="93" font-family="sans-serif" font-size="11" font-weight="bold" fill="#FFFFFF" text-anchor="middle">🛡️ Centro Seguridad</text>
 
     <rect x="815" y="74" width="125" height="30" rx="8" fill="#10B981" />
-    <text x="877" y="93" font-family="sans-serif" font-size="11" font-weight="bold" fill="#FFFFFF" text-anchor="middle">⬇️ Descargar APK</text>
+    <text x="877" y="93" font-family="sans-serif" font-size="11" font-weight="bold" fill="#FFFFFF" text-anchor="middle">📱 App Android</text>
 
     <!-- Side-by-Side Analysis Cards -->
     <!-- Card 1: Crudo -->
@@ -655,8 +655,8 @@ const androidMovilSvg = `
     <text x="32" y="318" font-family="sans-serif" font-size="9.5" fill="#64748B">Inmutable punto a punto</text>
 
     <rect x="20" y="370" width="240" height="75" rx="10" fill="#10B981" />
-    <text x="140" y="400" font-family="sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="middle">Descargar APK</text>
-    <text x="140" y="422" font-family="sans-serif" font-size="10" fill="#E6FFFA" text-anchor="middle">android/ActasDigitales.apk</text>
+    <text x="140" y="400" font-family="sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="middle">Compilar la App</text>
+    <text x="140" y="422" font-family="sans-serif" font-size="10" fill="#E6FFFA" text-anchor="middle">cd android &amp;&amp; ./gradlew assembleDebug</text>
   </g>
 
   <!-- Center: Phone Mockup -->

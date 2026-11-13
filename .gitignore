@@ -72,3 +72,9 @@ web/dist/ActasDigitales.apk
 # Resultados de pruebas E2E
 web/test-results/
 web/playwright-report/
+
+# APK de la aplicación: artefacto de compilación (cd android && ./gradlew assembleDebug).
+# No se versiona para no distribuir paquetes que no correspondan al código fuente.
+android/ActasDigitales.apk
+android/app/build/
+tools/verificacion/
