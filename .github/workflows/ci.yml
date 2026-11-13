@@ -11,10 +11,10 @@ jobs:
     name: Backend, Pipeline y Seguridad HTTPS
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Configurar Python 3.11
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 
@@ -41,10 +41,10 @@ jobs:
     name: Compilación y Tipado Web (React + TS)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Configurar Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: "npm"
@@ -60,13 +60,13 @@ jobs:
     name: E2E Distribución de la App (APK)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Verificar sincronía del APK estático con el release oficial
         run: python tools/sync_apk.py --check
 
       - name: Configurar Python 3.11
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 
@@ -76,7 +76,7 @@ jobs:
           pip install fastapi uvicorn pydantic pydantic-settings python-multipart aiofiles requests
 
       - name: Configurar Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: "npm"
