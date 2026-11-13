@@ -76,6 +76,22 @@ Todas las modificaciones notables de este proyecto están documentadas en este a
 ### ✅ CI
 - Nuevo job E2E incluye `/api/metrics` (JSON, contadores). El workflow de
   release firma y publica AAB/APK por tag.
+- **Corregido:** el test E2E «sección de descarga visible» fallaba en CI desde su
+  introducción (nombre accesible del CTA ≠ texto esperado por el test). Ahora
+  **verde** junto con el resto de la suite (7 tests, Chromium en CI).
+- **Nuevo workflow `android-build-check.yml`** (compilación real sin publicar):
+  keystore PKCS12 efímera del runner, `assembleRelease` + `bundleRelease` con R8
+  y splits por ABI. **Verde** en `81fce95`. Verificó y corrigió: error Kotlin en
+  `signingConfig` (condición String donde Kotlin exige Boolean) y conflicto de
+  AGP 9 (`Multiple shrunk-resources` ⇒ `isShrinkResources=false`; se mantiene
+  R8 + splits). Las anotaciones de check-runs se usaron como canal de diagnóstico
+  porque los logs del run no son descargables desde el entorno de trabajo.
+- Acciones actualizadas (checkout v7, setup-node v7, setup-python v7, setup-java v6,
+  upload-artifact v7).
+- `release.yml`: sin secrets `ACTAS_KEYSTORE_*` omite el build firmado (avisando
+  en verde) — nunca publica sin firmar. Los binarios firmados de v1.5.0 quedan
+  pendientes de que el mantenedor cargue los secrets (keystore PKCS12 persistente
+  generado en `android/signing/`, fuera de Git).
 
 ### 🐛 Correcciones rápidas
 - `web/Dockerfile`: `npm install` → `npm ci` (build reproducible).

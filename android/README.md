@@ -88,6 +88,10 @@ android/app/src/main/java/com/actasdigitales/app/
 
 ---
 
+## ✅ Verificación en CI (sin publicar)
+
+Cada push a `arena/**` o `main` que toque `android/**` ejecuta [.github/workflows/android-build-check.yml](../.github/workflows/android-build-check.yml): firma efímera PKCS12 del propio runner, `./gradlew :app:assembleRelease :app:bundleRelease` (R8 + splits por ABI) y SHA-256 de los artefactos adjuntos al run. **No publica nada**; solo verifica que el proyecto compila y empaqueta correctamente.
+
 ## 🚀 Publicar una Release (APK/AAB firmados)
 
 El workflow [.github/workflows/release.yml](../.github/workflows/release.yml) compila, firma y publica los artefactos al hacer push de un tag `v*`:
@@ -109,3 +113,5 @@ git tag v1.5.0 && git push origin v1.5.0
 ```
 
 La versión del APK deriva del tag (`ACTAS_VERSION_NAME`) y `versionCode` del número de ejecución de CI. Para Play Store usa el **AAB** generado (`bundleRelease`); para distribución directa usa el **APK universal** (lo que sirve la Web y GitHub Releases).
+
+> **Estado actual (v1.5.0):** el keystore persistente PKCS12 (`actas-mobile`, RSA-4096) ya está generado en `android/signing/` (fuera de Git) junto con las credenciales en `keystore-credentials.txt`. **Haz copia de seguridad de ambos archivos** (p. ej. en tu gestor de contraseñas): la clave firma todas las actualizaciones futuras; perderla obliga a re-firmar la distribución. Para activar la publicación automática, carga `ACTAS_KEYSTORE_BASE64/PASSWORD/KEY_ALIAS/KEY_PASSWORD` como secrets y vuelve a etiquetar (`git tag -f v1.5.0 && git push -f origin v1.5.0`) o ejecuta el workflow manualmente.
