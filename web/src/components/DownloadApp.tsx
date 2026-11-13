@@ -209,7 +209,7 @@ export const DownloadApp: React.FC = () => {
                 href={downloadHref}
                 download="ActasDigitales.apk"
                 className="group inline-flex items-center gap-2.5 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold text-sm sm:text-base tracking-tight shadow-[0_10px_35px_-10px_rgba(16,185,129,0.55)] hover:shadow-[0_14px_40px_-8px_rgba(16,185,129,0.65)] transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-emerald-400/40"
-                aria-label="Descargar el APK de Actas Digitales para Android"
+                aria-label="Descargar para Android"
               >
                 <Download className="w-5 h-5 transition-transform duration-200 group-hover:translate-y-0.5" />
                 <span>Descargar para Android</span>
