@@ -19,7 +19,7 @@
 [![Versión](https://img.shields.io/badge/versi%C3%B3n-1.2.0-4f46e5?style=flat-square)](CHANGELOG.md)
 [![Plataformas](https://img.shields.io/badge/plataformas-Web%C2%B7Android%C2%B7Servidor-1e1b4b?style=flat-square)](#-ecosistema)
 [![Seguridad](https://img.shields.io/badge/Seguridad-TLS%201.3%20%7C%20RSA--4096-059669?style=flat-square)](#-seguridad-https-y-certificados)
-[![APK Android](https://img.shields.io/badge/APK-Android%20v1.2.0-10b981?style=flat-square&logo=android&logoColor=white)](android/ActasDigitales.apk)
+[![APK Android](https://img.shields.io/badge/APK-Android%20v1.0.0%20(release)-10b981?style=flat-square&logo=android&logoColor=white)](android/app/release/app-release.apk)
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)](#-requisitos)
 [![Kotlin](https://img.shields.io/badge/Kotlin-Jetpack%20Compose-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](android/)
 [![Licencia](https://img.shields.io/badge/licencia-propietaria-475569?style=flat-square)](LICENSE)
@@ -263,7 +263,7 @@ En la barra de herramientas de exportación de la Web encontrarás los selectore
 
 <p align="center">
   <img src="docs/assets/actas-digitales-movil.png" width="100%" alt="Actas Digitales en el móvil: Web PWA instalable y Android nativo con Jetpack Compose" />
-  <br /><sub>Actas Digitales en movilidad: Web PWA instalable y app Android nativa con APK directo (<a href="android/ActasDigitales.apk">android/ActasDigitales.apk</a>).</sub>
+  <br /><sub>Actas Digitales en movilidad: Web PWA instalable y app Android nativa con APK directo (<a href="android/app/release/app-release.apk">android/app/release/app-release.apk</a>).</sub>
 </p>
 
 ### 📱 Paquete de Instalación Móvil Android (APK)
@@ -275,20 +275,21 @@ Con el servidor en marcha, abre la Web en tu PC o móvil y usa la sección **«D
 * ⬇️ **Descargar el APK directamente** con un clic (`GET /api/app/download`) — sin tiendas externas ni dependencia de GitHub.
 * 📷 **Escanear el código QR** con la cámara de tu Android para abrir la descarga al instante.
 * 🔢 **Verificar la custodia SHA-256** del paquete desde la Web o con `sha256sum ActasDigitales.apk`.
-* 📋 **Consultar los metadatos del APK** vía API: `GET /api/app/info` (versión, paquete `com.actasdigitales.app`, tamaño, firma RSA-4096, requisito Android 7.0+/API 24).
-* 🐳 En **Docker Compose** la descarga funciona igual: `./android` se monta como solo lectura dentro del backend (`APK_DOWNLOAD_PATH=/android/ActasDigitales.apk`).
+* 📋 **Consultar los metadatos del APK** vía API: `GET /api/app/info` (versión, paquete `com.actasdigitales.app`, tamaño, **esquemas de firma detectados**, `artifact_kind`, requisito Android 8.0+/API 26). La respuesta distingue honestamente qué artefacto se sirve (`release-gradle` vs `stub-demo`).
+* 🐳 En **Docker Compose** la descarga funciona igual: `./android` se monta como solo lectura dentro del backend (`APK_DOWNLOAD_PATH=/android/app/release/app-release.apk`).
 
-#### 📦 Distribución manual del APK
+#### 📦 Qué APK se sirve y cómo regenerarla
 
-Para pruebas inmediatas en dispositivos Android físicos o emuladores sin necesidad de compilar el código fuente en Android Studio, el repositorio incluye el paquete compilado y firmado:
+El artefacto oficial de distribución es el **release nativo completo** (Kotlin + Jetpack Compose, WorkManager, Room, BiometricPrompt):
 
-* 📦 **Ruta del APK:** [`android/ActasDigitales.apk`](android/ActasDigitales.apk) (y copia en `android/app/build/outputs/apk/debug/app-debug.apk`)
-* 🔑 **Firma Criptográfica:** v1 JAR Scheme con clave **RSA de 4096 bits** emitida por la Autoridad de Certificación de Actas Digitales.
+* 📱 **Artefacto oficial:** [`android/app/release/app-release.apk`](android/app/release/app-release.apk) (~13 MB, `com.actasdigitales.app`, v1.0.0/code 1, minSdk 26, target 34) — firmado con **APK Signature Scheme v2/v3**. Se sirve tanto por la Web como copiado en [`web/public/ActasDigitales.apk`](web/public/ActasDigitales.apk) para hosting estático (GitHub Pages/nginx): `python3 tools/sync_apk.py` re-sincroniza la copia y `python3 tools/sync_apk.py --check` la verifica en CI.
+* 🔑 **Firma del release:** El `build.gradle.kts` declara una `signingConfig` que lee la clave permanente desde `android/signing/actas-mobile.keystore` o de las variables `ACTAS_KEYSTORE_PATH` / `ACTAS_KEYSTORE_PASSWORD` / `ACTAS_KEY_ALIAS` / `ACTAS_KEY_PASSWORD` (la clave **nunca** va a Git; `android/signing/` está ignorado). Generación: `keytool -genkey -v -keystore signing/actas-mobile.keystore -alias actas-mobile -keyalg RSA -keysize 4096 -validity 3650`. La próxima build declara `versionName 1.3.0` / `versionCode 2`.
+* 🧪 **APK mínimo autónomo (legado):** [`android/ActasDigitales.apk`](android/ActasDigitales.apk) (~6 KB) es un stub de instalación generado por `python3 tools/compilar_apk.py` (AAPT2 + DEX sintético, firma v1 RSA-4096). Desde la 1.3.0 la Web **sirve por defecto el release nativo**; el stub solo actúa como respaldo si falta el release. `compilar_apk.py` ahora reutiliza una **clave persistente** en `android/signing/` (antes regeneraba la clave en cada ejecución, rompiendo las actualizaciones in-situ).
 * 📲 **Instalación rápida vía ADB:**
   ```bash
-  adb install -r android/ActasDigitales.apk
+  adb install -r app-release.apk
   ```
-* 🛠 **Herramienta de compilación autónoma:** Puedes regenerar el APK en cualquier momento ejecutando `python3 tools/compilar_apk.py`.
+* 🛠 **Verificación del paquete desde la Web:** tras descargar, la propia sección «Descarga la App para tu móvil» incluye un **verificador SHA-256 en el navegador** (selecciona el APK descargado y lo comprueba al instante, sin instalar nada).
 
 ▶️ **Vídeo:** [presentación oficial de 3 min (1080p60, narración en español y subtítulos)](docs/PROPUESTA_VIDEO_PROMOCIONAL.md) · [reproductor interactivo en la app Web](web/) · [manual imprimible de usuario](docs/MANUAL_USUARIO.html)
 

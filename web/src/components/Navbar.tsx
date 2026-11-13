@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mic, Key, Film, ShieldCheck, Cpu, Shield, Smartphone } from 'lucide-react';
+import { Mic, Key, Film, ShieldCheck, Cpu, Shield, Smartphone, Sun, Moon } from 'lucide-react';
 
 interface NavbarProps {
   apiKey: string;
@@ -18,6 +18,20 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [tempKey, setTempKey] = useState(apiKey);
+  const [theme, setTheme] = useState<'light' | 'dark'>(() =>
+    typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? 'dark' : 'light'
+  );
+
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    document.documentElement.classList.toggle('dark', next === 'dark');
+    try {
+      localStorage.setItem('actas_theme', next);
+    } catch {
+      /* almacenamiento no disponible */
+    }
+  };
 
   const handleSave = () => {
     onApiKeyChange(tempKey);
@@ -38,7 +52,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 v1.2 · ENTERPRISE
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 hidden sm:block">
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 hidden sm:block">
               Captura · Transcribe · Consolida · Formaliza
             </p>
           </div>
@@ -57,6 +71,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="md:hidden">TLS 1.3</span>
             </button>
           )}
+
+          {/* Theme Toggle (Claro / Oscuro) */}
+          <button
+            onClick={toggleTheme}
+            className="flex items-center justify-center text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 w-8 h-8 rounded-xl transition-colors border border-slate-700"
+            title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            aria-pressed={theme === 'dark'}
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
 
           {/* Download Android App Button */}
           <a
@@ -106,17 +131,17 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Settings Modal */}
       {showSettings && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-fade-zoom-in">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 dark:border-slate-800 animate-fade-zoom-in">
             <div className="flex items-center space-x-2 mb-3">
-              <Key className="w-5 h-5 text-indigo-600" />
-              <h3 className="font-semibold text-slate-900 text-lg">Configuración de Proveedor IA</h3>
+              <Key className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-lg">Configuración de Proveedor IA</h3>
             </div>
-            <p className="text-sm text-slate-600 mb-4">
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
               Por defecto el servidor utiliza el motor integrado de procesamiento y corrección en español. Opcionalmente puedes suministrar una API Key de OpenAI o Groq para modelos cloud como Whisper Large v3 o GPT-4o.
             </p>
 
             <div className="mb-4">
-              <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">
+              <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">
                 API Key (OpenAI o Groq)
               </label>
               <input
@@ -124,17 +149,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                 placeholder="sk-... o gsk_..."
                 value={tempKey}
                 onChange={(e) => setTempKey(e.target.value)}
-                className="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                className="w-full text-sm px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
-              <p className="text-xs text-slate-500 mt-1.5 flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-slate-500" /> La clave se transmite únicamente en el encabezado X-API-Key de tu sesión.
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" /> La clave se transmite únicamente en el encabezado X-API-Key de tu sesión.
               </p>
             </div>
 
             <div className="flex justify-end space-x-2">
               <button
                 onClick={() => setShowSettings(false)}
-                className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 rounded-lg"
+                className="px-4 py-2 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-800 hover:dark:text-slate-200 rounded-lg"
               >
                 Cancelar
               </button>

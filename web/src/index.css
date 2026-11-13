@@ -52,3 +52,7 @@ html {
     animation: none;
   }
 }
+
+.dark {
+  color-scheme: dark;
+}

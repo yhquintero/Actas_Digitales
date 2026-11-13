@@ -4,21 +4,24 @@ Aplicación móvil nativa para la captura de audio de reuniones y actas, subida 
 
 ---
 
-## 📦 Paquete APK Listo para Pruebas
+## 📦 Paquete APK Listo para Instalar
 
-Para facilitar la evaluación inmediata en dispositivos físicos o emuladores sin requerir un entorno completo de Android Studio con SDK instalado, el proyecto incluye el binario precompilado y firmado criptográficamente:
+El artefacto oficial de distribución es el **release nativo completo** (Kotlin + Jetpack Compose, WorkManager, Room, BiometricPrompt):
 
-* 📱 **Ubicación del APK:** [`android/ActasDigitales.apk`](ActasDigitales.apk) (y copia en `android/app/build/outputs/apk/debug/app-debug.apk`)
-* 🔐 **Firma Digital:** v1 JAR Scheme con clave **RSA de 4096 bits** generada por la Autoridad de Certificación de Actas Digitales.
+* 📱 **Artefacto oficial:** [`app/release/app-release.apk`](app/release/app-release.apk) (~13 MB, `com.actasdigitales.app`, v1.0.0 / code 1, minSdk 26, target 34) — firmado con **APK Signature Scheme v2/v3**.
+* 🔐 **Firma del release:** `build.gradle.kts` declara una `signingConfig` opcional que lee la clave permanente desde `android/signing/actas-mobile.keystore` o de las variables de entorno `ACTAS_KEYSTORE_PATH` / `ACTAS_KEYSTORE_PASSWORD` / `ACTAS_KEY_ALIAS` / `ACTAS_KEY_PASSWORD`. **La clave nunca va a Git** (`android/signing/` está ignorado). Generación:
+  ```bash
+  keytool -genkey -v -keystore signing/actas-mobile.keystore \
+    -alias actas-mobile -keyalg RSA -keysize 4096 -validity 3650
+  ```
+  La próxima build declara `versionName 1.3.0` / `versionCode 2` (la `app-release.apk` comprometida es 1.0.0/1).
 * 🛡 **Seguridad de Red:** Compatible con conexiones seguras **TLS 1.3** y tolerancia opcional a certificados autofirmados corporativos de desarrollo (`network_security_config.xml`).
+* 🌐 **Distribución desde la Web:** el servidor sirve este APK en `/api/app/download` con hash SHA-256 verificable (`/api/app/info`), y `web/public/ActasDigitales.apk` es su copia estática para hosting sin backend. Sincronízalas tras cada build con `python3 tools/sync_apk.py` (verificación en CI: `--check`).
 * ⚡ **Instalación rápida vía ADB:**
   ```bash
-  adb install -r android/ActasDigitales.apk
+  adb install -r app-release.apk
   ```
-* 🛠 **Generación autónoma:** Puedes regenerar el APK ejecutando desde la raíz del repositorio:
-  ```bash
-  python3 tools/compilar_apk.py
-  ```
+* 🧪 **APK mínimo (legado):** [`ActasDigitales.apk`](ActasDigitales.apk) (~6 KB) es un stub de instalación autónomo generado por `python3 tools/compilar_apk.py` (AAPT2 + DEX sintético, firma v1 RSA-4096). Desde la 1.3.0 la Web sirve por defecto el release; el stub queda como respaldo. `compilar_apk.py` reutiliza una **clave persistente** en `android/signing/` (antes regeneraba la clave en cada build, invalidando las actualizaciones in-situ).
 
 ---
 

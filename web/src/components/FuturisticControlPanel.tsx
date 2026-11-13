@@ -368,7 +368,7 @@ export const FuturisticControlPanel: React.FC<FuturisticControlPanelProps> = ({
                     DESCARGAR APP MÓVIL (APK)
                   </span>
                   <span className="text-[11px] text-slate-400 leading-snug">
-                    App oficial Android v1.2.0 · Firmada RSA-4096 · Se sirve desde este servidor (Android 7+)
+                    App nativa Android (Kotlin + Compose) · Firmada v2/v3 · Se sirve desde este servidor (con verificador SHA-256 en la Web)
                   </span>
                 </div>
               </div>

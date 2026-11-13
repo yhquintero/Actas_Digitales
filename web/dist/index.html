@@ -1,6 +1,15 @@
 <!doctype html>
 <html lang="es">
   <head>
+    <script>
+      // Aplicar el tema antes del primer pintado (evita FOUC)
+      try {
+        var saved = localStorage.getItem('actas_theme');
+        if (saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) { /* tema por defecto: claro */ }
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta
@@ -37,10 +46,10 @@
         });
       }
     </script>
-    <script type="module" crossorigin src="/assets/index-CBYe7Kc8.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-B9t6pNhC.css">
+    <script type="module" crossorigin src="/assets/index-Bz6zbi9i.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BN5E4Jlx.css">
   </head>
-  <body class="bg-slate-50 text-slate-800 antialiased min-h-screen">
+  <body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 antialiased min-h-screen transition-colors">
     <div id="root"></div>
     <noscript>
       <div style="font-family: system-ui, sans-serif; padding: 2rem; text-align: center; background: #0f172a; color: #e2e8f0; min-height: 100vh;">

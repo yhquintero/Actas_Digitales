@@ -13,7 +13,7 @@ services:
       - DEFAULT_LANGUAGE=es
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - GROQ_API_KEY=${GROQ_API_KEY:-}
-      - APK_DOWNLOAD_PATH=/android/ActasDigitales.apk
+      - APK_DOWNLOAD_PATH=/android/app/release/app-release.apk
     volumes:
       - ./backend/uploads:/app/uploads
       - ./android:/android:ro

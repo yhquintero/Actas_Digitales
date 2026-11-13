@@ -292,24 +292,52 @@ def compile_and_sign():
     # 3. Generar classes.dex
     dex_bytes = generate_dex()
 
-    # 4. Generar clave RSA-4096 y certificado X.509
-    key = rsa.generate_private_key(public_exponent=65537, key_size=4096)
-    subject = issuer = x509.Name([
-        x509.NameAttribute(x509.NameOID.COMMON_NAME, "Actas Digitales Mobile"),
-        x509.NameAttribute(x509.NameOID.ORGANIZATION_NAME, "Actas Digitales Security Authority"),
-        x509.NameAttribute(x509.NameOID.COUNTRY_NAME, "ES")
-    ])
-    now = datetime.datetime.now(datetime.timezone.utc)
-    cert = (
-        x509.CertificateBuilder()
-        .subject_name(subject)
-        .issuer_name(issuer)
-        .public_key(key.public_key())
-        .serial_number(x509.random_serial_number())
-        .not_valid_before(now - datetime.timedelta(days=1))
-        .not_valid_after(now + datetime.timedelta(days=3650))
-        .sign(key, hashes.SHA256())
-    )
+    # 4. Clave RSA-4096 y certificado X.509.
+    # Se reutiliza la clave PERSISTENTE de android/signing/ cuando existe
+    # (gitignored): así las actualizaciones del APK conservan la misma firma
+    # y Android permite instalarlas sobre la versión anterior.
+    # Si no existe, se genera una nueva y se persiste con aviso.
+    signing_dir = REPO_ROOT / "android" / "signing"
+    key_path = signing_dir / "actas-mobile.key.pem"
+    cert_path = signing_dir / "actas-mobile.crt.pem"
+
+    if key_path.exists() and cert_path.exists():
+        key = serialization.load_pem_private_key(key_path.read_bytes(), password=None)
+        cert = x509.load_pem_x509_certificates(cert_path.read_bytes())[0]
+        print(f"[OK] Usando clave persistente de {key_path}")
+    else:
+        print("[!] Clave persistente no encontrada en android/signing/. Generando una nueva...")
+        print("[!] IMPORTANTE: la firma cambiará respecto a builds anteriores.")
+        print("[!] Guarda android/signing/ en un lugar seguro (está en .gitignore).")
+        key = rsa.generate_private_key(public_exponent=65537, key_size=4096)
+        subject = issuer = x509.Name([
+            x509.NameAttribute(x509.NameOID.COMMON_NAME, "Actas Digitales Mobile"),
+            x509.NameAttribute(x509.NameOID.ORGANIZATION_NAME, "Actas Digitales Security Authority"),
+            x509.NameAttribute(x509.NameOID.COUNTRY_NAME, "ES")
+        ])
+        now = datetime.datetime.now(datetime.timezone.utc)
+        cert = (
+            x509.CertificateBuilder()
+            .subject_name(subject)
+            .issuer_name(issuer)
+            .public_key(key.public_key())
+            .serial_number(x509.random_serial_number())
+            .not_valid_before(now - datetime.timedelta(days=1))
+            .not_valid_after(now + datetime.timedelta(days=3650))
+            .sign(key, hashes.SHA256())
+        )
+        try:
+            signing_dir.mkdir(parents=True, exist_ok=True)
+            key_path.write_bytes(key.private_bytes(
+                serialization.Encoding.PEM,
+                serialization.PrivateFormat.PKCS8,
+                serialization.NoEncryption(),
+            ))
+            os.chmod(key_path, 0o600)
+            cert_path.write_bytes(cert.public_bytes(serialization.Encoding.PEM))
+            print(f"[OK] Clave persistente guardada en {key_path} y {cert_path}")
+        except OSError as exc:
+            print(f"[!] No se pudo persistir la clave ({exc}); la firma será efímera en esta build.")
 
     # 5. Extraer entradas y agregar DEX
     entries = {}
@@ -376,6 +404,13 @@ def compile_and_sign():
         print(f"  Certificado: {certs[0].subject.human_friendly}")
         print(f"  Algoritmo y longitud de clave: RSA {certs[0].public_key.bit_size} bits")
     print("--------------------------------------\n")
+
+    # 9. Sincronizar la copia estática que sirve la Web (web/public)
+    try:
+        import subprocess
+        subprocess.run([sys.executable, str(REPO_ROOT / "tools" / "sync_apk.py")], check=False)
+    except Exception as exc:
+        print(f"[!] No se pudo sincronizar web/public/ActasDigitales.apk: {exc}")
 
 if __name__ == "__main__":
     compile_and_sign()

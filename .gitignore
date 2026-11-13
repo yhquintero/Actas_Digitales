@@ -61,3 +61,14 @@ app/build/
 local.properties
 .DS_Store
 *.mp3
+
+# Claves de firma Android (clave privada de la app — NUNCA subir a Git)
+android/signing/
+*.keystore
+*.jks
+
+# Copia estática del APK en el dist compilado (se regenera desde web/public al compilar)
+web/dist/ActasDigitales.apk
+# Resultados de pruebas E2E
+web/test-results/
+web/playwright-report/

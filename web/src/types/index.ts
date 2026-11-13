@@ -100,6 +100,10 @@ export interface AndroidAppInfo {
   requires_android: string;
   abi: string;
   signature: string;
+  signature_schemes: string[];
+  installable: boolean;
+  artifact_kind: string;
+  description: string;
   permissions: string[];
   filename: string;
   size_bytes: number;
