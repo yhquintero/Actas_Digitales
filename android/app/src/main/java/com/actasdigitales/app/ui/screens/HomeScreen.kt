@@ -411,8 +411,4 @@ private fun copyUriToCache(context: Context, uri: Uri): File? {
     } catch (e: Exception) {
         null
     }
-        if (showServerDialog) {
-            ServerSettingsDialog(onDismiss = { showServerDialog = false })
-        }
-
 }
