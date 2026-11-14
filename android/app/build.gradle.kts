@@ -25,6 +25,9 @@ android {
         // Certificate pinning opcional (opt-in, ver RetrofitClient): vacío por defecto
         buildConfigField("String", "ACTAS_CERT_PIN_PRIMARY", "\"${System.getenv("ACTAS_CERT_PIN_PRIMARY") ?: ""}\"")
         buildConfigField("String", "ACTAS_CERT_PIN_BACKUP", "\"${System.getenv("ACTAS_CERT_PIN_BACKUP") ?: ""}\"")
+        // Token de sincronización móvil⇄Web (debe coincidir con ACTAS_SYNC_TOKEN del servidor).
+        // Vacío por defecto: la sync responde 401/503 hasta configurarlo (seguro por defecto).
+        buildConfigField("String", "ACTAS_SYNC_TOKEN", "\"${System.getenv("ACTAS_SYNC_TOKEN") ?: ""}\"")
     }
 
     signingConfigs {

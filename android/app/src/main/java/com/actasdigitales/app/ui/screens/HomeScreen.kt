@@ -24,7 +24,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.UploadFile
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -58,6 +60,7 @@ import com.actasdigitales.app.ui.components.CyberPipelineBannerCard
 import com.actasdigitales.app.ui.components.FuturisticProcessingCard
 import com.actasdigitales.app.ui.components.FuturisticSuccessCard
 import com.actasdigitales.app.ui.components.ThemeToggleChip
+import com.actasdigitales.app.ui.components.ServerSettingsDialog
 import com.actasdigitales.app.ui.theme.ThemeMode
 import com.actasdigitales.app.ui.viewmodel.AudioUiState
 import com.actasdigitales.app.ui.viewmodel.AudioViewModel
@@ -73,6 +76,8 @@ fun HomeScreen(
     themeMode: ThemeMode,
     onThemeModeChange: (ThemeMode) -> Unit
 ) {
+    var showServerDialog by remember { mutableStateOf(false) }
+
     val uiState by viewModel.uiState.collectAsState()
     val currentAmplitude by viewModel.amplitudeFlow.collectAsState()
     val context = LocalContext.current
@@ -135,6 +140,13 @@ fun HomeScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { showServerDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Ajustes del servidor",
+                            tint = Color.White
+                        )
+                    }
                     ThemeToggleChip(
                         currentMode = themeMode,
                         onModeChange = onThemeModeChange,
@@ -329,6 +341,10 @@ fun HomeScreen(
 
                 else -> Unit
             }
+        }
+
+        if (showServerDialog) {
+            ServerSettingsDialog(onDismiss = { showServerDialog = false })
         }
     }
 }

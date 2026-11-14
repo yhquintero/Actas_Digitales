@@ -138,3 +138,6 @@ git tag v1.5.0 && git push origin v1.5.0
 ```
 
 La versión del APK deriva del tag (`ACTAS_VERSION_NAME`) y `versionCode` del número de ejecución de CI. Para Play Store usa el **AAB** generado (`bundleRelease`); para distribución directa usa el **APK universal** (lo que sirve la Web y GitHub Releases).
+
+
+* 🔄 **Móvil ⇄ Web comparten actas:** ambos endpoints (`/api/acts`, `/api/acts/sync`) exigen `ACTAS_SYNC_TOKEN` (cabecera `X-Sync-Token`). La app lo envía si se compila con la variable de entorno `ACTAS_SYNC_TOKEN`. Sin él, la sincronización responde 401/503.

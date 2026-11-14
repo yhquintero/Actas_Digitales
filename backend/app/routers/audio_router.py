@@ -11,10 +11,22 @@ from ..config import settings
 from ..models.job import JobResponse, JobStatus, CorrectionItem
 from ..services.audio_service import AudioService
 from ..services.job_manager import job_manager
+from ..services.retention import KEEP_FROM_PURGE
 from ..services.consolidation_service import ConsolidationService
 from ..services.correction_service import CorrectionService
 
 router = APIRouter(prefix="/audio", tags=["Audio & Transcripción"])
+
+
+def _require_admin(x_admin_token: Optional[str]) -> None:
+    """Los endpoints de administración exigen ACTAS_ADMIN_TOKEN (503 si no está configurado, 401 si es erróneo)."""
+    if not settings.ADMIN_TOKEN:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Endpoint administrativo desactivado: configura ACTAS_ADMIN_TOKEN en el servidor.",
+        )
+    if not x_admin_token or x_admin_token != settings.ADMIN_TOKEN:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="X-Admin-Token inválido o ausente.")
 
 @router.post("/upload", response_model=JobResponse, status_code=status.HTTP_202_ACCEPTED)
 async def upload_audio(
@@ -452,14 +464,16 @@ async def download_ca_cert():
     )
 
 @router.post("/system/purge-cache")
-async def purge_audio_cache():
+async def purge_audio_cache(x_admin_token: Optional[str] = Header(default=None, alias="X-Admin-Token")):
     """
-    Purga los archivos temporales de audio en disco para liberar almacenamiento seguro.
+    Purga los ficheros del directorio de subidas (exige ACTAS_ADMIN_TOKEN).
+    Nunca borra el almacén de actas ni los marcadores necesarios.
     """
+    _require_admin(x_admin_token)
     purged_count = 0
     bytes_freed = 0
     for p in settings.UPLOAD_DIR.glob("*"):
-        if p.is_file() and p.name != ".gitkeep":
+        if p.is_file() and p.name not in KEEP_FROM_PURGE:
             bytes_freed += p.stat().st_size
             try:
                 p.unlink()
@@ -475,10 +489,12 @@ async def purge_audio_cache():
     }
 
 @router.post("/system/run-fire-tests")
-async def run_fire_tests_api():
+async def run_fire_tests_api(x_admin_token: Optional[str] = Header(default=None, alias="X-Admin-Token")):
     """
-    Ejecuta la suite de pruebas de fuego OWASP, fuzzing y estándares internacionales.
+    Ejecuta la suite de pruebas de fuego OWASP, fuzzing y estándares internacionales
+    (exige ACTAS_ADMIN_TOKEN).
     """
+    _require_admin(x_admin_token)
     import unittest
     loader = unittest.TestLoader()
     tests_dir = settings.UPLOAD_DIR.parent.parent / "tools"

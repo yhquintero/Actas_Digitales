@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.actasdigitales.app.BuildConfig
 import com.actasdigitales.app.data.api.RetrofitClient
 import com.actasdigitales.app.data.local.AppDatabase
 import kotlinx.coroutines.Dispatchers
@@ -71,6 +72,12 @@ class CloudSyncWorker(
                 .url("$base/api/acts/sync")
                 .post(body.toString().toRequestBody("application/json; charset=utf-8".toMediaType()))
                 .header("Accept", "application/json")
+                .apply {
+                    // El servidor exige ACTAS_SYNC_TOKEN en /api/acts/sync (seguridad por defecto).
+                    if (BuildConfig.ACTAS_SYNC_TOKEN.isNotBlank()) {
+                        header("X-Sync-Token", BuildConfig.ACTAS_SYNC_TOKEN)
+                    }
+                }
                 .build()
 
             client.newCall(request).execute().use { response ->

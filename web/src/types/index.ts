@@ -54,6 +54,7 @@ export interface JobResponse {
   corrections_applied: CorrectionItem[];
   stats?: JobStats;
   error_message?: string;
+  transcription_engine?: string;
 }
 
 export type PillarId = 'captura' | 'transcribe' | 'consolida' | 'formaliza';

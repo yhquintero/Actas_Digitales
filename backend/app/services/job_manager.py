@@ -110,6 +110,7 @@ class JobManager:
                 custom_api_key=custom_api_key
             )
             job.raw_transcription = raw_text
+            job.transcription_engine = TranscriptionService.last_engine
             job.segments = segments
 
             # 3. Consolidación y desduplicación

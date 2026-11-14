@@ -16,10 +16,10 @@ object MultiLanguageTranslator {
         if (text.isBlank()) return ""
 
         return when (targetLanguage) {
-            TargetLanguage.ENGLISH -> "[OFFICIAL TRANSLATION - EN]\n\n" + translateToEnglish(text)
-            TargetLanguage.PORTUGUESE -> "[TRADUÇÃO OFICIAL - PT]\n\n" + translateToPortuguese(text)
-            TargetLanguage.FRENCH -> "[TRADUCTION OFFICIELLE - FR]\n\n" + translateToFrench(text)
-            TargetLanguage.GERMAN -> "[OFFIZIELLE ÜBERSETZUNG - DE]\n\n" + translateToGerman(text)
+            TargetLanguage.ENGLISH -> "[DRAFT - PARTIAL AUTO-TRANSLATION OF KEY TERMS ONLY - NOT A COMPLETE TRANSLATION]\n\n" + translateToEnglish(text)
+            TargetLanguage.PORTUGUESE -> "[RASCUNHO - TRADUÇÃO AUTOMÁTICA PARCIAL DE TERMOS-CHAVE - NÃO É UMA TRADUÇÃO COMPLETA]\n\n" + translateToPortuguese(text)
+            TargetLanguage.FRENCH -> "[BROUILLON - TRADUCTION AUTOMATIQUE PARTIELLE DE TERMES CLÉS - PAS UNE TRADUCTION COMPLÈTE]\n\n" + translateToFrench(text)
+            TargetLanguage.GERMAN -> "[ENTWURF - NUR AUTOMATISCHER TEILÜBERSETZUNG VON SCHLÜSSELBEGRIFFEN - KEINE VOLLSTÄNDIGE ÜBERSETZUNG]\n\n" + translateToGerman(text)
         }
     }
 

@@ -4,6 +4,52 @@ Todas las modificaciones notables de este proyecto están documentadas en este a
 
 ---
 
+## [No publicado] - 2026-11-14 · Honestidad y seguridad por defecto
+
+> Auditoría interna «honestidad total»: nada de fingir capacidades.
+> Cambios con **ruptura** de comportamiento (seguro por defecto).
+
+### 🔐 Seguridad
+- `POST /api/audio/system/purge-cache` y `POST /api/audio/system/run-fire-tests`
+  exigen `ACTAS_ADMIN_TOKEN` (cabecera `X-Admin-Token`). Sin configurar → 503; erróneo → 401.
+- `GET /api/acts` y `POST /api/acts/sync` exigen `ACTAS_SYNC_TOKEN` (cabecera `X-Sync-Token`).
+  Sin configurar → 503. La app Android envía el token vía BuildConfig `ACTAS_SYNC_TOKEN`.
+- CSP: `script-src 'self'` (eliminado `'unsafe-inline'`; scripts inline extraídos a `web/public/boot.js`).
+- Cabecera `Server` ya no revela versión/framework; `--no-server-header` documentado para uvicorn.
+- Manifiesto Android: eliminado `android:usesCleartextTraffic="true"` (la network-security-config gobierna).
+
+### 🗄 Almacén de actas
+- `synced_acts.jsonl` → **SQLite** (`acts.db`, WAL, PRIMARY KEY `audio_sha256`) con
+  **migración automática** en el primer arranque (`tools/test_acts_store.py` lo cubre).
+- `ACTAS_RETENTION_HOURS` (defecto 720 h): purga automática de subidas antiguas cada 6 h.
+  El almacén de actas nunca se purga por este mecanismo.
+
+### 🗣 Honestidad del pipeline
+- **Audios canónicos de demostración desactivados por defecto** (`ACTAS_DEMO_MODE=1` para demos).
+- **Google Web Speech desactivado por defecto** (`ACTAS_ALLOW_GOOGLE_ASR=1` para opt-in explícito):
+  por defecto el audio NUNCA sale del servidor.
+- Cada job expone `transcription_engine` (visible en la Web como chip; ámbar para `demo-canonical`).
+- Mensaje «no speech» honesto: explica qué motores hay y cómo habilitar transcripción real.
+- Android: `OfflineAiEngine` ya no inventa un acta falsa ni «ACUERDOS»; genera un **respaldo de
+  custodia sin transcripción** (SHA-256 + estructura vacía a rellenar a mano).
+- Android: `ExecutiveSummaryExtractor` ya no inventa decisiones/tareas ausentes (listas vacías).
+- Android: `MultiLanguageTranslator` ya no se anuncia como traducción «oficial»; es borrador
+  parcial de términos clave, etiquetado como tal.
+
+### 🛠 App Android · Ajustes de servidor
+- Nuevo diálogo **Ajustes del servidor** (icono engranaje en Captura): URL persistente
+  (SharedPreferences), tabla de preajustes (emulador TLS/HTTP, `actasdigitales.local`) y
+  **prueba real de `/api/health`** con diagnóstico. Arregla el error típico `10.0.2.2:8443`.
+- `AudioRepository` sin caché permanente del servicio (al cambiar la URL se aplica en la siguiente llamada).
+
+### ✅ Verificación y tooling
+- `tools/check_version_sync.py` nuevo: versión canónica `web/package.json` ⇄ backend ⇄ README ⇄ docs ⇄ Footer ⇄ CHANGELOG. CI lo ejecuta.
+- `tools/test_acts_store.py` nuevo (migración, idempotencia SHA-256, retención). CI lo ejecuta.
+- Versiones sincronizadas a 1.5.0 en README (badge), Footer web, `docs/index.html`.
+- Fix incongruencia de manifiesto y claims «cifrado de extremo a extremo» → «TLS en tránsito, on-premise».
+
+---
+
 ## [1.5.0] - 2026-11-13
 
 > Iteración sobre las «Más sugerencias de mejora» propuestas tras la 1.4.0.

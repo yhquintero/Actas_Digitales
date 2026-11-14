@@ -1,15 +1,7 @@
 <!doctype html>
 <html lang="es">
   <head>
-    <script>
-      // Aplicar el tema antes del primer pintado (evita FOUC)
-      try {
-        var saved = localStorage.getItem('actas_theme');
-        if (saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          document.documentElement.classList.add('dark');
-        }
-      } catch (e) { /* tema por defecto: claro */ }
-    </script>
+    <script src="/boot.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta
@@ -26,28 +18,8 @@
     <link rel="apple-touch-icon" sizes="512x512" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <title>Actas Digitales | Procesamiento de Audio a Texto Corregido</title>
-    <script>
-      // Desregistrar cualquier Service Worker residual de otras aplicaciones (Inventario / NovaGest)
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-          for (var i = 0; i < registrations.length; i++) {
-            registrations[i].unregister();
-            console.log('[Actas Digitales] Service Worker legado eliminado:', registrations[i]);
-          }
-        });
-      }
-      // Purgar caches de almacenamiento local para garantizar la carga fresca de Actas Digitales
-      if ('caches' in window) {
-        caches.keys().then(function(names) {
-          for (var i = 0; i < names.length; i++) {
-            caches.delete(names[i]);
-            console.log('[Actas Digitales] Cache Storage purgada:', names[i]);
-          }
-        });
-      }
-    </script>
-    <script type="module" crossorigin src="/assets/index-CqDSQwyN.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-Bk0vVuNo.css">
+    <script type="module" crossorigin src="/assets/index-Dh4uoMTI.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DZlhPURv.css">
   </head>
   <body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 antialiased min-h-screen transition-colors">
     <div id="root"></div>

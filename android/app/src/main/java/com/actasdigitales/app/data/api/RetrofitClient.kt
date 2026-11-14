@@ -11,17 +11,37 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
+    const val DEFAULT_BASE_URL = "https://10.0.2.2:8443/"
+
     /**
-     * URL del backend.
+     * URL del backend. Configurable en tiempo de ejecución con [configure]:
+     * la UI de Ajustes la persiste en SharedPreferences y la restaura al arrancar.
      *
      * - Emulador oficial de Android: `https://10.0.2.2:8443/`
-     * - Dispositivo físico en la misma Wi-Fi: `http://<IP-del-ordenador>:8000/`
-     *   (o `https://…:8443/` con la CA del proyecto instalada como CA de usuario)
-     *
-     * Se puede cambiar en tiempo de ejecución antes de la primera petición.
+     * - Emulador en HTTP plano:      `http://10.0.2.2:8000/`
+     * - Dispositivo físico (LAN):    `https://<IP-u-nombre>:<puerto>/` con la CA
+     *   del proyecto instalada como CA de usuario, o el nombre `actasdigitales.local`
+     *   (también con cleartext permitido en network_security_config).
      */
     @Volatile
-    var baseUrl: String = "https://10.0.2.2:8443/"
+    var baseUrl: String = DEFAULT_BASE_URL
+        private set
+
+    @Volatile
+    private var cachedService: ActasApiService? = null
+
+    @Volatile
+    private var cachedClient: OkHttpClient? = null
+
+    /** Normaliza, aplica la nueva URL y descarta cliente/servicio cacheados. */
+    @Synchronized
+    fun configure(newUrl: String) {
+        var url = newUrl.trim()
+        if (!url.startsWith("http://") && !url.startsWith("https://")) url = "https://$url"
+        baseUrl = if (url.endsWith("/")) url else "$url/"
+        cachedClient = null
+        cachedService = null
+    }
 
     /**
      * Certificate pinning OPCIONAL (opt-in) y recomendado en producción:
@@ -33,7 +53,6 @@ object RetrofitClient {
      *   openssl x509 -in server.crt -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | openssl base64
      *
      * Sin pines, la validación TLS usa las CAs del sistema: SEGURA, sin bypass.
-     * (La versión anterior aceptaba CUALQUIER certificado —eliminado.)
      */
     internal fun certificatePinner(): CertificatePinner? {
         val host = try {
@@ -54,13 +73,11 @@ object RetrofitClient {
     /**
      * Cliente HTTP seguro y usable en dispositivo real:
      *  - Validación TLS del sistema, o certificate pinning con ACTAS_CERT_PIN_*.
-     *  - TLS negociado por el sistema (1.3 → 1.2): no se fuerza ningún protocolo.
      *  - retryOnConnectionFailure para redes corporativas o Wi-Fi inestables.
-     *  - Logger solo en compilaciones de depuración, en nivel BASIC (nunca BODY,
-     *    que podría filtrar la API Key en el logcat).
+     *  - Logger solo en compilaciones de depuración, en nivel BASIC (nunca BODY).
      *  - Sin trust-all ni hostnameVerifier universal: jamás se aceptan certificados inválidos.
      */
-    private val okHttpClient: OkHttpClient by lazy {
+    private fun buildClient(): OkHttpClient {
         val builder = OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(180, TimeUnit.SECONDS)
@@ -73,14 +90,29 @@ object RetrofitClient {
             )
         }
         certificatePinner()?.let { builder.certificatePinner(it) }
-        builder.build()
+        return builder.build()
     }
 
+    @Synchronized
+    private fun httpClient(): OkHttpClient = cachedClient ?: buildClient().also { cachedClient = it }
+
+    @Synchronized
     fun getApiService(customUrl: String? = null): ActasApiService {
-        val url = (customUrl ?: baseUrl).let { if (it.endsWith("/")) it else "$it/" }
+        if (customUrl == null) {
+            cachedService?.let { return it }
+            val url = baseUrl
+            return Retrofit.Builder()
+                .baseUrl(url)
+                .client(httpClient())
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .create(ActasApiService::class.java)
+                .also { cachedService = it }
+        }
+        val url = customUrl.let { if (it.endsWith("/")) it else "$it/" }
         return Retrofit.Builder()
             .baseUrl(url)
-            .client(okHttpClient)
+            .client(httpClient())
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(ActasApiService::class.java)

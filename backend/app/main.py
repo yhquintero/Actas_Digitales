@@ -1,3 +1,4 @@
+import asyncio
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -13,11 +14,19 @@ from .routers.acts_router import router as acts_router
 from .middlewares.security_middleware import SecurityMiddleware
 from .services.job_manager import job_manager
 from .services.metrics import metrics
+from .services import acts_store, retention
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Inicio del servidor
+    # Inicio del servidor: almacén de actas (con migración del legado) y tarea de retención
+    acts_store.init()
+    retention_task = asyncio.create_task(retention.retention_loop())
     yield
+    retention_task.cancel()
+    try:
+        await retention_task
+    except asyncio.CancelledError:
+        pass
     # Apagado ordenado e inmediato: cancelar conexiones SSE y tareas pendientes
     job_manager.shutdown()
 

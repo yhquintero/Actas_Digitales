@@ -30,7 +30,8 @@ import java.util.UUID
  */
 class AudioRepository(private val actaDao: ActaDao? = null) {
 
-    private val apiService by lazy { RetrofitClient.getApiService() }
+    // Sin caché permanente: al cambiar la URL del servidor (Ajustes) la siguiente llamada usa la nueva.
+    private val apiService get() = RetrofitClient.getApiService()
 
     /**
      * Canalización de Inteligencia Acústica 100% Offline (Zero-Cloud Local).

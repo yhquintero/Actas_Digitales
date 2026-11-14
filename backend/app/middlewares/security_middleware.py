@@ -41,7 +41,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         response.headers["Permissions-Policy"] = "microphone=(self), camera=(), geolocation=()"
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline'; "
+            "script-src 'self'; "
             "style-src 'self' 'unsafe-inline'; "
             "img-src 'self' data:; "
             "media-src 'self' blob:; "
@@ -49,6 +49,6 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             "font-src 'self' data:; "
             "frame-ancestors 'none';"
         )
-        response.headers["Server"] = "ActasDigitales/1.2 (TLS 1.3 RSA-4096)"
+        response.headers["Server"] = "ActasDigitales"
 
         return response
