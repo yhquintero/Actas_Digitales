@@ -14,7 +14,6 @@ from ..services.job_manager import job_manager
 from ..services.retention import KEEP_FROM_PURGE
 from ..services.consolidation_service import ConsolidationService
 from ..services.correction_service import CorrectionService
-from ..services.pdf_service import build_acta_pdf
 
 router = APIRouter(prefix="/audio", tags=["Audio & Transcripción"])
 
@@ -377,6 +376,14 @@ async def export_acta_pdf(
     Incluye huella SHA-256 del contenido en el pie de página.
     """
     from fastapi.responses import Response
+
+    try:
+        from ..services.pdf_service import build_acta_pdf
+    except ImportError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=(f"PDF no disponible: falta la dependencia fpdf2 ({exc}). "
+                    "Instálala con: pip install -r backend/requirements.txt"))
 
     try:
         pdf_bytes = build_acta_pdf(
