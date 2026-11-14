@@ -4,6 +4,60 @@ Todas las modificaciones notables de este proyecto están documentadas en este a
 
 ---
 
+## [1.7.0] - 2026-11-13 · Exportación PDF servidor y transcripción auditable
+
+> Cierra los dos fallos reportados por el usuario: «no me hizo nada en la traducción»
+> y «el PDF no exporta». Nada se finge: cada motor registra por qué falló y el PDF
+> se genera de verdad en el servidor.
+
+### 🗣 Transcripción
+- **Los fallos de cada motor ya no son silenciosos.** `TranscriptionService.last_failures`
+  registra el motivo real (excepción + clase) de cada motor que no produjo texto
+  (groq/openai, faster-whisper, whisper). El informe «no se pudo transcribir»
+  incluye esos motivos, visibles en la Web y en la consola del servidor.
+- **faster-whisper: modelo `base` por defecto** (antes `tiny`, casi inútil en audio
+  real). Configurable con `ACTAS_FW_MODEL=tiny|base|small|medium|large-v3`.
+- Segments vacíos o texto vacío → fallo registrado (ya no se acepta como éxito).
+- Whisper API con archivos grandes: timeout de 600 s para ffmpeg, error claro si
+  ffmpeg no produce fragmentos o si todos los fragmentos fallan (incluye el primer
+  error HTTP/red real en lugar de un informe vacío).
+- `faster-whisper` incluido en `requirements.txt` (antes exigía instalación manual
+  sin aviso; con el primer arranque descarga el modelo ~150 MB).
+
+### 📄 Exportación PDF y DOCX
+- **Nuevo `POST /api/audio/export-pdf`:** genera un PDF real en el servidor
+  (fpdf2, 100 % local, sin servicios externos) con el mismo diseño que la
+  exportación DOCX: A4 / Carta / Oficio, márgenes estándar / estrecho /
+  encuadernación, modos «Solo Traducción Completa» y «Acta Oficial con Firmas»,
+  cabecera PROTOCOLO OFICIAL, huella SHA-256 del contenido en el pie y en la
+  cabecera. Cabecera `X-Content-SHA256` en la respuesta.
+- **DOCX: el acta oficial estampa ahora la huella SHA-256** del contenido
+  (paridad con el PDF).
+- **Web: botón «Descargar PDF»** (rose) junto a «Word (.DOCX)»: envía el mismo
+  formulario (título, papel, márgenes, datos del acta) y descarga el `.pdf`.
+- **«Imprimir» (Ctrl+P) ahora imprime ÚNICAMENTE el documento del acta** gracias
+  a nuevas reglas `@media print` en `index.css` (oculta navbar/paneles/botones)
+  y respeta el tamaño de papel elegido (A4/Carta/Oficio) inyectando `@page` en
+  el momento de imprimir.
+- **`tools/test_exports.py`:** 2 motores × 3 tamaños × 2 modos + 4 pruebas de
+  endpoint (magic `%PDF-`, zip DOCX válido, huella SHA-256 presente). CI lo ejecuta.
+
+### 🖥 Arranque (Windows)
+- `backend/run_server.py`: **preflight de puerto** — si el puerto (defecto 8443)
+  ya está en uso, imprime diagnóstico claro con `netstat -ano | findstr :<puerto>`
+  y `taskkill /PID <PID> /F` (y el equivalente Linux), sugiere `--port <n+1>`
+  y **termina con código 1** (antes uvicorn moría por `[Errno 10048]` y el
+  lanzador informaba éxito).
+- Errores de arranque distintos de Ctrl+C terminan con código 1.
+
+### ⚠️ Notas
+- El primer uso de faster-whisper requiere descargar el modelo desde HuggingFace
+  (o usar `ACTAS_FW_MODEL` con un modelo ya en caché). Sin red y sin clave API,
+  la transcripción local no puede inventar texto: el informe auditado lo dice.
+- `web/package-lock.json` vuelve a estar sincronizado con `package.json` (1.7.0).
+
+---
+
 ## [No publicado] - 2026-11-14 · Honestidad y seguridad por defecto
 
 > Auditoría interna «honestidad total»: nada de fingir capacidades.

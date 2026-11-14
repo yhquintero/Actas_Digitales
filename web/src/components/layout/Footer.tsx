@@ -52,7 +52,7 @@ export const Footer: React.FC<FooterProps> = ({
             <span>Panel de Telemetría</span>
           </button>
 
-          <span className="font-mono text-slate-400 dark:text-slate-500">v1.6.0 · On-Premise Sovereign</span>
+          <span className="font-mono text-slate-400 dark:text-slate-500">v1.7.0 · On-Premise Sovereign</span>
         </div>
       </div>
     </footer>
