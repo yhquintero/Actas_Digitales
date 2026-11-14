@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Actas Digitales - Audio to Text Pipeline"
-    VERSION: str = "1.5.0"
+    VERSION: str = "1.6.0"
     API_PREFIX: str = "/api"
     
     # Uploads
@@ -12,7 +12,8 @@ class Settings(BaseSettings):
     MAX_FILE_SIZE_MB: int = 1024  # Límite ampliado a 1 GB (1024 MB)
     ALLOWED_EXTENSIONS: set[str] = {
         ".mp3", ".wav", ".m4a", ".ogg", ".webm", ".aac", ".flac",
-        ".opus", ".wma", ".mp4", ".oga", ".amr", ".3gp", ".m4p", ".caf"
+        ".opus", ".wma", ".mp4", ".oga", ".amr", ".3gp", ".m4p", ".caf",
+        ".mov", ".mkv", ".avi", ".m4v", ".ts", ".flv", ".wmv",
     }
     
     # Language

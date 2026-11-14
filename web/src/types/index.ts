@@ -12,6 +12,14 @@ export interface AudioSegment {
   start_time: number;
   end_time: number;
   text: string;
+  /** Participante atribuido por solape con la diarización (Participante 1..N). */
+  speaker?: string | null;
+}
+
+export interface SpeakerTurn {
+  speaker: string;
+  start_time: number;
+  end_time: number;
 }
 
 export interface CorrectionItem {
@@ -55,6 +63,10 @@ export interface JobResponse {
   stats?: JobStats;
   error_message?: string;
   transcription_engine?: string;
+  /** Nº estimado de voces detectadas (1-4); null si no se pudo diarizar. */
+  num_speakers?: number | null;
+  /** Turnos fusionados de la diarización local. */
+  speaker_turns?: SpeakerTurn[];
 }
 
 export type PillarId = 'captura' | 'transcribe' | 'consolida' | 'formaliza';
@@ -135,4 +147,20 @@ export interface SyncedActa {
 export interface SyncedActasResponse {
   total: number;
   acts: SyncedActa[];
+}
+
+/** Resultado de búsqueda FTS5 en el servidor (snippet con «» como marcas). */
+export interface SyncedActaSearchResult {
+  audio_sha256: string;
+  filename: string;
+  snippet: string;
+  rank: number;
+  words_count?: number;
+  timestamp?: number | null;
+  synced_at?: string | null;
+}
+
+export interface SyncedActaSearchResponse {
+  query: string;
+  results: SyncedActaSearchResult[];
 }

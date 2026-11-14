@@ -41,9 +41,13 @@ jobs:
         run: |
           python tools/sync_apk.py --check
 
-      - name: Probar almacén de actas (migración JSONL → SQLite) y retención
+      - name: Probar almacén de actas (migración JSONL → SQLite, FTS5) y retención
         run: |
           python tools/test_acts_store.py
+
+      - name: Probar diarización y extracción multipista (audio sintético)
+        run: |
+          python tools/test_audio_inteligente.py
 
       - name: Ejecutar Suite de Pruebas de Fuego y Vulnerabilidades
         run: |

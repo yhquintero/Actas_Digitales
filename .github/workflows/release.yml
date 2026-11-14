@@ -80,13 +80,13 @@ jobs:
           cd android
           chmod +x gradlew
           export ACTAS_VERSION_NAME="${ACTAS_VERSION_NAME#v}"
-          ./gradlew :app:assembleRelease :app:bundleRelease --stacktrace
+          ./gradlew :app:assembleRelease :app:bundleRelease :webclone:assembleRelease --stacktrace
 
       - name: Generar SHA256SUMS.txt
         if: steps.secrets.outputs.has_keystore == 'true'
         run: |
-          cd android/app/build/outputs
-          find . \( -name '*.apk' -o -name '*.aab' \) -type f | sort | xargs sha256sum > SHA256SUMS.txt
+          cd android
+          find app/build/outputs webclone/build/outputs \( -name '*.apk' -o -name '*.aab' \) -type f | sort | xargs sha256sum > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
       - name: Publicar GitHub Release con los artefactos
@@ -95,8 +95,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${GITHUB_REF_NAME}"
-          cd android/app/build/outputs
-          mapfile -t FILES < <(find . \( -name '*.apk' -o -name '*.aab' \) -type f | sort)
+          cd android
+          mapfile -t FILES < <(find app/build/outputs webclone/build/outputs \( -name '*.apk' -o -name '*.aab' \) -type f | sort)
           gh release create "$TAG" "${FILES[@]}" SHA256SUMS.txt \
             --title "Actas Digitales ${TAG}" \
             --generate-notes \

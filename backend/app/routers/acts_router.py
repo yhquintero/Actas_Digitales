@@ -12,8 +12,9 @@ configurado, la sincronización queda DESACTIVADA (503) — abierto sólo en la
 retaguardia confiable no es una opción aceptable para actas confidenciales.
 
 Endpoints:
-  GET  /api/acts        -> Lista de actas sincronizadas (limit)   [X-Sync-Token]
-  POST /api/acts/sync   -> Subida por lotes (idempotente)         [X-Sync-Token]
+  GET  /api/acts          -> Lista de actas sincronizadas (limit)  [X-Sync-Token]
+  GET  /api/acts/search   -> Búsqueda de texto completo (FTS5)     [X-Sync-Token]
+  POST /api/acts/sync     -> Subida por lotes (idempotente)        [X-Sync-Token]
 """
 
 from typing import Optional
@@ -66,6 +67,20 @@ async def list_synced_acts(limit: int = Query(default=20, ge=1, le=100),
                            x_sync_token: Optional[str] = Header(default=None, alias="X-Sync-Token")):
     _require_sync_token(x_sync_token)
     return {"total": acts_store.count_acts(), "acts": acts_store.list_acts(limit)}
+
+
+@router.get("/search")
+async def search_synced_acts(q: str = Query(..., min_length=2, max_length=200),
+                             limit: int = Query(default=20, ge=1, le=50),
+                             x_sync_token: Optional[str] = Header(default=None, alias="X-Sync-Token")):
+    """Búsqueda FTS5 (unicode61, sin diacríticos): «ejemplo quorum». Rasgos:
+
+    - La consulta del usuario se sanitiza (solo términos entrecomillados, AND implícito).
+    - Ordenada por BM25; devuelve snippet con «» como marcas de resaltado.
+    - Se ejecuta siempre dentro del servidor (nada se envía a terceros).
+    """
+    _require_sync_token(x_sync_token)
+    return {"query": q, "results": acts_store.search_acts(q, limit)}
 
 
 @router.post("/sync")

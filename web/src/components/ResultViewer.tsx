@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Copy, Check, Download, Sparkles, FileText, SplitSquareVertical, ArrowRight, Printer, FileCheck, Edit3, Save, Award, FileSpreadsheet, Sliders, Clock, CheckCircle2 } from 'lucide-react';
+import { Copy, Check, Download, Sparkles, FileText, SplitSquareVertical, ArrowRight, Printer, FileCheck, Edit3, Save, Award, FileSpreadsheet, Sliders, Clock, CheckCircle2, Users } from 'lucide-react';
 import { JobResponse, CorrectionItem } from '../types';
 
 interface ResultViewerProps {
@@ -19,7 +19,7 @@ const ENGINE_LABELS: Record<string, string> = {
 };
 
 export const ResultViewer: React.FC<ResultViewerProps> = ({ job }) => {
-  const [activeTab, setActiveTab] = useState<'official' | 'corrected' | 'comparison' | 'timeline' | 'corrections' | 'raw'>('official');
+  const [activeTab, setActiveTab] = useState<'official' | 'corrected' | 'comparison' | 'timeline' | 'participants' | 'corrections' | 'raw'>('official');
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState(job.final_corrected_text || '');
@@ -76,6 +76,26 @@ export const ResultViewer: React.FC<ResultViewerProps> = ({ job }) => {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const formatSpeakerTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    const dec = Math.floor((s % 1) * 10);
+    return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}.${dec}`;
+  };
+
+  // Estadísticas de la diarización local: turnos y tiempos por participante
+  const speakerStats = (job.speaker_turns || []).reduce<Record<string, { turns: number; seconds: number }>>((acc, turn) => {
+    const key = turn.speaker || 'Participante ?';
+    const cur = acc[key] || { turns: 0, seconds: 0 };
+    cur.turns += 1;
+    cur.seconds += Math.max(0, turn.end_time - turn.start_time);
+    acc[key] = cur;
+    return acc;
+  }, {});
+  const speakerKeys = Object.keys(speakerStats).sort((a, b) => speakerStats[b].seconds - speakerStats[a].seconds);
+  const totalSpeakTime = speakerKeys.reduce((sum, k) => sum + speakerStats[k].seconds, 0);
+  const hasDiarization = (job.num_speakers ?? 0) > 0 && (job.speaker_turns?.length ?? 0) > 0;
 
   const generateOfficialActa = () => {
     const textToFormat = editedText || job.final_corrected_text || '';
@@ -426,6 +446,19 @@ _____________________________             _____________________________
           </button>
 
           <button
+            onClick={() => setActiveTab('participants')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 ${
+              activeTab === 'participants'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:dark:text-slate-100 hover:bg-slate-200/60 hover:dark:bg-slate-700/60'
+            }`}
+            title="Quién interviene y durante cuánto tiempo (diarización local, experimental)"
+          >
+            <Users className="w-4 h-4" />
+            <span>Participantes{job.num_speakers ? ` (${job.num_speakers})` : ''}</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('corrections')}
             className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 ${
               activeTab === 'corrections'
@@ -675,6 +708,11 @@ _____________________________             _____________________________
                         <span className="bg-indigo-100 text-indigo-800 dark:text-indigo-300 font-mono font-bold px-2 py-0.5 rounded text-[11px] border border-indigo-200 dark:border-indigo-800">
                           {formatSec(seg.start_time)} - {formatSec(seg.end_time)}
                         </span>
+                        {seg.speaker && (
+                          <span className="text-[10px] font-bold text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/70 border border-violet-200 dark:border-violet-800 rounded-full px-2 py-0.5">
+                            {seg.speaker}
+                          </span>
+                        )}
                         <span className="text-slate-400 dark:text-slate-500 text-[10px] font-mono">
                           ({(seg.end_time - seg.start_time).toFixed(1)}s)
                         </span>
@@ -689,6 +727,107 @@ _____________________________             _____________________________
             ) : (
               <p className="text-xs text-slate-500 dark:text-slate-400 italic p-4 bg-slate-50 dark:bg-slate-950 rounded-xl">
                 No hay segmentos temporales disponibles para este archivo.
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Tab: Participantes (diarización local experimental) */}
+        {activeTab === 'participants' && (
+          <div className="space-y-5">
+            <div className="flex items-start justify-between gap-4 pb-2 border-b border-slate-200 dark:border-slate-700 flex-wrap">
+              <div>
+                <h4 className="text-xs font-mono font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">
+                  Intervenciones Detectadas por la Diarización Local
+                </h4>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
+                  La diarización distingue <strong>voces</strong> y las numera en orden de aparición.
+                  <strong> No identifica quién es nadie</strong>: no asigna nombres ni cargos. Si el audio tiene
+                  una sola voz, se mostrará un único participante. Atribuir un nombre real exige cotejo humano.
+                </p>
+              </div>
+              <span className="text-[10px] bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800 px-2 py-1 rounded-full font-mono font-bold whitespace-nowrap">
+                EXPERIMENTAL
+              </span>
+            </div>
+
+            {hasDiarization ? (
+              <>
+                {/* Resumen por participante */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {speakerKeys.map((name) => {
+                    const s = speakerStats[name];
+                    const pct = totalSpeakTime > 0 ? Math.round((s.seconds / totalSpeakTime) * 100) : 0;
+                    return (
+                      <div key={name} className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-8 h-8 rounded-lg bg-indigo-600/10 border border-indigo-300 dark:border-indigo-800 flex items-center justify-center shrink-0">
+                            <Users className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                          </div>
+                          <div>
+                            <div className="text-sm font-black text-slate-800 dark:text-slate-100">{name}</div>
+                            <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">{s.turns} intervención{s.turns === 1 ? '' : 'es'}</div>
+                          </div>
+                        </div>
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 dark:text-slate-400">
+                            <span>{s.seconds.toFixed(1)}s hablados</span>
+                            <span>{pct}%</span>
+                          </div>
+                          <div className="mt-1 h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                            <div className="h-full bg-indigo-500" style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Turnos fusionados */}
+                <div>
+                  <div className="flex items-center justify-between mb-2 text-[10px] font-mono uppercase text-slate-500 dark:text-slate-400">
+                    <span className="font-bold">Turnos de intervención ({(job.speaker_turns || []).length})</span>
+                    <span>Rango: 00:00 - {job.stats?.audio_duration_formatted || `${job.stats?.audio_duration_sec}s`}</span>
+                  </div>
+                  <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                    {(job.speaker_turns || []).map((turn, idx) => (
+                      <div key={idx} className="flex items-center gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs">
+                        <span className="bg-indigo-100 text-indigo-800 dark:text-indigo-300 font-mono font-bold px-2 py-0.5 rounded text-[10px] border border-indigo-200 dark:border-indigo-800 w-20 text-center shrink-0">
+                          {formatSpeakerTime(turn.start_time)}
+                        </span>
+                        <span className="shrink-0 text-[11px] font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-2.5 py-0.5">
+                          {turn.speaker}
+                        </span>
+                        <span className="text-slate-500 dark:text-slate-400 font-mono text-[10px]">
+                          hasta {formatSpeakerTime(turn.end_time)} · {(turn.end_time - turn.start_time).toFixed(1)}s
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Segmentos transcritos con su participante */}
+                {job.segments && job.segments.some((s) => s.speaker) && (
+                  <div>
+                    <div className="text-[10px] font-mono uppercase font-bold text-slate-500 dark:text-slate-400 mb-2">
+                      Texto transcrito por participante (asignado por solape temporal)
+                    </div>
+                    <div className="space-y-2">
+                      {job.segments.filter((s) => s.speaker).map((seg, idx) => (
+                        <div key={idx} className="flex items-start gap-3 text-xs border border-slate-100 dark:border-slate-800 rounded-xl p-3 bg-slate-50/60 dark:bg-slate-950/60">
+                          <span className="shrink-0 text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 rounded-full px-2 py-0.5 mt-0.5">
+                            {seg.speaker}
+                          </span>
+                          <p className="text-slate-700 dark:text-slate-300 leading-relaxed">{seg.text}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="text-xs text-slate-500 dark:text-slate-400 italic p-4 bg-slate-50 dark:bg-slate-950 rounded-xl">
+                Este audio no tiene diarización disponible (monovoz detectada, audio demasiado corto o procesado con motor sin rasgos acústicos). El acta sigue siendo válida; la atribución por hablantes es opcional.
               </p>
             )}
           </div>

@@ -16,7 +16,7 @@
 🌐 **Español** · [English](docs/readme/README_en.md)
 
 [![CI](https://github.com/yhquintero/Actas_Digitales/actions/workflows/ci.yml/badge.svg)](https://github.com/yhquintero/Actas_Digitales/actions/workflows/ci.yml)
-[![Versión](https://img.shields.io/badge/versi%C3%B3n-1.5.0-4f46e5?style=flat-square)](CHANGELOG.md)
+[![Versión](https://img.shields.io/badge/versi%C3%B3n-1.6.0-4f46e5?style=flat-square)](CHANGELOG.md)
 [![Plataformas](https://img.shields.io/badge/plataformas-Web%C2%B7Android%C2%B7Servidor-1e1b4b?style=flat-square)](#-ecosistema)
 [![Seguridad](https://img.shields.io/badge/Seguridad-TLS%201.3%20%7C%20RSA--4096-059669?style=flat-square)](#-seguridad-https-y-certificados)
 [![APK Android](https://img.shields.io/badge/APK-Android%20v1.0.0%20(release)-10b981?style=flat-square&logo=android&logoColor=white)](android/app/release/app-release.apk)
@@ -99,7 +99,8 @@ Actas Digitales está compuesto por **tres componentes que trabajan de forma sin
 
 ### Operación y Captura Acústica
 - 🎙 **Grabación directa en navegador y móvil** — Web Audio API en navegador y `MediaRecorder` nativo en Android calibrado a 16 kHz / mono / AAC para máxima fidelidad fonética.
-- 📥 **Soporte multiformato y subida masiva** — Acepta `.mp3`, `.wav`, `.m4a`, `.ogg`, `.webm`, `.flac` y `.aac` individuales o en lote, con límite ampliado de hasta **1 GB (1024 MB)** por archivo.
+- 📥 **Soporte multiformato y subida masiva** — Acepta `.mp3`, `.wav`, `.m4a`, `.ogg`, `.webm`, `.flac`, `.aac`, `.mp4`, `.mov`, `.mkv`, `.avi` y más individuales o en lote, con límite ampliado de hasta **1 GB (1024 MB)** por archivo.
+- 🎞 **Extracción inteligente de pistas** — Los contenedores de vídeo con varias pistas de audio (p. ej. Zoom/Meet con una pista por idioma) se inspeccionan en el servidor: cada pista se exporta como WAV 16 kHz mono con SHA-256 verificable, códec, canales e idioma, y la Web permite **descargarla** o **transcribir solo la pista elegida**.
 - 📡 **Subida resiliente y tolerante a fallos** — En Android, `WorkManager` gestiona la subida en segundo plano: si el usuario minimiza la app o se pierde el Wi-Fi, la transferencia se reanuda de forma transparente.
 
 ### Pipeline de Inteligencia Lingüística
@@ -108,6 +109,7 @@ Actas Digitales está compuesto por **tres componentes que trabajan de forma sin
 - ✂️ **Consolidación y desduplicación inteligente** — Detección de solapamientos en fronteras de segmentos mediante alineación difusa (*fuzzy matching*).
 - 🧹 **Supresión de muletillas y vacilaciones orales** — Limpieza automática de expresiones redundantes (*"bueno pues este..."*, *"o sea"*, *"ehhh"*, *"tipo que"*).
 - 🩹 **Eliminación de tartamudeos y repeticiones accidentales** — Corrección de cortes con guion (*"de-de-de verdad"* $\to$ *"de verdad"*) y palabras duplicadas consecutivas (*"vamos a a a revisar"* $\to$ *"vamos a revisar"*).
+- 🗣 **Diarización local de hablantes (experimental)** — El servidor distingue **voces** en el propio audio (VAD + MFCC + tono fundamental, clustering con tamaño mínimo y silueta) y etiqueta «Participante 1..N» por orden de aparición, con turnos y porcentaje de tiempo por interviniente (pestaña «Participantes» en el resultado). **No identifica quién es nadie** ni atribuye nombres; solapamientos por hablante dominante.
 - ✍️ **Corrección ortotipográfica y gramatical RAE** — Acentuación correcta de palabras agudas/graves en actas (*sesión, reunión, situación, día, conclusión, próximo, último, técnico, artículo, estará, habrá*), concordancia de género/número y mayúsculas oracionales.
 - ❓ **Signos de apertura reglamentarios en español** — Inyección obligatoria de los signos de apertura `¿` y `¡` al inicio de oraciones interrogativas y exclamativas.
 
@@ -116,6 +118,8 @@ Actas Digitales está compuesto por **tres componentes que trabajan de forma sin
 - 🔍 **Auditoría de cambios** — Listado pormenorizado de cada corrección aplicada con su categoría (*muletilla, repetición, ortografía, puntuación*) y justificación.
 - 📑 **Estructuración en Acta Oficial RAE** — Convierte el texto corregido en un documento formal con título, asistentes, orden del día, acuerdos numerados (`ACUERDO-01`, etc.) y pie de firmas para Presidente y Secretario.
 - 💾 **Exportación multipropósito** — Copiado instantáneo al portapapeles, descarga en `.txt` UTF-8, archivo `.md` (Markdown) o impresión/guardado en PDF vectorial.
+- 🔍 **Buscador de actas (FTS5)** — Las actas sincronizadas desde el móvil se indexan con SQLite FTS5 (unicode61, sin diacríticos, ranking BM25 y fragmentos resaltados): búsqueda instantánea dentro del servidor, sin enviar nada a terceros.
+- 📴 **PWA offline real** — La Web instala un Service Worker versionado (app-shell offline, navegación *network-first*, estáticos *stale-while-revalidate*); `/api/*` **nunca se cachea**. Sin conexión, la app abre igual (la transcripción requiere servidor).
 
 <p align="right"><a href="#readme-top">Volver arriba ⬆</a></p>
 
@@ -163,7 +167,7 @@ Diseñado siguiendo el patrón de arquitectura centralizada de herramientas de e
 | 📜 **`[ CONSOLA EN TIEMPO REAL ]`** | Transmite en vivo los eventos, peticiones y diagnósticos | Visibilidad instantánea del estado operativo sin salir de la GUI |
 
 > **💡 Herramienta de Purga Rápida de Caché en 1 Clic:**  
-> Si tu navegador Microsoft Edge guardó la web de Inventario/NovaGest en caché o Service Worker, haz doble clic en **`server/purgar-cache.bat`**. Este script eliminará automáticamente los Service Workers residuales y abrirá Microsoft Edge en Modo InPrivate cargando Actas Digitales de inmediato. También puedes forzar una recarga limpia en tu navegador pulsando **`Ctrl + Shift + R`** o **`Ctrl + F5`**.
+> Si tu navegador conserva un Service Worker antiguo roto en caché (de instalaciones previas), el propio `/sw.js` oficial lo sustituye de forma nativa al actualizar; como vía de emergencia absoluta existe **`server/purgar-cache.bat`** y la ruta **`/limpiar-cache`** del servidor (desregistra SWs y borra cachés de este origen). También puedes forzar una recarga limpia en tu navegador pulsando **`Ctrl + Shift + R`** o **`Ctrl + F5`**.
 
 ---
 
@@ -473,7 +477,13 @@ python3 tools/test_pipeline.py
 # 3. Suite de Pruebas de Fuego, Fuzzing y Estándares OWASP Top 10
 python3 tools/test_pruebas_de_fuego.py
 
-# 4. Verificación de compilación y tipado estricto de la Web
+# 4. Almacén de actas SQLite (migración, FTS5) y retención automática
+python3 tools/test_acts_store.py
+
+# 5. Diarización local y extracción multipista (audio sintético)
+python3 tools/test_audio_inteligente.py
+
+# 6. Verificación de compilación y tipado estricto de la Web
 cd web && npm run build && cd ..
 ```
 

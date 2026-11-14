@@ -64,7 +64,7 @@ jobs:
           cd android
           chmod +x gradlew
           set +e
-          ./gradlew :app:assembleRelease :app:bundleRelease --stacktrace > /tmp/build.log 2>&1
+          ./gradlew :app:assembleRelease :app:bundleRelease :webclone:assembleRelease --stacktrace > /tmp/build.log 2>&1
           CODE=$?
           if [ $CODE -ne 0 ]; then
             echo "::group::tail build.log"
@@ -85,8 +85,8 @@ jobs:
 
       - name: Listar artefactos generados y sus SHA-256
         run: |
-          cd android/app/build/outputs
-          echo "== APKs ==" && find . -name '*.apk' -type f -exec sha256sum {} \; | sort -k2
+          cd android
+          echo "== APKs ==" && find app/build/outputs webclone/build/outputs -name '*.apk' -type f -exec sha256sum {} \; | sort -k2
           echo "== AABs ==" && find . -name '*.aab' -type f -exec sha256sum {} \; | sort -k2
 
       - name: Publicar APK/AAB efímeros como artefactos del run (no de la Release)
@@ -96,4 +96,5 @@ jobs:
           path: |
             android/app/build/outputs/**/*.apk
             android/app/build/outputs/**/*.aab
+            android/webclone/build/outputs/**/*.apk
           retention-days: 7

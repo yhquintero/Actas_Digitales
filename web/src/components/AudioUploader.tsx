@@ -1,6 +1,35 @@
 import React, { useState, useRef } from 'react';
-import { UploadCloud, AlertCircle, Files, Trash2, CheckCircle2, ShieldCheck, Zap } from 'lucide-react';
+import { UploadCloud, AlertCircle, Files, Trash2, CheckCircle2, ShieldCheck, Zap, Film, Loader2, Download, Mic2 } from 'lucide-react';
 import { SUPPORTED_AUDIO_FORMATS, ALLOWED_EXTENSIONS_LIST } from '../constants/formats';
+
+const VIDEO_EXTENSIONS = ['.mp4', '.mov', '.mkv', '.avi', '.m4v', '.ts', '.flv', '.wmv', '.webm'];
+const isVideoFile = (file: File) =>
+  VIDEO_EXTENSIONS.includes('.' + (file.name.split('.').pop() || '').toLowerCase());
+
+interface ExtractedTrack {
+  track_index: number;
+  codec?: string | null;
+  channels?: number | null;
+  sample_rate?: number | null;
+  language?: string | null;
+  title?: string | null;
+  duration_seconds?: number | null;
+  ok?: boolean;
+  error?: string | null;
+  sha256?: string | null;
+  size_bytes?: number;
+  output_format?: string | null;
+  download_url?: string | null;
+}
+
+interface ExtractionResult {
+  extraction_id: string;
+  source_filename: string;
+  source_sha256: string;
+  source_duration_seconds?: number | null;
+  num_tracks: number;
+  tracks: ExtractedTrack[];
+}
 
 interface AudioUploaderProps {
   onFileSelected: (file: File) => void;
@@ -17,6 +46,12 @@ export const AudioUploader: React.FC<AudioUploaderProps> = ({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Extracción inteligente de pistas (contenedores de vídeo multipista)
+  const [extractingIdx, setExtractingIdx] = useState<number | null>(null);
+  const [extraction, setExtraction] = useState<ExtractionResult | null>(null);
+  const [extractError, setExtractError] = useState<string | null>(null);
+  const [sendingTrack, setSendingTrack] = useState<number | null>(null);
 
   const allowedExtensions = [
     ...ALLOWED_EXTENSIONS_LIST,
@@ -86,6 +121,45 @@ export const AudioUploader: React.FC<AudioUploaderProps> = ({
     setSelectedFiles(updated);
   };
 
+  const handleExtractTracks = async (fileIdx: number) => {
+    const file = selectedFiles[fileIdx];
+    if (!file) return;
+    setExtractingIdx(fileIdx);
+    setExtractError(null);
+    setExtraction(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/audio/extract', { method: 'POST', body: formData });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({} as { detail?: string }));
+        throw new Error(body?.detail || `Error ${res.status} al extraer las pistas.`);
+      }
+      setExtraction(await res.json());
+    } catch (err) {
+      setExtractError(err instanceof Error ? err.message : 'No se pudieron extraer las pistas.');
+    } finally {
+      setExtractingIdx(null);
+    }
+  };
+
+  const handleTranscribeTrack = async (track: ExtractedTrack) => {
+    if (!extraction || !track.download_url) return;
+    setSendingTrack(track.track_index);
+    try {
+      const res = await fetch(track.download_url);
+      if (!res.ok) throw new Error('La pista temporal expiró. Repite la extracción.');
+      const blob = await res.blob();
+      const base = extraction.source_filename.replace(/\.[^/.]+$/, '');
+      const file = new File([blob], `${base}_pista_${track.track_index}.wav`, { type: 'audio/wav' });
+      onFileSelected(file);
+    } catch (err) {
+      setExtractError(err instanceof Error ? err.message : 'No se pudo encolar la pista.');
+    } finally {
+      setSendingTrack(null);
+    }
+  };
+
   const handleSubmit = () => {
     if (selectedFiles.length === 0) return;
 
@@ -115,7 +189,7 @@ export const AudioUploader: React.FC<AudioUploaderProps> = ({
           ref={inputRef}
           type="file"
           multiple
-          accept=".mp3,.wav,.m4a,.ogg,.webm,.flac,.aac,.opus,.wma,.mp4,.oga,.amr,.3gp"
+          accept=".mp3,.wav,.m4a,.ogg,.webm,.flac,.aac,.opus,.wma,.mp4,.oga,.amr,.3gp,.m4p,.caf,.mov,.mkv,.avi,.m4v,.ts,.flv,.wmv"
           className="hidden"
           onChange={handleFileChange}
         />
@@ -128,7 +202,7 @@ export const AudioUploader: React.FC<AudioUploaderProps> = ({
           Arrastra audios aquí o haz clic para examinar
         </h3>
         <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 max-w-lg mx-auto">
-          Decodificación acústica universal para <span className="font-semibold text-slate-700 dark:text-slate-300">MP3, WAV, M4A, OGG, WebM, AAC, FLAC, OPUS, WMA, MP4</span> en español.
+          Decodificación acústica universal para <span className="font-semibold text-slate-700 dark:text-slate-300">MP3, WAV, M4A, OGG, WebM, AAC, FLAC, OPUS, WMA, MP4, MOV, MKV, AVI…</span> en español. Los vídeos con varias pistas de audio se procesan seleccionando la pista.
         </p>
 
         {/* Formats Badges */}
@@ -201,6 +275,88 @@ export const AudioUploader: React.FC<AudioUploaderProps> = ({
               </div>
             ))}
           </div>
+
+          {/* Extracción inteligente (experimental): solo vídeos/contenedores */}
+          {selectedFiles.some(isVideoFile) && (
+            <div className="mt-3 rounded-2xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/60 dark:bg-indigo-950/50 p-4 space-y-2">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Film className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                  <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-indigo-800 dark:text-indigo-300">
+                    Extracción Inteligente de Pistas
+                  </span>
+                  <span className="text-[9px] bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800 px-1.5 py-0.5 rounded-full font-mono font-bold">EXPERIMENTAL</span>
+                </div>
+                <span className="text-[10px] text-indigo-700/80 dark:text-indigo-300/80">Vídeo con varias pistas (idioma, sala, interpretación)</span>
+              </div>
+
+              {selectedFiles.map((file, idx) => isVideoFile(file) ? (
+                <div key={idx} className="flex items-center justify-between gap-3 bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-900 rounded-xl px-3 py-2">
+                  <span className="text-[11px] text-slate-700 dark:text-slate-300 truncate">{file.name}</span>
+                  <button
+                    onClick={() => handleExtractTracks(idx)}
+                    disabled={extractingIdx !== null || isLoading}
+                    className="shrink-0 text-[11px] font-bold px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-300 disabled:dark:bg-slate-700 text-white transition flex items-center gap-1.5"
+                  >
+                    {extractingIdx === idx ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Film className="w-3.5 h-3.5" />}
+                    {extractingIdx === idx ? 'Extrayendo…' : 'Inspeccionar pistas'}
+                  </button>
+                </div>
+              ) : null)}
+
+              {extractError && (
+                <div className="flex items-start gap-2 text-[11px] text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 rounded-xl px-3 py-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{extractError}</span>
+                </div>
+              )}
+
+              {extraction && (
+                <div className="space-y-2 pt-1">
+                  <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 flex flex-wrap gap-x-4 gap-y-1 px-1">
+                    <span>SHA-256 origen: <span className="text-slate-700 dark:text-slate-200">{extraction.source_sha256.slice(0, 16)}…</span></span>
+                    {extraction.source_duration_seconds != null && (
+                      <span>Duración: <span className="text-slate-700 dark:text-slate-200">{extraction.source_duration_seconds.toFixed(1)}s</span></span>
+                    )}
+                    <span>Pistas: <span className="text-slate-700 dark:text-slate-200">{extraction.num_tracks}</span></span>
+                  </div>
+                  {extraction.tracks.map((track) => (
+                    <div key={track.track_index} className="flex items-center justify-between gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-[11px]">
+                      <div className="min-w-0">
+                        <div className="font-bold text-slate-800 dark:text-slate-200">
+                          Pista {track.track_index} · {track.codec || 'códec desconocido'}{track.channels ? ` · ${track.channels}ch` : ''}{track.sample_rate ? ` @ ${track.sample_rate} Hz` : ''}
+                        </div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate">
+                          {track.language ? `idioma ${track.language} · ` : ''}{track.output_format || 'fallo de extracción'}{track.sha256 ? ` · sha256 ${track.sha256.slice(0, 12)}…` : ''}{track.error ? ` · ${track.error}` : ''}
+                        </div>
+                      </div>
+                      {track.ok && track.download_url && (
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <a
+                            href={track.download_url}
+                            download
+                            title="Descargar la pista en WAV 16 kHz mono"
+                            className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-indigo-600 hover:border-indigo-300 transition"
+                          >
+                            <Download className="w-4 h-4" />
+                          </a>
+                          <button
+                            onClick={() => handleTranscribeTrack(track)}
+                            disabled={sendingTrack !== null || isLoading}
+                            title="Transcribir únicamente esta pista de audio"
+                            className="flex items-center gap-1 px-2.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 disabled:dark:bg-slate-700 text-white font-bold text-[10px] transition"
+                          >
+                            {sendingTrack === track.track_index ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mic2 className="w-3.5 h-3.5" />}
+                            Transcribir
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="pt-2 flex justify-end">
             <button

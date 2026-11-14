@@ -82,6 +82,30 @@ def main() -> int:
         print(f'  [5] Retención 0 (desactivada): eliminados={removed}')
         ok &= (removed == 0)
 
+        # 5b) Búsqueda FTS5: migrada desde JSONL, con snippet y sin diacríticos
+        hits = acts_store.search_acts('texto')
+        print(f'  [5b] FTS5 "texto": {len(hits)} resultados (esperado 2)')
+        ok &= (len(hits) == 2)
+        hits = acts_store.search_acts('"; DROP TABLE acts; --')
+        print(f'  [5c] FTS5 inyección: {len(hits)} resultados (esperado 0, sin excepción)')
+        ok &= (len(hits) == 0)
+        hits = acts_store.search_acts('acta2')
+        print(f'  [5d] FTS5 por nombre de fichero: {len(hits)} resultados (esperado 1)')
+        ok &= (len(hits) == 1 and hits[0]['filename'] == 'acta2.m4a')
+        ok &= acts_store.count_acts() == 2  # la inyección no borró nada
+
+        # 6) Temporales de extracción antiguos se purgan recursivamente
+        import os as _os
+        ex_dir = tmp_path / 'extract' / 'abc123'
+        ex_dir.mkdir(parents=True)
+        old_track = ex_dir / 'track_0.wav'
+        old_track.write_bytes(b'RIFF' + b'x' * 32)
+        os_time = time.time() - 40 * 24 * 3600
+        _os.utime(old_track, (os_time, os_time))
+        removed, freed = retention.purge_old_uploads(720)
+        print(f'  [6] Purga temporales de extracción: eliminados={removed} (espera ≥1) · directorio existe={ex_dir.exists()}')
+        ok &= (not ex_dir.exists())
+
     settings.UPLOAD_DIR = original_upload_dir
     print('\nRESULTADO:', 'todas las pruebas superadas ✔' if ok else 'FALLOS DETECTADOS ✘')
     return 0 if ok else 1

@@ -93,32 +93,6 @@ async def metrics_endpoint():
     """
     return metrics.snapshot(version=settings.VERSION, jobs_total=len(job_manager._jobs))
 
-# Neutralizador de Service Worker residual de Inventario / NovaGest u otras apps locales
-KILLER_SW_JS = """// Actas Digitales - Neutralizador de Service Worker de Inventario / NovaGest
-self.addEventListener('install', (e) => self.skipWaiting());
-self.addEventListener('activate', (e) => {
-    self.registration.unregister().then(() => self.clients.matchAll()).then((clients) => {
-        clients.forEach(c => c.navigate(c.url));
-    });
-    if ('caches' in self) {
-        caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
-    }
-});
-"""
-
-@app.get("/sw.js")
-@app.get("/service-worker.js")
-@app.get("/registerSW.js")
-async def kill_service_worker():
-    return Response(
-        content=KILLER_SW_JS,
-        media_type="application/javascript",
-        headers={
-            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
-            "Clear-Site-Data": '"cache", "storage"'
-        }
-    )
-
 @app.get("/api/purge-cache")
 @app.get("/limpiar-cache")
 async def purge_cache_endpoint():
@@ -127,7 +101,7 @@ async def purge_cache_endpoint():
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Actas Digitales - Cache Purgada</title>
+<title>Actas Digitales - Purga de emergencia</title>
 <script>
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(r => r.forEach(reg => reg.unregister()));
@@ -148,8 +122,8 @@ p { color: #94a3b8; font-size: 0.95rem; }
 </head>
 <body>
 <div class="card">
-  <h2>🧹 Cache y Service Workers Purgados</h2>
-  <p>Se ha liberado la memoria del navegador de datos previos de Inventario / NovaGest.</p>
+  <h2>🧹 Purga de emergencia aplicada</h2>
+  <p>Se han desregistrado los Service Workers y borradas las cachés de este origen. La próxima carga registrará de nuevo el Service Worker oficial (/sw.js).</p>
   <div class="spinner"></div>
   <p style="margin-top: 1rem; font-size: 0.85rem; color: #64748b;">Cargando Actas Digitales en 1 segundo...</p>
 </div>
@@ -190,6 +164,12 @@ if static_dist_path.exists():
                 return FileResponse(
                     resolved,
                     headers={"Cache-Control": "public, max-age=31536000, immutable"},
+                )
+            if resolved.name in ("sw.js", "manifest.webmanifest"):
+                # El Service Worker y el manifiesto deben revalidarse siempre
+                return FileResponse(
+                    resolved,
+                    headers={"Cache-Control": "no-cache, no-store, must-revalidate, max-age=0"},
                 )
             return FileResponse(resolved)
         return FileResponse(

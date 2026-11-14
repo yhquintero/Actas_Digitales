@@ -8,7 +8,9 @@ de un recuento agregado.
 """
 
 import asyncio
+import shutil
 import time
+from pathlib import Path
 from typing import Tuple
 
 from ..config import settings
@@ -34,6 +36,21 @@ def purge_old_uploads(retention_hours: float) -> Tuple[int, int]:
                 removed += 1
         except OSError:
             continue
+
+    # Temporales de extracción (UPLOAD_DIR/extract/<id>/) más antiguos del TTL
+    extract_root = upload_dir / "extract"
+    if extract_root.is_dir():
+        for child in extract_root.iterdir():
+            try:
+                mtime = max((f.stat().st_mtime for f in child.rglob("*") if f.is_file()), default=child.stat().st_mtime)
+                if mtime < cutoff:
+                    for f in child.rglob("*"):
+                        if f.is_file():
+                            freed += f.stat().st_size
+                            removed += 1
+                    shutil.rmtree(child, ignore_errors=True)
+            except OSError:
+                continue
     return removed, freed
 
 

@@ -11,6 +11,7 @@ import { RecentJobs } from './components/RecentJobs';
 import { PromoVideoModal } from './components/PromoVideoModal';
 import { FuturisticControlPanel } from './components/FuturisticControlPanel';
 import { DownloadApp } from './components/DownloadApp';
+import { BackToTop } from './components/BackToTop';
 import { useAudioJob } from './hooks/useAudioJob';
 import { ApiService } from './services/api';
 import { JobResponse, PillarId } from './types';
@@ -311,6 +312,8 @@ export const App: React.FC = () => {
         {/* Descarga de la App Android directamente desde la Web */}
         <DownloadApp />
       </main>
+
+      <BackToTop />
 
       {/* Formal Footer */}
       <Footer
