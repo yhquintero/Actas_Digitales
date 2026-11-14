@@ -10,3 +10,4 @@ export * from './pillars/PillarsWorkflow';
 export * from './security/SecurityCenterModal';
 export * from './layout/Footer';
 export * from './common/Badge';
+export * from './BackToTop';

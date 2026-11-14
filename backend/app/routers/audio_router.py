@@ -509,3 +509,122 @@ async def run_fire_tests_api(x_admin_token: Optional[str] = Header(default=None,
         "errors": len(result.errors),
         "standards_validated": ["OWASP Top 10", "TLS 1.3", "Rate Limiting", "Path Traversal", "RAE Grammar"]
     }
+
+# ---------------------------------------------------------------------------
+# Extracción de TODAS las pistas de audio de un fichero multimedia (v1.6.0)
+# ---------------------------------------------------------------------------
+
+import hashlib
+import shutil
+import uuid
+
+_EXTRACTIONS: dict = {}
+_EXTRACTIONS_LIMIT = 50
+
+_EXTRACT_KEEP = {"extract"}  # los temporales de extracción viven en UPLOAD_DIR/extract/
+
+
+def _extraction_dir(extraction_id: str) -> Path:
+    return settings.UPLOAD_DIR / "extract" / extraction_id
+
+
+def _register_extraction(meta: dict) -> None:
+    _EXTRACTIONS[meta["extraction_id"]] = meta
+    while len(_EXTRACTIONS) > _EXTRACTIONS_LIMIT:
+        _EXTRACTIONS.pop(next(iter(_EXTRACTIONS)))
+
+
+@router.post("/extract", status_code=status.HTTP_201_CREATED)
+async def extract_audio_tracks(file: UploadFile = File(...)):
+    """
+    Recibe CUALQUIER fichero multimedia (vídeo o audio) y exporta TODAS sus pistas
+    de audio como WAV PCM 16 kHz mono lista para el pipeline. Cada pista incluye
+    códec, canales, frecuencia, idioma/título, duración, tamaño y SHA-256.
+    Los contenedores protegidos (DRM) se rechazan con error explícito.
+    """
+    content = await file.read()
+    file_size = len(content)
+    filename = file.filename or "audio"
+    ext = Path(filename).suffix.lower()
+    if ext and ext not in settings.ALLOWED_EXTENSIONS:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f"Extensión '{ext}' no admitida para extracción.")
+
+    extraction_id = str(uuid.uuid4())
+    work_dir = _extraction_dir(extraction_id)
+    work_dir.mkdir(parents=True, exist_ok=True)
+    safe_source = work_dir / f"source{ext or '.bin'}"
+    async with aiofiles.open(safe_source, "wb") as f:
+        await f.write(content)
+
+    source_sha256 = hashlib.sha256(content).hexdigest()
+    probe = AudioService.list_audio_streams(safe_source)
+    if not probe.get("ok"):
+        shutil.rmtree(work_dir, ignore_errors=True)
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                            detail=probe.get("error", "No se pudo inspeccionar el fichero."))
+
+    tracks_meta = []
+    for track in probe.get("tracks", []):
+        idx = track["track_index"]
+        out_path = work_dir / f"track_{idx}.wav"
+        ok, detail = AudioService.extract_audio_track(safe_source, idx, out_path)
+        track_entry = dict(track, ok=bool(ok), error=None if ok else detail)
+        if ok and out_path.exists():
+            wav_bytes = out_path.read_bytes()
+            track_entry["sha256"] = hashlib.sha256(wav_bytes).hexdigest()
+            track_entry["size_bytes"] = len(wav_bytes)
+            track_entry["output_format"] = "WAV PCM 16 kHz mono 16-bit"
+            track_entry["download_url"] = f"/api/audio/extract/{extraction_id}/tracks/{idx}"
+        else:
+            track_entry["sha256"] = None
+            track_entry["size_bytes"] = 0
+        tracks_meta.append(track_entry)
+
+    extracted = sum(1 for t in tracks_meta if t.get("ok"))
+    if tracks_meta and extracted == 0:
+        shutil.rmtree(work_dir, ignore_errors=True)
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                            detail="Hay pistas de audio declaradas pero no se pudo decodificar ninguna (¿códec protegido?).")
+
+    meta = {
+        "extraction_id": extraction_id,
+        "source_filename": filename,
+        "source_size_bytes": file_size,
+        "source_sha256": source_sha256,
+        "source_duration_seconds": probe.get("duration_seconds"),
+        "num_tracks": len(tracks_meta),
+        "num_tracks_extracted": extracted,
+        "created_at": datetime.utcnow().isoformat() + "Z",
+        "tracks": tracks_meta,
+        "work_dir": str(work_dir),
+    }
+    _register_extraction(meta)
+    return {k: v for k, v in meta.items() if k != "work_dir"}
+
+
+@router.get("/extract/{extraction_id}")
+async def get_extraction(extraction_id: str):
+    meta = _EXTRACTIONS.get(extraction_id)
+    if not meta:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Extracción no encontrada o expirada.")
+    return {k: v for k, v in meta.items() if k != "work_dir"}
+
+
+@router.get("/extract/{extraction_id}/tracks/{track_index}")
+async def download_track(extraction_id: str, track_index: int):
+    meta = _EXTRACTIONS.get(extraction_id)
+    if not meta:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Extracción no encontrada o expirada.")
+    track = next((t for t in meta["tracks"] if t["track_index"] == track_index), None)
+    if not track or not track.get("ok"):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pista no disponible (¿extracción fallida?).")
+    out_path = Path(meta["work_dir"]) / f"track_{track_index}.wav"
+    if not out_path.exists():
+        raise HTTPException(status_code=status.HTTP_410_GONE, detail="El fichero temporal expiró (política de retención). Repite la extracción.")
+    return FileResponse(
+        path=out_path,
+        media_type="audio/wav",
+        filename=f"{Path(meta['source_filename']).stem}_pista_{track_index}.wav",
+        headers={"X-Track-SHA256": track.get("sha256") or ""},
+    )

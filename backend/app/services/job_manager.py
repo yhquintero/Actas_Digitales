@@ -113,6 +113,27 @@ class JobManager:
             job.transcription_engine = TranscriptionService.last_engine
             job.segments = segments
 
+            # 2.5 Detección de participantes (diarización ligera, opcional y jamás fatal)
+            try:
+                from .diarization_service import diarize, assign_segment_speakers
+                signal, sr = AudioService.load_pcm_mono(file_path)
+                if signal is not None:
+                    dia = diarize(signal, sr)
+                    turns = dia.get("turns", [])
+                    job.num_speakers = dia.get("num_speakers")
+                    from ..models.job import SpeakerTurn
+                    job.speaker_turns = [SpeakerTurn(**t) for t in turns]
+                    speaker_labels = assign_segment_speakers(turns, job.segments)
+                    for seg, label in zip(job.segments, speaker_labels):
+                        seg.speaker = label
+                    print(f"[diarización] participantes={job.num_speakers} turnos={len(turns)} ratio_voz={dia.get('speech_ratio')}")
+                else:
+                    job.num_speakers = None
+            except Exception as exc:
+                print(f"[diarización] Aviso (no fatal): {exc}")
+                job.num_speakers = None
+                job.speaker_turns = []
+
             # 3. Consolidación y desduplicación
             job.status = JobStatus.CONSOLIDATING
             job.progress_percent = 70

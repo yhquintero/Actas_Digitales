@@ -18,3 +18,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "ActasDigitales"
 include(":app")
+include(":webclone")

@@ -14,7 +14,7 @@ El artefacto oficial de distribución es el **release nativo completo** (Kotlin 
   keytool -genkey -v -keystore signing/actas-mobile.keystore \
     -alias actas-mobile -keyalg RSA -keysize 4096 -validity 3650
   ```
-  La próxima build declara `versionName 1.3.0` / `versionCode 2` (la `app-release.apk` comprometida es 1.0.0/1).
+  La próxima build declara `versionName 1.6.0` / `versionCode 2` (la `app-release.apk` comprometida es 1.0.0/1).
 * 🛡 **Seguridad de Red:** Validación TLS estricta con CAs del sistema y **certificate pinning opcional** (`ACTAS_CERT_PIN_PRIMARY` / `ACTAS_CERT_PIN_BACKUP`, pines SPKI SHA-256 en base64 vía `BuildConfig`, también aplicado a la sincronización con la Web). Las CAs de usuario solo se confían en dominios de desarrollo (LAN/emulador); **no existe bypass de certificados** (la versión que aceptaba cualquier certificado fue eliminada). Generación del pin:
   ```bash
   openssl x509 -in server.crt -pubkey -noout | openssl pkey -pubin -outform der \
@@ -55,6 +55,33 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ---
 
+
+---
+
+## 🌐 Módulo `:webclone` — «clon Web» en el móvil (WebView)
+
+`android/webclone` es una **segunda app Android** (`com.actasdigitales.webclone`) mínima: una `WebView` de pantalla completa que carga **la misma interfaz web** que sirve `GET /` en el servidor. Sin Compose ni AndroidX; ~40 KB de APK.
+
+* 🔧 **Compilación:** `cd android && ./gradlew :webclone:assembleRelease`
+  (el workflow `android-build-check.yml` la compila en CI junto a `:app` y el
+  `release.yml` la firma y publica con la misma clave cuando se etiqueta).
+* 🔗 **Servidor por defecto:** `https://10.0.2.2:8443/` (emulador, TLS). Se puede
+  cambiar desde el menú **⋮ → Cambiar servidor…** (persistente en
+  SharedPreferences del dispositivo), o fijar en distribución con la variable de
+  entorno `ACTAS_WEB_URL` en tiempo de compilación. Menú → «Restablecer servidor
+  por defecto» para volver al valor de compilación.
+* 🛡 **Seguridad:** mismo régimen que `:app`: cleartext solo para
+  `10.0.2.2`, `localhost` y `actasdigitales.local` (`network_security_config.xml`);
+  HTTPS por defecto; **los errores de TLS jamás se aceptan** (se cancela y se
+  avisa); JS activo (la app Web lo necesita) pero `allowFileAccess=false`,
+  `mixedContent NEVER_ALLOW`, depuración WebView desactivada.
+* 📎 **Selector de ficheros:** el `<input type="file">` de la Web funciona
+  (`WebChromeClient.onShowFileChooser` + SAF); las descargas (PDF del acta, APK…)
+  se abren con el gestor externo, nunca dentro del WebView.
+* ⚠️ **Honestidad:** no es una app nativa con las funciones de captura offline de
+  `:app`; es un **cliente de la Web alojada** — requiere que el servidor esté
+  accesible desde el teléfono (red o LAN). Si el servidor cae, muestra una página
+  de «Sin conexión» con reintento.
 
 ---
 

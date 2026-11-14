@@ -1,4 +1,4 @@
-import { JobResponse, AndroidAppInfo, SyncedActasResponse } from '../types';
+import { JobResponse, AndroidAppInfo, SyncedActasResponse, SyncedActaSearchResponse } from '../types';
 
 export class ApiService {
   private static getHeaders(apiKey?: string): Record<string, string> {
@@ -39,17 +39,50 @@ export class ApiService {
     return await res.json();
   }
 
-  static async listSyncedActas(limit: number = 10): Promise<SyncedActasResponse> {
+  /**
+   * Token de sincronización del servidor (ACTAS_SYNC_TOKEN). Se guarda SOLO en
+   * sessionStorage (muere con la pestaña); nunca en localStorage ni en la build.
+   * Sin token, el servidor responde 401/503 y la UI ofrece un campo para introducirlo.
+   */
+  static getSyncToken(): string {
+    return sessionStorage.getItem('actas_sync_token') || '';
+  }
+
+  static setSyncToken(token: string): void {
+    if (token.trim()) sessionStorage.setItem('actas_sync_token', token.trim());
+    else sessionStorage.removeItem('actas_sync_token');
+  }
+
+  private static syncHeaders(): Record<string, string> {
+    const token = this.getSyncToken();
+    return token ? { 'X-Sync-Token': token } : {};
+  }
+
+  /** Código HTTP crudo para distinguir 401/503 del resto de fallos. */
+  static async listSyncedActasRaw(limit: number = 10): Promise<{ status: number; data: SyncedActasResponse | null }> {
     try {
-      const res = await fetch(`/api/acts?limit=${limit}`);
-      if (res.ok) {
-        return (await res.json()) as SyncedActasResponse;
-      }
-      return { total: 0, acts: [] };
+      const res = await fetch(`/api/acts?limit=${limit}`, { headers: this.syncHeaders() });
+      if (res.ok) return { status: res.status, data: (await res.json()) as SyncedActasResponse };
+      return { status: res.status, data: null };
     } catch (err) {
       console.error('[ApiService] Error al listar actas sincronizadas:', err);
-      return { total: 0, acts: [] };
+      return { status: 0, data: null };
     }
+  }
+
+  static async listSyncedActas(limit: number = 10): Promise<SyncedActasResponse> {
+    const { data } = await this.listSyncedActasRaw(limit);
+    return data ?? { total: 0, acts: [] };
+  }
+
+  static async searchSyncedActas(query: string, limit: number = 20): Promise<SyncedActaSearchResponse> {
+    const res = await fetch(`/api/acts/search?q=${encodeURIComponent(query)}&limit=${limit}`, {
+      headers: this.syncHeaders(),
+    });
+    if (!res.ok) {
+      throw new Error(res.status === 401 ? 'Token de sincronización inválido.' : 'No se pudo buscar en el servidor.');
+    }
+    return (await res.json()) as SyncedActaSearchResponse;
   }
 
   static async listRecentJobs(limit: number = 25): Promise<JobResponse[]> {

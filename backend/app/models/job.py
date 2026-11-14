@@ -17,6 +17,13 @@ class AudioSegment(BaseModel):
     start_time: float
     end_time: float
     text: str
+    speaker: Optional[str] = None
+
+
+class SpeakerTurn(BaseModel):
+    speaker: str
+    start_time: float
+    end_time: float
 
 class CorrectionItem(BaseModel):
     original: str
@@ -62,6 +69,9 @@ class JobResponse(BaseModel):
     # web-speech-navegador | whisper-api-groq | whisper-api-openai | demo-canonical |
     # google-speech | faster-whisper-local | whisper-local | no-speech-local | desconocido
     transcription_engine: str = "desconocido"
+    # Detección de participantes (diarización ligera, 100% local)
+    num_speakers: Optional[int] = None
+    speaker_turns: List[SpeakerTurn] = Field(default_factory=list)
 
 class DirectTranscribeRequest(BaseModel):
     language: str = "es"

@@ -6,6 +6,10 @@ Almacén persistente de actas sincronizadas (SQLite).
   lectura O(log n) y modo WAL.
 - Migra automáticamente el legado JSONL en el primer arranque (INSERT OR IGNORE
   y renombra el fichero a `synced_acts.jsonl.migrated`).
+- Búsqueda de texto completo con SQLite FTS5 (`acts_fts`): índice sobre
+  `final_text` + `filename`, con snippet y ranking BM25. El índice se mantiene
+  en `init()` (backfill idempotente) y en cada inserción de `sync_items()`.
+  Nada se envía fuera del servidor.
 """
 
 import json
@@ -20,6 +24,15 @@ from ..config import settings
 _LOCK = threading.Lock()
 KEEP_FROM_PURGE = {".gitkeep", "acts.db", "acts.db-wal", "acts.db-shm",
                     "synced_acts.jsonl", "synced_acts.jsonl.migrated"}
+
+_FTS_SCHEMA = """
+CREATE VIRTUAL TABLE IF NOT EXISTS acts_fts USING fts5(
+    audio_sha256 UNINDEXED,
+    filename,
+    final_text,
+    tokenize = 'unicode61 remove_diacritics 2'
+);
+"""
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS acts (
@@ -56,10 +69,21 @@ def _connect() -> sqlite3.Connection:
     return conn
 
 
+def _rebuild_fts_backfill(conn) -> None:
+    """Inserta en acts_fts las actas que falten (p. ej. tras migración JSONL)."""
+    conn.execute(
+        """INSERT INTO acts_fts (audio_sha256, filename, final_text)
+           SELECT audio_sha256, filename, final_text FROM acts
+           WHERE audio_sha256 NOT IN (SELECT audio_sha256 FROM acts_fts)"""
+    )
+
+
 def init() -> None:
-    """Crea la tabla (si falta) y migra el legado JSONL de forma segura."""
+    """Crea la tabla (si falta), el índice FTS5 y migra el legado JSONL de forma segura."""
     with _LOCK, _connect() as conn:
         conn.executescript(_SCHEMA)
+        conn.executescript(_FTS_SCHEMA)
+        _rebuild_fts_backfill(conn)
         legacy = _legacy_path()
         if legacy.exists():
             migrated = 0
@@ -94,6 +118,8 @@ def init() -> None:
                 print(f"[acts_store] Legado JSONL migrado: {migrated} actas importadas ({legacy.name}.migrated)")
             except OSError as exc:
                 print(f"[acts_store] Aviso: no se pudo migrar el legado JSONL ({exc}); se conserva el fichero.")
+        # El backfill también cubre lo migrado desde JSONL
+        _rebuild_fts_backfill(conn)
 
 
 def list_acts(limit: int = 20) -> List[dict]:
@@ -134,6 +160,54 @@ def sync_items(items: List[dict], source: str = "android-room") -> tuple:
                  item.get("timestamp") or int(time.time() * 1000), now_iso, source))
             if cur.rowcount:
                 stored += 1
+                conn.execute(
+                    "INSERT INTO acts_fts (audio_sha256, filename, final_text) VALUES (?,?,?)",
+                    (sha, item.get("filename") or "acta", item.get("final_text") or ""),
+                )
             else:
                 duplicates += 1
     return stored, duplicates
+
+
+def _fts_query(raw: str) -> str:
+    """Construye una consulta FTS5 segura: términos entrecomillados unidos por AND implícito.
+
+    Elimina la sintaxis FTS5 del usuario (comillas, paréntesis, asteriscos, operadores)
+    para evitar errores y consultas-trampa. Solo letras/dígitos/guiones bajo/diéresis.
+    """
+    terms = []
+    for chunk in raw.split():
+        cleaned = "".join(ch for ch in chunk if ch.isalnum() or ch in "-_'")
+        cleaned = cleaned.strip("-_'")
+        if cleaned:
+            terms.append('"' + cleaned.replace('"', "") + '"')
+    return " ".join(terms[:12])
+
+
+def search_acts(query: str, limit: int = 20) -> List[dict]:
+    """Búsqueda FTS5 por relevancia (bm25). Devuelve dicts con snippet resaltado."""
+    fts = _fts_query(query)
+    if not fts:
+        return []
+    with _LOCK, _connect() as conn:
+        rows = conn.execute(
+            """SELECT audio_sha256, filename,
+                      snippet(acts_fts, 2, '«', '»', ' … ', 18) AS snippet,
+                      bm25(acts_fts) AS rank
+               FROM acts_fts
+               WHERE acts_fts MATCH ?
+               ORDER BY rank
+               LIMIT ?""",
+            (fts, limit),
+        ).fetchall()
+        out = []
+        for row in rows:
+            meta = conn.execute(
+                "SELECT words_count, timestamp, synced_at FROM acts WHERE audio_sha256 = ?",
+                (row["audio_sha256"],),
+            ).fetchone()
+            item = dict(row)
+            if meta:
+                item.update(dict(meta))
+            out.append(item)
+        return out

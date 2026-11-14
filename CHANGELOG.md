@@ -50,6 +50,88 @@ Todas las modificaciones notables de este proyecto están documentadas en este a
 
 ---
 
+## [1.6.0] - 2026-11-14 · Extracción inteligente y diarización local
+
+### 🎞 Extracción inteligente de pistas de audio (vídeos)
+- Nuevo `POST /api/audio/extract`: acepta cualquier contenedor con vídeo (MP4, MOV, MKV, AVI,
+  M4V, TS, FLV, WMV, WebM…) con varias pistas de audio; exporta **cada pista** como **WAV PCM
+  16 kHz mono 16-bit** listo para el pipeline, con SHA-256, códec, canales, frecuencia,
+  idioma/título y duración. Respuesta 201 con `extraction_id` y URLs de descarga.
+- `GET /api/audio/extract/{id}` (metadatos) y `GET /api/audio/extract/{id}/tracks/{i}` (descarga).
+- Contenedores protegidos (DRM) o pistas sin decodificador → **422 explícito**; nunca un WAV vacío.
+- Temporales en `uploads/extract/<uuid>/`, purga automática por la retención (720 h) de forma
+  recursiva (`tools/test_acts_store.py` lo cubre).
+- La Web añade un panel **«Extracción Inteligente de Pistas»** (AudioUploader, experimental):
+  inspecciona el vídeo, lista las pistas y permite **descargarlas** o **transcribir solo la pista
+  elegida** (fetch de la pista → encolada como trabajo normal). `AudioUploader` amplía los
+  formatos aceptados (MOV, MKV, AVI, M4V, TS, FLV, WMV…) y el catálogo `constants/formats.ts`.
+
+### 🗣 Diarización local de hablantes (experimental)
+- Nuevo `backend/app/services/diarization_service.py` (numpy): VAD adaptativo (percentiles de dB),
+  rasgos MFCC (13) + energía + **F0 por autocorrelación**, clustering k-means++ (semilla fija 42,
+  k=2..4) con **tamaño mínimo de cluster** (≥12% de ventanas o 3) para no fabricar participantes
+  fantasma en las transiciones, y selección de k por **silueta**.
+- Etiquetas **«Participante 1..N»** numeradas por orden de aparición; turnos fusionados y
+  **asignación de segmentos transcritos por solape temporal**.
+- `Job` gana `num_speakers`, `speaker_turns` y `segments[].speaker`; paso «2.5» en el pipeline
+  (nunca fatal: si la diarización falla, el acta se genera igualmente).
+- La Web añade la pestaña **«Participantes»** en el visor de resultados: resumen por participante
+  (turnos, segundos hablados, % del total), línea temporal de turnos y segmentos con su etiqueta;
+  más badge de hablante en la línea temporal. Chip «EXPERIMENTAL» visible.
+- Alcance honesto: distingue **voces**, **no identifica quién es nadie** (no atribuye nombres ni
+  cargos). Validado con audio sintético de 2 voces claramente diferenciadas
+  (`tools/test_audio_inteligente.py`); la precisión con voces reales será inferior y depende de la
+  calidad de grabación. Solapamientos se resuelven por hablante dominante.
+
+### 🔊 Ratios de voz reales
+- El `vad_speech_ratio` del pipeline ya no es el valor fijo 0.94: se calcula del material de
+  entrada (`_real_speech_ratio`) y se propaga.
+
+### 📴 PWA offline real (reemplaza al «killer SW»)
+- Nuevo `web/public/sw.js`: precache del app-shell, navegación *network-first* con fallback
+  offline, estáticos *stale-while-revalidate*, **`/api/*` nunca se cachea** (actas y telemetría
+  jamás pasan por Cache Storage), sin interceptación cross-origin ni POST; caché versionada
+  (`actas-v1.6.0`) con purga de versiones antiguas en `activate`.
+- `boot.js` registra el Service Worker (sustituye a la desregistración universal). Las
+  instalaciones con el antiguo SW roto reciben el nuevo al actualizar (mismo scriptURL `/sw.js`).
+- El backend ya no sirve el "killer SW" en `/sw.js` (la PWA real lo sustituye);
+  `/limpiar-cache` se conserva como **purga de emergencia** con texto honesto.
+- nginx: CSP `script-src 'self'` (sin `unsafe-inline`), `worker-src 'self'`, `/sw.js` con
+  `Cache-Control: no-store` y `Service-Worker-Allowed: /`.
+
+### 🔎 Búsqueda de actas (SQLite FTS5) y sync token en la Web
+- `acts_store`: índice FTS5 `acts_fts` (unicode61 `remove_diacritics 2`, contenido duplicado),
+  backfill idempotente en `init()` y alta en cada `sync_items()`; `search_acts()` con
+  **snippet** (`«marcas»`) y ranking **BM25**; la consulta del usuario se sanitiza a términos
+  entrecomillados (AND implícito) — la sintaxis FTS5 inyectada no ejecuta nada (cubierto en test).
+- `GET /api/acts/search?q=…` (X-Sync-Token) y `tools/test_acts_store.py` la cubre.
+- Web: panel «Actas del móvil» honesto con token (sessionStorage, nunca localStorage/bundle):
+  estados 401/503 explícitos con formulario de token; **buscador con debounce** y resultados
+  resaltados en la UI; `ApiService.listSyncedActasRaw` distingue 401/503 de otros fallos.
+
+### ⬆️ Web
+- Botón flotante **«Volver arriba»** (aparece > 480 px, `prefers-reduced-motion` respetado).
+- Tipos `AudioSegment.speaker` / `JobResponse.num_speakers` / `speaker_turns` en la Web;
+  badge de hablante en la línea temporal y pestaña **Participantes** en el visor de resultados.
+
+### 🤖 Android `:webclone` — «clon Web» en el móvil
+- Nuevo módulo `android/webclone` (`com.actasdigitales.webclone`): WebView de pantalla completa
+  con la MISMA interfaz que sirve el servidor; menú ⋮ → «Cambiar servidor…» (persistente,
+  SharedPreferences) + «Restablecer»; URL por defecto `https://10.0.2.2:8443/`, override de
+  distribución con env `ACTAS_WEB_URL`; TLS estricto (jamás se aceptan errores), cleartext solo
+  para emulador/localhost/`actasdigitales.local`, selector de ficheros (SAF) para los uploads,
+  descargas abiertas con el gestor externo, página «Sin conexión» con reintento.
+- `settings.gradle.kts` incluye `:webclone`; `android-build-check.yml` y `release.yml` la
+  compilan/firman/publican con la misma clave efímera/real que `:app`.
+- Honestidad: es un **cliente de la Web**, no la app nativa — requiere servidor accesible.
+
+### 🔢 Versionado
+- Versión canónica 1.6.0 en `web/package.json`, backend `config.py`, README (badge),
+  `docs/index.html` (brand-badge), `Footer.tsx` (insignia), Android `:app`/`:webclone`
+  (default `versionName`) e hilo de `check_version_sync.py`.
+
+---
+
 ## [1.5.0] - 2026-11-13
 
 > Iteración sobre las «Más sugerencias de mejora» propuestas tras la 1.4.0.

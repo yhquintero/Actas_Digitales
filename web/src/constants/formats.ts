@@ -70,6 +70,27 @@ export const SUPPORTED_AUDIO_FORMATS: AudioFormatInfo[] = [
     container: 'MPEG-4 Part 14 Video/Audio',
     recommendedUse: 'Grabaciones de vídeo de Zoom, Teams, Meet o cámaras de sala',
     decoder: 'PyAV (extracción directa de pista de audio)'
+  },
+  {
+    extension: '.mov',
+    codec: 'AAC / PCM / ALAC Audio Track',
+    container: 'QuickTime File Format',
+    recommendedUse: 'Grabaciones de iPhone/iPad y QuickTime Player',
+    decoder: 'PyAV (extracción directa de pista de audio)'
+  },
+  {
+    extension: '.mkv',
+    codec: 'AAC / Opus / FLAC / AC3 Audio Track',
+    container: 'Matroska',
+    recommendedUse: 'Grabaciones y screencasts en contenedor Matroska (múltiples pistas)',
+    decoder: 'PyAV (extracción directa de pista de audio)'
+  },
+  {
+    extension: '.avi',
+    codec: 'MP3 / PCM Audio Track',
+    container: 'Audio Video Interleave',
+    recommendedUse: 'Grabaciones históricas y material heredado de cámaras DV',
+    decoder: 'PyAV (extracción directa de pista de audio)'
   }
 ];
 

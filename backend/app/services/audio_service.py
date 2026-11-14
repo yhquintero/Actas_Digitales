@@ -204,6 +204,102 @@ class AudioService:
         return False
 
     @staticmethod
+    def load_pcm_mono(file_path: Path, sr: int = 16000, max_seconds: float = 7200.0):
+        """Decodifica a mono 16 kHz float32 normalizado. Devuelve (signal, sample_rate) o (None, sr)."""
+        try:
+            import miniaudio
+            import numpy as np
+
+            decoded = miniaudio.decode_file(str(file_path), output_format=miniaudio.SampleFormat.SIGNED16,
+                                            nchannels=1, sample_rate=sr)
+            if decoded and decoded.samples:
+                samples = np.frombuffer(decoded.samples, dtype=np.int16).astype(np.float32) / 32768.0
+                limit = int(max_seconds * sr)
+                return samples[:limit], sr
+        except Exception:
+            pass
+        # Fallback: WAV PCM temporal
+        temp_wav = file_path.parent / f"_pcm_{file_path.stem}.wav"
+        try:
+            if AudioService.convert_to_pcm_wav(file_path, temp_wav) and temp_wav.exists():
+                import numpy as np
+                with wave.open(str(temp_wav), "rb") as wf:
+                    frames = wf.readframes(min(wf.getnframes(), int(max_seconds * sr)))
+                    rate = wf.getframerate()
+                samples = np.frombuffer(frames, dtype=np.int16).astype(np.float32) / 32768.0
+                return samples, rate
+        except Exception:
+            pass
+        finally:
+            try:
+                if temp_wav.exists():
+                    temp_wav.unlink()
+            except Exception:
+                pass
+        return None, sr
+
+    @staticmethod
+    def list_audio_streams(file_path: Path) -> Dict[str, Any]:
+        """Enumera las pistas de audio embebidas (PyAV) con sus metadatos."""
+        tracks = []
+        duration = None
+        try:
+            import av
+            with av.open(str(file_path)) as container:
+                if container.duration:
+                    duration = float(container.duration) / 1_000_000.0
+                for index, stream in enumerate(container.streams.audio):
+                    meta = dict(stream.metadata or {})
+                    lang = meta.get("language") or meta.get("LANGUAGE") or "und"
+                    title = meta.get("title") or meta.get("TITLE") or ""
+                    codec = (stream.codec_context.name if stream.codec_context else None) or "desconocido"
+                    channels = stream.channels if getattr(stream, "channels", None) else None
+                    rate = stream.rate if getattr(stream, "rate", None) else None
+                    bit_rate = stream.bit_rate if getattr(stream, "bit_rate", None) else None
+                    s_dur = None
+                    try:
+                        if stream.duration and stream.time_base:
+                            s_dur = float(stream.duration * stream.time_base)
+                    except Exception:
+                        s_dur = None
+                    tracks.append({
+                        "track_index": index,
+                        "codec": codec,
+                        "channels": channels,
+                        "sample_rate": rate,
+                        "bit_rate": int(bit_rate) if bit_rate else None,
+                        "language": lang,
+                        "title": title,
+                        "duration_seconds": round(s_dur, 2) if s_dur else (round(duration, 2) if duration else None),
+                    })
+        except Exception:
+            return {"ok": False, "error": "No se pudo inspeccionar el contenedor (¿formato no soportado o protegido por DRM?).",
+                    "tracks": [], "duration_seconds": duration}
+        return {"ok": True, "tracks": tracks, "duration_seconds": round(duration, 2) if duration else None}
+
+    @staticmethod
+    def extract_audio_track(src_path: Path, track_index: int, out_path: Path) -> Tuple[bool, str]:
+        """Extrae una pista de audio a WAV PCM 16 kHz mono. Devuelve (ok, detalle)."""
+        try:
+            import imageio_ffmpeg
+            ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+        except Exception:
+            ffmpeg_exe = "ffmpeg"
+        cmd = [ffmpeg_exe, "-y", "-i", str(src_path),
+               "-map", f"0:a:{track_index}", "-vn", "-sn", "-dn",
+               "-ac", "1", "-ar", "16000", "-c:a", "pcm_s16le", "-f", "wav", str(out_path)]
+        try:
+            res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=1800)
+            if res.returncode == 0 and out_path.exists() and out_path.stat().st_size > 44:
+                return True, "ok"
+            err = (res.stderr or b"").decode("utf-8", errors="replace")[-400:]
+            return False, f"FFmpeg no pudo decodificar la pista {track_index}: {err}"
+        except FileNotFoundError:
+            return False, "FFmpeg no disponible en el servidor."
+        except subprocess.TimeoutExpired:
+            return False, "Tiempo de extracción agotado."
+
+    @staticmethod
     def analyze_audio_metadata(file_path: Path) -> Dict[str, Any]:
         """Extrae metadatos técnicos acústicos del archivo."""
         duration = AudioService.get_exact_audio_duration(file_path)
@@ -231,6 +327,22 @@ class AudioService:
             "channels": "Mono" if channels == 1 else "Estéreo",
             "file_size_bytes": os.path.getsize(file_path),
             "file_size_mb": round(os.path.getsize(file_path) / (1024 * 1024), 2),
-            "vad_speech_ratio": 0.94,
+            "vad_speech_ratio": AudioService._real_speech_ratio(file_path),
             "quality_assessment": "Excelente para transcripción fonética en español"
         }
+
+    @staticmethod
+    def _real_speech_ratio(file_path: Path) -> float:
+        """Ratio de voz medido por el VAD real (no un 0,94 de adorno)."""
+        try:
+            from .diarization_service import _compute_vad_threshold, _frame_signal, _rms_db
+            signal, sr = AudioService.load_pcm_mono(file_path, max_seconds=300.0)
+            if signal is None or len(signal) < sr:
+                return 0.0
+            frames = _frame_signal(signal, sr)
+            db = _rms_db(frames)
+            threshold = _compute_vad_threshold(db)
+            ratio = float((db >= threshold).mean()) if db.size else 0.0
+            return round(ratio, 3)
+        except Exception:
+            return 0.0

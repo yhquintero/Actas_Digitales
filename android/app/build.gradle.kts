@@ -12,11 +12,11 @@ android {
         applicationId = "com.actasdigitales.app"
         minSdk = 26
         targetSdk = 34
-        // Versionado: por defecto 1.3.0/2 (la app-release.apk comprometida es 1.0.0/1).
+        // Versionado: por defecto 1.6.0/2 (la app-release.apk comprometida es 1.0.0/1).
         // El workflow de release inyecta la versión del tag (ACTAS_VERSION_NAME sin la "v")
         // y el número de ejecución de CI como versionCode.
         versionCode = (System.getenv("ACTAS_VERSION_CODE") ?: "2").toInt()
-        versionName = System.getenv("ACTAS_VERSION_NAME") ?: "1.3.0"
+        versionName = System.getenv("ACTAS_VERSION_NAME") ?: "1.6.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
