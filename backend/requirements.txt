@@ -14,3 +14,10 @@ miniaudio>=1.60
 av>=11.0.0
 imageio-ffmpeg>=0.5.0
 numpy>=1.26
+fpdf2>=2.7
+
+# Transcripción local offline (recomendado para soberanía de datos).
+# El primer arranque descarga el modelo BASE de HuggingFace (~150 MB);
+# cámbialo con ACTAS_FW_MODEL=tiny|small|medium|large-v3 (def: base).
+# Si no hay red, usa ACTAS_FW_MODEL con un modelo ya en caché o la clave Groq/OpenAI.
+faster-whisper>=1.0.0

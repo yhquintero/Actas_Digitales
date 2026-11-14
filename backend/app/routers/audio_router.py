@@ -14,6 +14,7 @@ from ..services.job_manager import job_manager
 from ..services.retention import KEEP_FROM_PURGE
 from ..services.consolidation_service import ConsolidationService
 from ..services.correction_service import CorrectionService
+from ..services.pdf_service import build_acta_pdf
 
 router = APIRouter(prefix="/audio", tags=["Audio & Transcripción"])
 
@@ -295,6 +296,9 @@ async def export_acta_docx(
             p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
     else:
+        import hashlib as _hashlib
+        _sha = _hashlib.sha256((text or "").encode("utf-8")).hexdigest()
+
         p_title = doc.add_paragraph()
         run_title = p_title.add_run(f"ACTA OFICIAL: {title.upper()}")
         run_title.bold = True
@@ -332,6 +336,10 @@ async def export_acta_docx(
         sig_p.add_run("______________________________                ______________________________\n")
         sig_p.add_run(f"   {president}                                   {secretary}\n")
         sig_p.add_run("          Presidente                                                 Secretario")
+        doc.add_paragraph().paragraph_format.space_after = Pt(8)
+        huella = doc.add_paragraph()
+        huella.add_run(f"Huella SHA-256 del contenido: {_sha}").italic = True
+        huella.paragraph_format.space_before = Pt(10)
 
     buf = io.BytesIO()
     doc.save(buf)
@@ -344,6 +352,59 @@ async def export_acta_docx(
         content=buf.getvalue(),
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
+
+@router.post("/export-pdf")
+async def export_acta_pdf(
+    text: str = Form(...),
+    title: str = Form("Sesión Ordinaria de Consejo"),
+    export_type: str = Form("full_text"),
+    paper_size: str = Form("a4"),
+    margin_type: str = Form("standard"),
+    date_str: Optional[str] = Form(None),
+    place: Optional[str] = Form("Sala Principal de Juntas / Conferencia Digital"),
+    attendees: Optional[str] = Form("Presidente, Secretario General, Vocales y Miembros del Comité"),
+    president: Optional[str] = Form("D. Presidente del Consejo"),
+    secretary: Optional[str] = Form("D. Secretario General"),
+    audio_duration: Optional[str] = Form(None),
+    wpm: Optional[str] = Form(None),
+    reading_time: Optional[str] = Form(None)
+):
+    """
+    Genera y descarga un PDF nativo (generado en el servidor con fpdf2, sin servicios
+    externos) con el mismo diseño que la exportación DOCX: papel A4/Carta/Oficio,
+    márgenes estándar/estrecho/encuadernación y modos 'full_text' / 'official_acta'.
+    Incluye huella SHA-256 del contenido en el pie de página.
+    """
+    from fastapi.responses import Response
+
+    try:
+        pdf_bytes = build_acta_pdf(
+            text,
+            title=title,
+            export_type=export_type,
+            paper_size=paper_size,
+            margin_type=margin_type,
+            date_str=date_str,
+            place=place,
+            attendees=attendees,
+            president=president,
+            secretary=secretary,
+            audio_duration=audio_duration,
+            wpm=wpm,
+            reading_time=reading_time,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail=f"No se pudo generar el PDF: {exc.__class__.__name__}: {exc}")
+
+    filename_prefix = "traduccion_completa" if export_type == "full_text" else "acta_oficial"
+    filename = f"{filename_prefix}_{paper_size}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"',
+                 "X-Content-SHA256": __import__("hashlib").sha256(pdf_bytes).hexdigest()}
     )
 
 @router.get("/system/status")

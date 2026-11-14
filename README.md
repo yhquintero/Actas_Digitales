@@ -16,7 +16,7 @@
 🌐 **Español** · [English](docs/readme/README_en.md)
 
 [![CI](https://github.com/yhquintero/Actas_Digitales/actions/workflows/ci.yml/badge.svg)](https://github.com/yhquintero/Actas_Digitales/actions/workflows/ci.yml)
-[![Versión](https://img.shields.io/badge/versi%C3%B3n-1.6.0-4f46e5?style=flat-square)](CHANGELOG.md)
+[![Versión](https://img.shields.io/badge/versi%C3%B3n-1.7.0-4f46e5?style=flat-square)](CHANGELOG.md)
 [![Plataformas](https://img.shields.io/badge/plataformas-Web%C2%B7Android%C2%B7Servidor-1e1b4b?style=flat-square)](#-ecosistema)
 [![Seguridad](https://img.shields.io/badge/Seguridad-TLS%201.3%20%7C%20RSA--4096-059669?style=flat-square)](#-seguridad-https-y-certificados)
 [![APK Android](https://img.shields.io/badge/APK-Android%20v1.0.0%20(release)-10b981?style=flat-square&logo=android&logoColor=white)](android/app/release/app-release.apk)
@@ -68,7 +68,7 @@ Actas Digitales está compuesto por **tres componentes que trabajan de forma sin
 
 | Pieza | Qué es | Qué aporta |
 |---|---|---|
-| 🌐 **Web (PWA)** | Interfaz moderna servida por el propio servidor; instalable como app de escritorio o móvil | Centro de mando: grabación en vivo con Web Audio API, uploader drag-and-drop (.mp3, .wav, .m4a, .ogg, .webm), seguimiento del pipeline en tiempo real (SSE), comparativa antes/después, auditoría de cambios, estructuración de acta RAE y exportación a PDF, TXT y Markdown |
+| 🌐 **Web (PWA)** | Interfaz moderna servida por el propio servidor; instalable como app de escritorio o móvil | Centro de mando: grabación en vivo con Web Audio API, uploader drag-and-drop (.mp3, .wav, .m4a, .ogg, .webm), seguimiento del pipeline en tiempo real (SSE), comparativa antes/después, auditoría de cambios, estructuración de acta RAE y exportación a Word, PDF, TXT y Markdown |
 | 📱 **Android** | App nativa en Kotlin + Jetpack Compose + Material Design 3 | Operación en movilidad: captura acústica de alta fidelidad con `MediaRecorder` (AAC 16 kHz), subida en segundo plano con `WorkManager` (tolerante a cortes de red), visualización reactiva y compartir mediante Android Intent |
 | 🗄️ **Servidor** | Proceso asíncrono en FastAPI + Workers en segundo plano | Núcleo de procesamiento: normalización acústica, VAD, motor STT forzado en español (`language="es"`), algoritmo de desduplicación de solapamientos, corrección ortotipográfica y cifrado HTTPS estricto con TLS 1.3 |
 
@@ -117,7 +117,7 @@ Actas Digitales está compuesto por **tres componentes que trabajan de forma sin
 - 📊 **Comparativa visual Antes / Después** — Vista en paralelo que resalta en rojo la transcripción cruda y en verde el acta consolidada.
 - 🔍 **Auditoría de cambios** — Listado pormenorizado de cada corrección aplicada con su categoría (*muletilla, repetición, ortografía, puntuación*) y justificación.
 - 📑 **Estructuración en Acta Oficial RAE** — Convierte el texto corregido en un documento formal con título, asistentes, orden del día, acuerdos numerados (`ACUERDO-01`, etc.) y pie de firmas para Presidente y Secretario.
-- 💾 **Exportación multipropósito** — Copiado instantáneo al portapapeles, descarga en `.txt` UTF-8, archivo `.md` (Markdown) o impresión/guardado en PDF vectorial.
+- 💾 **Exportación multipropósito** — Copiado instantáneo al portapapeles, Word nativo (.docx), **PDF real generado en el servidor** (`/api/audio/export-pdf`), impresión/guardado PDF del navegador (`@media print`, solo el acta), descarga en `.txt` UTF-8 o `.md` (Markdown).
 - 🔍 **Buscador de actas (FTS5)** — Las actas sincronizadas desde el móvil se indexan con SQLite FTS5 (unicode61, sin diacríticos, ranking BM25 y fragmentos resaltados): búsqueda instantánea dentro del servidor, sin enviar nada a terceros.
 - 📴 **PWA offline real** — La Web instala un Service Worker versionado (app-shell offline, navegación *network-first*, estáticos *stale-while-revalidate*); `/api/*` **nunca se cachea**. Sin conexión, la app abre igual (la transcripción requiere servidor).
 
@@ -234,8 +234,9 @@ En la barra de herramientas de exportación de la Web encontrarás los selectore
    * **Encuadernación:** Margen izquierdo ampliado a 3.5 cm para grapas, cosido notarial y sellos oficiales.
 
 #### Paso 4 · Descarga o Impresión Inmediata
-* **Botón `Word (.DOCX)`:** Descarga instantáneamente un documento nativo de Microsoft Word con las dimensiones de página y márgenes exactos de la hoja seleccionada (A4, Carta u Oficio).
-* **Botón `PDF / Imprimir`:** Abre el diálogo de impresión del navegador preconfigurado mediante reglas `@media print` para imprimir directamente o guardar en **PDF vectorial**.
+* **Botón `Word (.DOCX)`:** Descarga instantáneamente un documento nativo de Microsoft Word con las dimensiones de página y márgenes exactos de la hoja seleccionada (A4, Carta u Oficio) y huella SHA-256 cuando eliges «Acta Oficial con Firmas».
+* **Botón `Descargar PDF`:** Descarga un **PDF real generado en el servidor** (100 % local, fpdf2) con el papel y los márgenes seleccionados — cabecera PROTOCOLO OFICIAL y huella SHA-256 del contenido en cabecera y pie — sin depender del diálogo de impresión.
+* **Botón `Imprimir` (o Ctrl+P):** Abre el diálogo de impresión del navegador; las reglas `@media print` imprimen **únicamente el documento del acta** (sin barras, paneles ni botones) y respetan el tamaño de papel elegido (A4 / Carta / Oficio).
 * **Botones `MD` y `TXT`:** Descarga en texto plano o Markdown para archivo digital.
 
 <p align="right"><a href="#readme-top">Volver arriba ⬆</a></p>
@@ -330,6 +331,7 @@ Valores seguros **por defecto** (todo desactivado hasta que expresamente se acti
 | Variable | Por defecto | Efecto |
 |---|---|---|
 | `OPENAI_API_KEY` / `GROQ_API_KEY` | *(vacío)* | Activa Whisper API (Groq o OpenAI) para transcripción en la nube. Sin clave: motores locales u informe auditado honesto. |
+| `ACTAS_FW_MODEL` | `base` | Modelo de **faster-whisper** local (`tiny`, `base`, `small`, `medium`, `large-v3`). El primero uso descarga el modelo desde HuggingFace (~150 MB para `base`; `tiny` ~75 MB). |
 | `ACTAS_DEMO_MODE` | `0` | `1` activa los audios **canónicos de demostración** (audio de pruebas, marketing). **Nunca activar en producción.** La Web lo marca como «DEMO · audio canónico». |
 | `ACTAS_ALLOW_GOOGLE_ASR` | `0` | `1` permite que SpeechRecognition envíe el audio a Google Web Speech. Por defecto **el audio no sale nunca del servidor**. |
 | `ACTAS_ADMIN_TOKEN` | *(vacío)* | Habilita `POST /api/audio/system/purge-cache` y `run-fire-tests` con la cabecera `X-Admin-Token`. Vacío = endpoints desactivados (503). |
@@ -339,6 +341,10 @@ Valores seguros **por defecto** (todo desactivado hasta que expresamente se acti
 **Transparencia radical del motor:** cada job expone `transcription_engine`
 (`web-speech-navegador`, `whisper-api-groq`, `whisper-api-openai`, `demo-canonical`,
 `google-speech`, `faster-whisper-local`, `whisper-local`, `no-speech-local`) y la Web lo muestra como chip.
+Si **ningún** motor produce texto, el informe auditado enumera el motivo real de cada
+motor que falló (p. ej. `whisper-api-openai: AuthenticationError`), tanto en la Web como
+en la consola del servidor (`[transcripción] …`), y la subida termina indicando qué
+componente falta o qué clave no es válida — nunca un silencio.
 
 ---
 
@@ -628,6 +634,44 @@ El módulo de corrección ortotipográfica (`correction_service.py`) inspecciona
 <br />
 
 La aplicación Android nativa está construida con **Android Jetpack WorkManager** y Retrofit. La tarea de subida se ejecuta en segundo plano con restricciones del sistema: si se pierde la conexión celular o Wi-Fi, la transferencia queda en pausa y se reanuda de forma automática en cuanto se restablece la conectividad, sin perder el archivo grabado.
+
+</details>
+
+<details>
+<summary><b>Proceso una grabación y no aparece ningún texto. ¿Por qué?</b></summary>
+
+<br />
+
+Abra el resultado: si ningún motor pudo transcribir, el informe «Archivo de audio analizado»
+enumerará el motivo real de cada motor (p. ej. `whisper-api-openai: AuthenticationError`
+→ clave inválida; `SSLError`/`ConnectionError` → red sin salida a ese proveedor;
+`ModuleNotFoundError: No module named 'faster_whisper'` → falta ejecutar
+`pip install -r backend/requirements.txt` con el venv activo; o `LocalEntryNotFoundError` → el
+primer arranque de faster-whisper no pudo descargar el modelo de HuggingFace).
+En la consola del servidor verá además una línea `[transcripción] <motor>: <motivo>` por motor.
+**Para salir de este estado:** configure `OPENAI_API_KEY` o `GROQ_API_KEY` en `backend/.env`,
+o instale/actualice faster-whisper con una red disponible, o pulse el botón **Configurar API Key**
+en la Web y pegue una clave válida (se guarda en su navegador, nunca en el repositorio).
+
+</details>
+
+<details>
+<summary><b>El puerto 8443 está ocupado (winerror 10048 / EADDRINUSE). ¿Qué hago?</b></summary>
+
+<br />
+
+Casi siempre significa que una instancia anterior del servidor sigue abierta. Encontrarla y cerrarla:
+
+```powershell
+netstat -ano | findstr :8443
+taskkill /PID <PID_encontrado> /F
+```
+
+en macOS/Linux: `lsof -i :8443` y `kill <PID>`.
+
+Como alternativa, arranque en otro puerto: `python run_server.py --port 8444` (y abra
+`https://localhost:8444`). Desde v1.7.0 el lanzador detecta el puerto ocupado **antes** de arrancar
+y termina con código 1, imprimiendo estos pasos.
 
 </details>
 

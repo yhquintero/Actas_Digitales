@@ -56,3 +56,41 @@ html {
 .dark {
   color-scheme: dark;
 }
+
+/* Impresión / Guardar como PDF desde el navegador: SOLO el documento del acta */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 16mm;
+  }
+
+  html, body {
+    background: #ffffff !important;
+  }
+
+  /* Ocultar todo el chrome de la app (navbar, paneles, botones, footer) */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Mostrar únicamente el documento del acta */
+  .acta-printable,
+  .acta-printable * {
+    visibility: visible;
+  }
+
+  .acta-printable {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #1e293b !important;
+  }
+}

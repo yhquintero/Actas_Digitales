@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Copy, Check, Download, Sparkles, FileText, SplitSquareVertical, ArrowRight, Printer, FileCheck, Edit3, Save, Award, FileSpreadsheet, Sliders, Clock, CheckCircle2, Users } from 'lucide-react';
+import { Copy, Check, Download, Sparkles, FileText, SplitSquareVertical, ArrowRight, Printer, FileCheck, Edit3, Save, Award, FileSpreadsheet, Sliders, Clock, CheckCircle2, Users, FileDown } from 'lucide-react';
 import { JobResponse, CorrectionItem } from '../types';
 
 interface ResultViewerProps {
@@ -37,6 +37,52 @@ export const ResultViewer: React.FC<ResultViewerProps> = ({ job }) => {
   const [paperSize, setPaperSize] = useState<'a4' | 'letter' | 'legal'>('a4');
   const [marginType, setMarginType] = useState<'standard' | 'narrow' | 'binding'>('standard');
   const [isDownloadingDocx, setIsDownloadingDocx] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    setIsDownloadingPdf(true);
+    try {
+      const textToExport = exportContent === 'full_text' ? editedText : (editedText || job.final_corrected_text || '');
+      const formData = new FormData();
+      formData.append('text', textToExport);
+      formData.append('title', actaTitle);
+      formData.append('export_type', exportContent);
+      formData.append('paper_size', paperSize);
+      formData.append('margin_type', marginType);
+      formData.append('date_str', actaDate);
+      formData.append('place', actaPlace);
+      formData.append('attendees', actaAttendees);
+      formData.append('president', presidentName);
+      formData.append('secretary', secretaryName);
+      formData.append('audio_duration', job.stats?.audio_duration_formatted || `${job.stats?.audio_duration_sec}s`);
+      formData.append('wpm', String(job.stats?.words_per_minute || ''));
+      formData.append('reading_time', job.stats?.reading_duration_formatted || '');
+
+      const res = await fetch('/api/audio/export-pdf', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({} as { detail?: string }));
+        throw new Error(body?.detail || 'Error al generar el PDF');
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const cleanName = job.filename.replace(/\.[^/.]+$/, '');
+      a.download = `${cleanName}_${exportContent === 'full_text' ? 'traduccion_completa' : 'acta_oficial'}_${paperSize}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      alert(err instanceof Error ? err.message : 'No se pudo generar el PDF');
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
 
   // Inyectar dinámicamente las reglas de tamaño de hoja para impresión nativa / PDF
   useEffect(() => {
@@ -190,6 +236,14 @@ _____________________________             _____________________________
   };
 
   const handlePrint = () => {
+    // Imprime ÚNICAMENTE el documento del acta (ver @media print en index.css)
+    // y respeta el tamaño de papel elegido en "Configuración de Exportación".
+    const pageSize: Record<string, string> = { a4: 'A4 portrait', letter: 'letter portrait', legal: 'legal portrait' };
+    document.getElementById('acta-print-page-size')?.remove();
+    const style = document.createElement('style');
+    style.id = 'acta-print-page-size';
+    style.textContent = `@page { size: ${pageSize[paperSize] || 'A4 portrait'}; margin: 14mm; }`;
+    document.head.appendChild(style);
     window.print();
   };
 
@@ -263,12 +317,22 @@ _____________________________             _____________________________
           </button>
 
           <button
+            onClick={handleDownloadPdf}
+            disabled={isDownloadingPdf}
+            className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center space-x-1.5 transition shadow-sm"
+            title="Descargar PDF generado en el servidor (papel y márgenes seleccionados)"
+          >
+            <FileDown className="w-4 h-4" />
+            <span>{isDownloadingPdf ? 'Generando...' : 'Descargar PDF'}</span>
+          </button>
+
+          <button
             onClick={handlePrint}
             className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center space-x-1.5 transition shadow-sm"
-            title="Imprimir o Guardar en PDF vectorial adaptado al papel seleccionado"
+            title="Imprimir o guardar como PDF (Ctrl+P). Se imprime solo el documento del acta"
           >
             <Printer className="w-4 h-4" />
-            <span>PDF / Imprimir</span>
+            <span>Imprimir</span>
           </button>
 
           <button
@@ -609,7 +673,7 @@ _____________________________             _____________________________
             </div>
 
             {/* Documento Renderizado Estilo Papel Oficial */}
-            <div className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-2xl p-8 sm:p-12 shadow-sm font-serif text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap selection:bg-indigo-100 max-w-4xl mx-auto">
+            <div className="acta-printable bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-2xl p-8 sm:p-12 shadow-sm font-serif text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap selection:bg-indigo-100 max-w-4xl mx-auto">
               <div className="border-b-2 border-indigo-900/40 pb-4 mb-6 flex justify-between items-center text-xs font-sans text-slate-500 dark:text-slate-400">
                 <span className="font-bold text-indigo-950 uppercase tracking-widest font-mono">
                   ACTAS DIGITALES · PROTOCOLO OFICIAL [{paperSize.toUpperCase()}]

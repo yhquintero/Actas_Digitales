@@ -139,6 +139,34 @@ def asegurar_certificados():
 
     return key_path, cert_path
 
+def puerto_en_uso(host: str, port: int) -> bool:
+    """Comprueba si hay algo escuchando en (127.0.0.1, port)."""
+    import socket
+    probe_host = "127.0.0.1" if host in ("0.0.0.0", "::", "") else host
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(0.8)
+            s.connect((probe_host, port))
+            return True
+    except OSError:
+        return False
+
+
+def instrucciones_puerto_ocupado(port: int) -> None:
+    print(f"\n[!] El puerto {port} YA ESTÁ EN USO (winerror 10048 / EADDRINUSE).")
+    print("    Normalmente es una instancia anterior del servidor que sigue abierta.")
+    print("\n    Para encontrarla y cerrarla:")
+    if sys.platform == "win32":
+        print(f"      netstat -ano | findstr :{port}")
+        print("      taskkill /PID <PID> /F")
+    else:
+        print(f"      lsof -i :{port}   (o: ss -ltnp | grep :{port})")
+        print("      kill <PID>")
+    print(f"\n    O arranca en otro puerto, p. ej.:")
+    print(f"      python run_server.py --port {port + 1 if port < 65535 else 8080}")
+    print(f"      (abre https://localhost:{port + 1 if port < 65535 else 8080})")
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Actas Digitales Server")
@@ -150,6 +178,13 @@ def main():
     # Si se pasa un argumento posicional numérico (ej: python run_server.py 8443)
     if len(sys.argv) > 1 and sys.argv[1].isdigit():
         args.port = int(sys.argv[1])
+
+    # 0. Preflight: si el puerto está ocupado, falla en claro y con código de salida ≠ 0.
+    #    (uvicorn devolvería winerror 10048/EADDRINUSE y el lanzador antes terminaba con
+    #    código 0 como si todo fuera bien — engañoso para scripts y accesos directos.)
+    if puerto_en_uso(args.host, args.port):
+        instrucciones_puerto_ocupado(args.port)
+        sys.exit(1)
 
     # 1. Asegurar dependencias (uvicorn, fastapi, docx, etc.)
     asegurar_dependencias()
@@ -183,6 +218,8 @@ def main():
         pass
     except Exception as e:
         print(f"[!] Error: {e}")
+        print("\n[*] Servidor detenido por error (ver arriba).")
+        sys.exit(1)
     finally:
         print("\n[*] Servidor detenido limpiamente.")
         sys.exit(0)

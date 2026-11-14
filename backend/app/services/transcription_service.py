@@ -12,6 +12,9 @@ from .audio_service import AudioService
 class TranscriptionService:
     # Cuenta atrás honesta: motor realmente utilizado en la última llamada (para `transcription_engine`)
     last_engine: str = "desconocido"
+    # Motivos de fallo de cada motor en la última llamada (se muestran en el informe final;
+    # nunca se tragan en silencio: el usuario debe saber POR QUÉ no se transcribió).
+    last_failures: List[str] = []
 
     # Transcripciones canónicas exactas para los audios oficiales de demostración y canciones de prueba.
     # SOLO se sirven si ACTAS_DEMO_MODE=1; en producción nunca se finge una transcripción.
@@ -126,8 +129,14 @@ class TranscriptionService:
           5) whisper nativo de OpenAI, si está instalado — "whisper-local".
           6) Informe auditado sin inventar texto — "no-speech-local".
         """
+        cls.last_failures = []
         duration = AudioService.get_exact_audio_duration(file_path)
         nombre_lower = file_path.name.lower()
+
+        def _note_failure(engine: str, exc: Exception) -> None:
+            reason = f"{engine}: {exc.__class__.__name__}: {exc}"
+            cls.last_failures.append(reason)
+            print(f"[transcripción] {reason}")
 
         # 0. Transcripción captada en vivo por el navegador durante la grabación del usuario
         if client_transcription and client_transcription.strip():
@@ -137,12 +146,16 @@ class TranscriptionService:
         # 1. API externa Whisper (Groq / OpenAI) con soporte para archivos de cualquier tamaño
         api_key = custom_api_key or settings.OPENAI_API_KEY or settings.GROQ_API_KEY
         if api_key:
+            engine_name = "whisper-api-groq" if api_key.startswith("gsk_") else "whisper-api-openai"
             try:
                 result = cls._transcribe_via_whisper_api(file_path, language, api_key, duration)
-                cls.last_engine = "whisper-api-groq" if api_key.startswith("gsk_") else "whisper-api-openai"
+                full_text, segs = result
+                if not (full_text or "").strip():
+                    raise RuntimeError("la API devolvió texto vacío (¿audio sin voz o límite de cuota?)")
+                cls.last_engine = engine_name
                 return result
             except Exception as e:
-                print(f"[Warning] Whisper API call failed ({e}). Reanudando con motores locales.")
+                _note_failure(engine_name, e)
 
         # 2. Audios canónicos de demostración — SOLO con ACTAS_DEMO_MODE=1 (nunca en producción)
         if settings.DEMO_MODE:
@@ -185,40 +198,44 @@ class TranscriptionService:
             return recognized
 
         # 4. Inferencia con faster-whisper local (si está disponible)
+        temp_wav = file_path.parent / f"fw_temp_{file_path.stem}.wav"
         try:
             from faster_whisper import WhisperModel
-            temp_wav = file_path.parent / f"fw_temp_{file_path.stem}.wav"
             AudioService.convert_to_pcm_wav(file_path, temp_wav)
             src_audio = temp_wav if temp_wav.exists() else file_path
-            
-            model = WhisperModel("tiny", device="cpu", compute_type="int8")
-            segments_gen, _ = model.transcribe(str(src_audio), language="es")
+
+            model_name = os.environ.get("ACTAS_FW_MODEL", "base").strip() or "base"
+            # Faster-whisper descarga el modelo de HuggingFace en el primer uso;
+            # si la red falla, la excepción queda registrada en last_failures.
+            model = WhisperModel(model_name, device="cpu", compute_type="int8")
+            segments_gen, _info = model.transcribe(str(src_audio), language=language or "es")
             raw_segments = list(segments_gen)
-            if raw_segments:
-                segments = [
-                    AudioSegment(
-                        id=i,
-                        start_time=round(float(s.start), 2),
-                        end_time=round(float(s.end), 2),
-                        text=s.text.strip()
-                    )
-                    for i, s in enumerate(raw_segments) if s.text.strip()
-                ]
-                full_text = " ".join(s.text for s in segments)
-                if temp_wav.exists():
-                    try: temp_wav.unlink()
-                    except Exception: pass
-                if full_text:
-                    cls.last_engine = "faster-whisper-local"
-                    return full_text, segments
-        except Exception:
-            pass
+            segments = [
+                AudioSegment(
+                    id=i,
+                    start_time=round(float(s.start), 2),
+                    end_time=round(float(s.end), 2),
+                    text=s.text.strip()
+                )
+                for i, s in enumerate(raw_segments) if s.text.strip()
+            ]
+            full_text = " ".join(s.text for s in segments).strip()
+            if full_text:
+                cls.last_engine = "faster-whisper-local"
+                return full_text, segments
+            _note_failure("faster-whisper-local", RuntimeError("el modelo no produjo segmentos con texto (¿audio sin voz inteligible?)"))
+        except Exception as e:
+            _note_failure("faster-whisper-local", e)
+        finally:
+            if temp_wav.exists():
+                try: temp_wav.unlink()
+                except Exception: pass
 
         # 5. Inferencia con Whisper nativo de OpenAI (si está instalado)
         try:
             import whisper
             model = whisper.load_model("base")
-            result = model.transcribe(str(file_path), language="es")
+            result = model.transcribe(str(file_path), language=language or "es")
             full_text = result.get("text", "").strip()
             raw_segments = result.get("segments", [])
             segments = [
@@ -233,8 +250,9 @@ class TranscriptionService:
             if full_text:
                 cls.last_engine = "whisper-local"
                 return full_text, segments
-        except Exception:
-            pass
+            _note_failure("whisper-local", RuntimeError("el modelo nativo no produjo texto"))
+        except Exception as e:
+            _note_failure("whisper-local", e)
 
         # 6. Si no se detecta voz inteligible con los motores locales, emitir informe auditado
         cls.last_engine = "no-speech-local"
@@ -378,7 +396,7 @@ class TranscriptionService:
 
         segment_time = 600  # Fragmentos de 10 minutos
         pattern = file_path.parent / f"chunk_{file_path.stem}_%03d.mp3"
-        
+
         # Segmentar a mp3 64k mono
         cmd = [
             ffmpeg_exe, "-y", "-i", str(file_path),
@@ -386,14 +404,23 @@ class TranscriptionService:
             "-c:a", "libmp3lame", "-b:a", "64k", "-ac", "1",
             str(pattern)
         ]
-        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try:
+            proc = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=600)
+            ffmpeg_err = proc.stderr.decode("utf-8", errors="replace")[-400:] if proc.stderr else ""
+        except Exception as exc:
+            raise RuntimeError(f"ffmpeg no pudo segmentar el audio: {exc}") from exc
 
         chunks = sorted(file_path.parent.glob(f"chunk_{file_path.stem}_*.mp3"))
+        if not chunks:
+            raise RuntimeError(f"ffmpeg no generó fragmentos (código {proc.returncode}). {ffmpeg_err}")
+        print(f"[Whisper Chunk API] {len(chunks)} fragmento(s) de ~{segment_time}s para transcribir vía API.")
         all_text = []
         all_segments: List[AudioSegment] = []
         cur_offset = 0.0
         seg_counter = 0
 
+        first_error: Optional[str] = None
+        ok_chunks = 0
         for chunk in chunks:
             try:
                 with open(chunk, "rb") as f:
@@ -413,7 +440,15 @@ class TranscriptionService:
                                 text=s.get("text", "").strip()
                             ))
                             seg_counter += 1
+                        ok_chunks += 1
+                    else:
+                        detail = resp.text[:200]
+                        if first_error is None:
+                            first_error = f"HTTP {resp.status_code}: {detail}"
+                        print(f"[Whisper Chunk API] Fragmento {chunk.name} → HTTP {resp.status_code}: {detail}")
             except Exception as e:
+                if first_error is None:
+                    first_error = f"{e.__class__.__name__}: {e}"
                 print(f"[Whisper Chunk API] Error en fragmento {chunk.name}: {e}")
             finally:
                 cur_offset += segment_time
@@ -421,7 +456,19 @@ class TranscriptionService:
                     try: chunk.unlink()
                     except Exception: pass
 
-        full_text = " ".join(all_text)
+        if ok_chunks == 0:
+            raise RuntimeError(
+                f"la API rechazó o falló en los {len(chunks)} fragmento(s). "
+                f"Primer error: {first_error or 'desconocido'}. "
+                "Revisa la clave [API Key], la cuota y que el audio tenga voz."
+            )
+
+        full_text = " ".join(all_text).strip()
+        if not full_text:
+            raise RuntimeError(
+                f"la API procesó {ok_chunks}/{len(chunks)} fragmento(s) pero devolvió texto vacío. "
+                "Si el audio es muy largo, prueba con 'base' de faster-whisper local (ACTAS_FW_MODEL)."
+            )
         return full_text, all_segments
 
     @classmethod
@@ -458,6 +505,13 @@ class TranscriptionService:
         requiere una clave API en la nube para transcripción avanzada.
         """
         dur_str = AudioService.format_duration(duration)
+        detalles = ""
+        if cls.last_failures:
+            detalles = (
+                " Motivos registrados por cada motor — "
+                + " | ".join(cls.last_failures)
+                + ". "
+            )
         ruta_google = (
             "El reconocimiento vía Google Web Speech está DESACTIVADO por defecto porque enviaría el audio "
             "a servidores de Google (ACTAS_ALLOW_GOOGLE_ASR=1 para activarlo explícitamente). "
@@ -470,6 +524,7 @@ class TranscriptionService:
             "Instala faster-whisper (pip install faster-whisper) para transcripción local de máxima calidad, "
             "o ingresa una clave gratuita de Groq/OpenAI (Whisper Large v3) en el botón [API Key]. " + ruta_google +
             "Si la grabación tiene voz real pero de baja ganancia, revisa el nivel del micrófono e inténtalo de nuevo."
+            + detalles
         )
         segments = [
             AudioSegment(

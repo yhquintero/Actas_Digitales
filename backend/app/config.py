@@ -2,9 +2,19 @@ import os
 from pathlib import Path
 from pydantic_settings import BaseSettings
 
+# Descubrimiento robusto del .env del servidor: funciona igual si se arranca
+# con «cd backend && python run_server.py», «python backend/run_server.py»
+# desde la raíz, o con uvicorn directo. Prioridad: CWD → backend/.env → raíz/.env
+_ENV_CANDIDATES = [
+    Path(".env"),
+    Path(__file__).resolve().parent.parent / ".env",
+    Path(__file__).resolve().parent.parent.parent / ".env",
+]
+ENV_FILE = next((str(c) for c in _ENV_CANDIDATES if c.exists()), ".env")
+
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Actas Digitales - Audio to Text Pipeline"
-    VERSION: str = "1.6.0"
+    VERSION: str = "1.7.0"
     API_PREFIX: str = "/api"
     
     # Uploads
@@ -36,7 +46,7 @@ class Settings(BaseSettings):
     PORT: int = 8000
     
     class Config:
-        env_file = ".env"
+        env_file = ENV_FILE
 
 settings = Settings()
 settings.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
