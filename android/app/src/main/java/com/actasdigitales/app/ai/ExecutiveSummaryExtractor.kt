@@ -42,12 +42,8 @@ object ExecutiveSummaryExtractor {
             }
         }
 
-        if (decisions.isEmpty()) {
-            decisions.add("Aprobación unánime del contenido expresado en la sesión.")
-        }
-        if (actions.isEmpty()) {
-            actions.add("Seguimiento de las pautas establecidas en la próxima reunión.")
-        }
+        // Honesto: si no hay decisiones o tareas detectables, devolver listas vacías
+        // en lugar de fabricar contenido que nunca se deliberó.
 
         return ExecutiveSummary(
             summaryText = summary,

@@ -10,7 +10,11 @@ from ..models.job import AudioSegment
 from .audio_service import AudioService
 
 class TranscriptionService:
-    # Transcripciones canónicas exactas para los audios oficiales de demostración y canciones de prueba
+    # Cuenta atrás honesta: motor realmente utilizado en la última llamada (para `transcription_engine`)
+    last_engine: str = "desconocido"
+
+    # Transcripciones canónicas exactas para los audios oficiales de demostración y canciones de prueba.
+    # SOLO se sirven si ACTAS_DEMO_MODE=1; en producción nunca se finge una transcripción.
     CANONICAL_DEMO_AUDIOS = {
         "escena_1": (
             "En cada empresa o asamblea, las decisiones más importantes nacen de una conversación. "
@@ -110,49 +114,61 @@ class TranscriptionService:
     ) -> Tuple[str, List[AudioSegment]]:
         """
         Transcribe el archivo de audio forzando idioma español y verificando su duración exacta.
-        0) Si se recibió la transcripción oral directa del cliente (Web Speech API del navegador), se procesa con máxima fidelidad.
-        1) Si hay API Key (Groq / OpenAI), invoca Whisper API oficial con soporte para archivos grandes (> 25MB).
-        2) Si coincide con un audio de prueba o canción canónica del sistema, devuelve su transcripción completa.
-        3) Si es un archivo de audio real (M4A, AAC, MP3, WAV, WebM, OGG, FLAC), lo convierte a WAV 16kHz mono y ejecuta reconocimiento real de voz.
-        4) Inferencia local con faster-whisper o whisper nativo si están instalados.
-        5) Si no se detectan palabras, emite un informe auditado con la duración exacta sin inventar textos falsos.
+
+        Orden real de motores (el primero que produce texto gana) y SIEMPRE se expone
+        el resultado en `TranscriptionService.last_engine` (y en la Web vía `transcription_engine`):
+          0) `client_transcription` recibida del navegador (Web Speech API) — "web-speech-navegador".
+          1) Whisper API (Groq / OpenAI) si hay API Key — "whisper-api-groq" / "whisper-api-openai".
+          2) Audios canónicos de demostración — SOLO con ACTAS_DEMO_MODE=1 — "demo-canonical".
+          3) Google Web Speech vía SpeechRecognition — SOLO con ACTAS_ALLOW_GOOGLE_ASR=1 (envía el
+             audio a Google: desactivado por defecto y documentado con su egress de datos).
+          4) faster-whisper local, si está instalado — "faster-whisper-local".
+          5) whisper nativo de OpenAI, si está instalado — "whisper-local".
+          6) Informe auditado sin inventar texto — "no-speech-local".
         """
         duration = AudioService.get_exact_audio_duration(file_path)
         nombre_lower = file_path.name.lower()
 
         # 0. Transcripción captada en vivo por el navegador durante la grabación del usuario
         if client_transcription and client_transcription.strip():
+            cls.last_engine = "web-speech-navegador"
             return cls._build_canonical_segments(client_transcription.strip(), duration)
 
         # 1. API externa Whisper (Groq / OpenAI) con soporte para archivos de cualquier tamaño
         api_key = custom_api_key or settings.OPENAI_API_KEY or settings.GROQ_API_KEY
         if api_key:
             try:
-                return cls._transcribe_via_whisper_api(file_path, language, api_key, duration)
+                result = cls._transcribe_via_whisper_api(file_path, language, api_key, duration)
+                cls.last_engine = "whisper-api-groq" if api_key.startswith("gsk_") else "whisper-api-openai"
+                return result
             except Exception as e:
                 print(f"[Warning] Whisper API call failed ({e}). Reanudando con motores locales.")
 
-        # 2. Comprobar si coincide con un audio de demostración o canción de prueba
-        for key, item in cls.CANONICAL_DEMO_AUDIOS.items():
-            texto_canonico = item[0]
-            duracion_canonica = item[1]
-            predefined_segments = item[2] if len(item) > 2 else None
+        # 2. Audios canónicos de demostración — SOLO con ACTAS_DEMO_MODE=1 (nunca en producción)
+        if settings.DEMO_MODE:
+            for key, item in cls.CANONICAL_DEMO_AUDIOS.items():
+                texto_canonico = item[0]
+                duracion_canonica = item[1]
+                predefined_segments = item[2] if len(item) > 2 else None
 
-            key_clean = key.replace("_", " ")
-            if (
-                key in nombre_lower or 
-                key_clean in nombre_lower or
-                ("verdad" in key and ("verdad" in nombre_lower or "mana" in nombre_lower or "maná" in nombre_lower or "shakira" in nombre_lower)) or
-                (abs(duration - duracion_canonica) < 1.5 and ("escena" in nombre_lower or "promo" in nombre_lower or "verdad" in nombre_lower))
-            ):
+                key_clean = key.replace("_", " ")
+                matches = (
+                    key in nombre_lower or
+                    key_clean in nombre_lower or
+                    ("verdad" in key and ("verdad" in nombre_lower or "mana" in nombre_lower or "maná" in nombre_lower or "shakira" in nombre_lower)) or
+                    (abs(duration - duracion_canonica) < 1.5 and ("escena" in nombre_lower or "promo" in nombre_lower or "verdad" in nombre_lower))
+                )
+                if not matches:
+                    continue
+                cls.last_engine = "demo-canonical"
                 if predefined_segments:
-                    # Usar marcas de tiempo sincronizadas y ajustadas a la duración real
+                    # Marcas de tiempo sincronizadas y ajustadas a la duración real
                     factor = (duration / duracion_canonica) if duracion_canonica > 0 else 1.0
                     built_segs = [
                         AudioSegment(
                             id=i,
                             start_time=round(s[0] * factor, 2),
-                            end_time=round(duration if i == len(predefined_segments)-1 else s[1] * factor, 2),
+                            end_time=round(duration if i == len(predefined_segments) - 1 else s[1] * factor, 2),
                             text=s[2]
                         )
                         for i, s in enumerate(predefined_segments)
@@ -160,9 +176,12 @@ class TranscriptionService:
                     return texto_canonico, built_segs
                 return cls._build_canonical_segments(texto_canonico, duration)
 
-        # 3. Intentar transcripción acústica real con SpeechRecognition (usando PyAV para M4A/AAC/MP3)
-        recognized = cls._transcribe_via_speech_recognition(file_path, duration, language)
+        # 3. Google Web Speech vía SpeechRecognition — SOLO con ACTAS_ALLOW_GOOGLE_ASR=1 (egress a Google)
+        recognized = None
+        if settings.ALLOW_GOOGLE_ASR:
+            recognized = cls._transcribe_via_speech_recognition(file_path, duration, language)
         if recognized:
+            cls.last_engine = "google-speech"
             return recognized
 
         # 4. Inferencia con faster-whisper local (si está disponible)
@@ -190,6 +209,7 @@ class TranscriptionService:
                     try: temp_wav.unlink()
                     except Exception: pass
                 if full_text:
+                    cls.last_engine = "faster-whisper-local"
                     return full_text, segments
         except Exception:
             pass
@@ -211,11 +231,13 @@ class TranscriptionService:
                 for i, s in enumerate(raw_segments)
             ]
             if full_text:
+                cls.last_engine = "whisper-local"
                 return full_text, segments
         except Exception:
             pass
 
         # 6. Si no se detecta voz inteligible con los motores locales, emitir informe auditado
+        cls.last_engine = "no-speech-local"
         return cls._build_no_speech_detected_result(file_path, duration)
 
     @classmethod
@@ -436,11 +458,18 @@ class TranscriptionService:
         requiere una clave API en la nube para transcripción avanzada.
         """
         dur_str = AudioService.format_duration(duration)
+        ruta_google = (
+            "El reconocimiento vía Google Web Speech está DESACTIVADO por defecto porque enviaría el audio "
+            "a servidores de Google (ACTAS_ALLOW_GOOGLE_ASR=1 para activarlo explícitamente). "
+            if not settings.ALLOW_GOOGLE_ASR else
+            "El reconocimiento vía Google Web Speech está activado vía ACTAS_ALLOW_GOOGLE_ASR=1 (el audio sale hacia Google). "
+        )
         msg = (
             f"Archivo de audio analizado ({file_path.name} · Duración: {dur_str} · {round(duration, 1)}s). "
-            "El archivo se decodificó con éxito, pero no se detectaron palabras nítidas con el motor acústico local. "
-            "Si la grabación contiene conversaciones reales o baja ganancia, puedes ingresar una clave gratuita de Groq (Whisper Large v3) "
-            "en el botón [API Key] de la barra superior para transcribir con máxima sensibilidad fonética."
+            "El archivo se decodificó con éxito, pero no se generó texto con los motores disponibles en este servidor. "
+            "Instala faster-whisper (pip install faster-whisper) para transcripción local de máxima calidad, "
+            "o ingresa una clave gratuita de Groq/OpenAI (Whisper Large v3) en el botón [API Key]. " + ruta_google +
+            "Si la grabación tiene voz real pero de baja ganancia, revisa el nivel del micrófono e inténtalo de nuevo."
         )
         segments = [
             AudioSegment(

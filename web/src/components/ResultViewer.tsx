@@ -6,6 +6,18 @@ interface ResultViewerProps {
   job: JobResponse;
 }
 
+const ENGINE_LABELS: Record<string, string> = {
+  'web-speech-navegador': 'Motor: Web Speech (navegador)',
+  'whisper-api-groq': 'Motor: Whisper Large v3 · Groq',
+  'whisper-api-openai': 'Motor: Whisper · OpenAI',
+  'demo-canonical': 'DEMO · audio canónico',
+  'google-speech': 'Motor: Google Web Speech',
+  'faster-whisper-local': 'Motor: faster-whisper (local)',
+  'whisper-local': 'Motor: whisper (local)',
+  'no-speech-local': 'Sin voz detectada localmente',
+  'desconocido': 'Motor: no informado',
+};
+
 export const ResultViewer: React.FC<ResultViewerProps> = ({ job }) => {
   const [activeTab, setActiveTab] = useState<'official' | 'corrected' | 'comparison' | 'timeline' | 'corrections' | 'raw'>('official');
   const [copied, setCopied] = useState(false);
@@ -188,6 +200,18 @@ _____________________________             _____________________________
             <span className="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-mono">
               RAE Verificado
             </span>
+            {job.transcription_engine && (
+              <span
+                className={`text-[10px] border px-2 py-0.5 rounded-full font-mono ${
+                  job.transcription_engine === 'demo-canonical'
+                    ? 'bg-amber-950 text-amber-300 border-amber-500/50'
+                    : 'bg-slate-800 text-slate-300 border-slate-600'
+                }`}
+                title="Motor de transcripción realmente utilizado"
+              >
+                {ENGINE_LABELS[job.transcription_engine] ?? job.transcription_engine}
+              </span>
+            )}
           </div>
           <h2 className="text-2xl font-black text-white tracking-tight mt-1">
             {job.filename}

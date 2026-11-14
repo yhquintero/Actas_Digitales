@@ -501,7 +501,7 @@
     <a href="#" class="brand">
       <img src="assets/actas-digitales-icon.svg" width="36" height="36" alt="Logo Actas Digitales">
       <span>Actas Digitales</span>
-      <span class="brand-badge">v1.2.0</span>
+      <span class="brand-badge">v1.5.0</span>
     </a>
     <div class="nav-links">
       <a href="#pilares">Los 4 Pilares</a>
@@ -570,7 +570,7 @@
         <ul>
           <li>Segmentación acústica inteligente</li>
           <li>Modelo forzado en español (<code>language="es"</code>)</li>
-          <li>Sin dependencia de servicios externos</li>
+          <li>Sin servicios externos por defecto (audio nunca sale del servidor; Google ASR y Whisper API son opt-in explícito)</li>
         </ul>
       </div>
 
@@ -698,7 +698,7 @@
   <section id="seguridad" class="security-section">
     <h2 class="section-title">Blindaje Criptográfico &amp; Privacidad</h2>
     <p class="section-subtitle">
-      Protección absoluta de las deliberaciones institucionales. Cifrado de extremo a extremo sin intermediarios externos.
+      Protección de las deliberaciones institucionales. TLS 1.3 en tránsito y procesamiento on-premise; el audio se descifra sólo en el servidor. SHA-256 garantiza integridad, no autoría.
     </p>
 
     <table class="security-table">

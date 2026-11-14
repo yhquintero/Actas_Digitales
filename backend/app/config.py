@@ -18,6 +18,13 @@ class Settings(BaseSettings):
     # Language
     DEFAULT_LANGUAGE: str = "es"
     
+    # Honestidad / seguridad (ver SECURITY.md)
+    DEMO_MODE: bool = os.getenv("ACTAS_DEMO_MODE", "0").lower() in ("1", "true", "yes", "on")
+    ALLOW_GOOGLE_ASR: bool = os.getenv("ACTAS_ALLOW_GOOGLE_ASR", "0").lower() in ("1", "true", "yes", "on")
+    ADMIN_TOKEN: str = os.getenv("ACTAS_ADMIN_TOKEN", "")
+    SYNC_TOKEN: str = os.getenv("ACTAS_SYNC_TOKEN", "")
+    RETENTION_HOURS: float = float(os.getenv("ACTAS_RETENTION_HOURS", "720"))  # 0 = desactivada
+    
     # Optional External APIs
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")

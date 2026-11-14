@@ -58,6 +58,10 @@ class JobResponse(BaseModel):
     corrections_applied: List[CorrectionItem] = Field(default_factory=list)
     stats: Optional[JobStats] = None
     error_message: Optional[str] = None
+    # Motor de transcripción realmente utilizado (honestidad radical):
+    # web-speech-navegador | whisper-api-groq | whisper-api-openai | demo-canonical |
+    # google-speech | faster-whisper-local | whisper-local | no-speech-local | desconocido
+    transcription_engine: str = "desconocido"
 
 class DirectTranscribeRequest(BaseModel):
     language: str = "es"

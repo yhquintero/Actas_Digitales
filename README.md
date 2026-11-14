@@ -16,7 +16,7 @@
 🌐 **Español** · [English](docs/readme/README_en.md)
 
 [![CI](https://github.com/yhquintero/Actas_Digitales/actions/workflows/ci.yml/badge.svg)](https://github.com/yhquintero/Actas_Digitales/actions/workflows/ci.yml)
-[![Versión](https://img.shields.io/badge/versi%C3%B3n-1.2.0-4f46e5?style=flat-square)](CHANGELOG.md)
+[![Versión](https://img.shields.io/badge/versi%C3%B3n-1.5.0-4f46e5?style=flat-square)](CHANGELOG.md)
 [![Plataformas](https://img.shields.io/badge/plataformas-Web%C2%B7Android%C2%B7Servidor-1e1b4b?style=flat-square)](#-ecosistema)
 [![Seguridad](https://img.shields.io/badge/Seguridad-TLS%201.3%20%7C%20RSA--4096-059669?style=flat-square)](#-seguridad-https-y-certificados)
 [![APK Android](https://img.shields.io/badge/APK-Android%20v1.0.0%20(release)-10b981?style=flat-square&logo=android&logoColor=white)](android/app/release/app-release.apk)
@@ -292,7 +292,7 @@ El artefacto oficial de distribución es el **release nativo completo** (Kotlin 
 * 🛠 **Verificación del paquete desde la Web:** tras descargar, la propia sección «Descarga la App para tu móvil» incluye un **verificador SHA-256 en el navegador** (selecciona el APK descargado y lo comprueba al instante, sin instalar nada).
 * 🚀 **GitHub Releases (distribución canónica):** la Web anuncia `release_url` en `/api/app/info` y la enlaza en la sección de descarga. El tag `v1.5.0` publicó el APK comprometido con `SHA256SUMS.txt`; los próximos tags `v*` compilan, **firman** y publican APK universal + por ABI + AAB automáticamente (workflow `release.yml`, ver más abajo).
 * 📊 **Observabilidad:** `GET /api/metrics` (contadores en memoria por proceso: peticiones HTTP, info del APK, descargas, bytes, actas sincronizadas) y logs estructurados JSON Lines en cada descarga. Ideal para instalaciones auto-alojadas con Prometheus delante.
-* 🔄 **Móvil ⇄ Web comparten actas:** la app sube sus actas locales (Room) a `POST /api/acts/sync` (idempotente por SHA-256 del audio); la Web las lista en el historial («Actas del móvil (Room → servidor)») vía `GET /api/acts`.
+* 🔄 **Móvil ⇄ Web comparten actas:** la app sube sus actas locales (Room) a `POST /api/acts/sync` (idempotente por SHA-256 del audio); la Web las lista en el historial («Actas del móvil (Room → servidor)») vía `GET /api/acts`. **Ambos exigen `X-Sync-Token`** (cabecera) igual que `ACTAS_SYNC_TOKEN` del servidor; la app lo incluye si se compila con la variable `ACTAS_SYNC_TOKEN`.
 * 🛡 **CORS estricto y TLS seguro:** orígenes explícitos por `ACTAS_CORS_ORIGINS` (defecto localhost); el móvil valida CAs del sistema con **certificate pinning opcional** (`ACTAS_CERT_PIN_PRIMARY/BACKUP`, SPKI SHA-256) y sin bypass de certificados.
 
 #### 🔨 Compilar desde el código fuente (Android Studio / Gradle)
@@ -316,6 +316,25 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ▶️ **Vídeo:** [presentación oficial de 3 min (1080p60, narración en español y subtítulos)](docs/PROPUESTA_VIDEO_PROMOCIONAL.md) · [reproductor interactivo en la app Web](web/) · [manual imprimible de usuario](docs/MANUAL_USUARIO.html)
 
 <p align="right"><a href="#readme-top">Volver arriba ⬆</a></p>
+
+---
+
+## 🔐 Variables de Entorno y Controles de Seguridad
+
+Valores seguros **por defecto** (todo desactivado hasta que expresamente se active):
+
+| Variable | Por defecto | Efecto |
+|---|---|---|
+| `OPENAI_API_KEY` / `GROQ_API_KEY` | *(vacío)* | Activa Whisper API (Groq o OpenAI) para transcripción en la nube. Sin clave: motores locales u informe auditado honesto. |
+| `ACTAS_DEMO_MODE` | `0` | `1` activa los audios **canónicos de demostración** (audio de pruebas, marketing). **Nunca activar en producción.** La Web lo marca como «DEMO · audio canónico». |
+| `ACTAS_ALLOW_GOOGLE_ASR` | `0` | `1` permite que SpeechRecognition envíe el audio a Google Web Speech. Por defecto **el audio no sale nunca del servidor**. |
+| `ACTAS_ADMIN_TOKEN` | *(vacío)* | Habilita `POST /api/audio/system/purge-cache` y `run-fire-tests` con la cabecera `X-Admin-Token`. Vacío = endpoints desactivados (503). |
+| `ACTAS_SYNC_TOKEN` | *(vacío)* | Exige `X-Sync-Token` en `GET/POST /api/acts*` (móvil⇄Web). Vacío = sincronización desactivada (503). La app Android lo envía vía BuildConfig `ACTAS_SYNC_TOKEN`. |
+| `ACTAS_RETENTION_HOURS` | `720` | Purga automática de ficheros de subida más antiguos de N horas (`0` desactiva). El almacén de actas (`acts.db`) nunca se purga. |
+
+**Transparencia radical del motor:** cada job expone `transcription_engine`
+(`web-speech-navegador`, `whisper-api-groq`, `whisper-api-openai`, `demo-canonical`,
+`google-speech`, `faster-whisper-local`, `whisper-local`, `no-speech-local`) y la Web lo muestra como chip.
 
 ---
 
@@ -562,7 +581,7 @@ git clone --depth 1 https://github.com/yhquintero/Actas_Digitales.git
 
 <br />
 
-Sí, de forma absoluta. El servidor puede ejecutarse en una máquina local o en la red Wi-Fi de tu oficina. La aplicación Web se comunica directamente con el servidor de la red local mediante HTTPS y el motor lingüístico de consolidación y corrección opera localmente con reglas fonéticas en español sin enviar ningún dato a servidores externos.
+Sí, por defecto. El servidor puede ejecutarse en una máquina local o en la red Wi-Fi de tu oficina; la Web se comunica con él por HTTPS y el motor de consolidación/corrección son reglas locales. **Transparencia:** la transcripción queda en tu infraestructura solo si no configuras motores externos; con `OPENAI_API_KEY`/`GROQ_API_KEY` el audio se envía a esa API, y `ACTAS_ALLOW_GOOGLE_ASR=1` enviaría el audio a Google Web Speech. Ambos son opt-in explícito y visibles en la respuesta del job (`transcription_engine`).
 
 </details>
 
@@ -571,7 +590,7 @@ Sí, de forma absoluta. El servidor puede ejecutarse en una máquina local o en 
 
 <br />
 
-Los navegadores web modernos (Chrome, Firefox, Safari y Edge) y los sistemas operativos móviles bloquean de forma estricta el acceso al micrófono del usuario (`navigator.mediaDevices.getUserMedia`) si el sitio se sirve mediante HTTP inseguro. HTTPS garantiza además que los archivos de audio de reuniones confidenciales viajen cifrados de extremo a extremo con TLS 1.3.
+Los navegadores web modernos (Chrome, Firefox, Safari y Edge) y los sistemas operativos móviles bloquean de forma estricta el acceso al micrófono del usuario (`navigator.mediaDevices.getUserMedia`) si el sitio se sirve mediante HTTP inseguro. HTTPS garantiza además que los archivos de audio de reuniones confidenciales viajen cifrados en tránsito con TLS 1.3 (entre tu navegador/móvil y tu servidor; el audio se descifra sólo en el servidor que controla tu organización).
 
 </details>
 

@@ -33,6 +33,18 @@ jobs:
         run: |
           python tools/test_pipeline.py
 
+      - name: Verificar sincronización de versión en todo el proyecto
+        run: |
+          python tools/check_version_sync.py
+
+      - name: Verificar que web/public/ActasDigitales.apk está sincronizado con el release
+        run: |
+          python tools/sync_apk.py --check
+
+      - name: Probar almacén de actas (migración JSONL → SQLite) y retención
+        run: |
+          python tools/test_acts_store.py
+
       - name: Ejecutar Suite de Pruebas de Fuego y Vulnerabilidades
         run: |
           python tools/test_pruebas_de_fuego.py
