@@ -14,9 +14,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import android.webkit.DownloadListener
-import android.webkit.FileChooserParams
 import android.webkit.SslErrorHandler
 import android.webkit.WebChromeClient
+import android.webkit.WebChromeClient.FileChooserParams
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -149,13 +149,17 @@ class MainActivity : Activity() {
                 params: FileChooserParams?
             ): Boolean {
                 fileChooserCallback = callback
-                val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
-                    addCategory(Intent.CATEGORY_OPENABLE)
-                    type = "*/*"
-                    putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-                    if (params?.acceptTypes?.isNotEmpty() == true) {
-                        val mime = params.acceptTypes.map { it.trim() }.firstOrNull { it.isNotEmpty() && it.contains("/") }
-                        if (mime != null) type = mime
+                val intent = try {
+                    params?.createIntent() ?: Intent(Intent.ACTION_GET_CONTENT).apply {
+                        addCategory(Intent.CATEGORY_OPENABLE)
+                        type = "*/*"
+                        putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                    }
+                } catch (e: Exception) {
+                    Intent(Intent.ACTION_GET_CONTENT).apply {
+                        addCategory(Intent.CATEGORY_OPENABLE)
+                        type = "*/*"
+                        putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
                     }
                 }
                 return try {
